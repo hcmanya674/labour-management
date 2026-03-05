@@ -1,1 +1,72 @@
 
+<!DOCTYPE html>
+<html>
+<head>
+<title>Install Labour Management App</title>
+
+<script>
+function detectDevice() 
+{
+
+    const ua = navigator.userAgent;
+
+    console.log("User Agent:", ua);
+
+    if (/android/i.test(ua)) {
+        document.getElementById("androidSection").style.display = "block";
+        document.getElementById("message").innerText = "Download Android App";
+    }
+
+    else if (/iphone|ipad|ipod/i.test(ua)) {
+        document.getElementById("iosSection").style.display = "block";
+        document.getElementById("message").innerText = "iPhone installation instructions";
+    }
+
+    else {
+        document.getElementById("message").innerText = "This app is only available for mobile devices.";
+    }
+}
+
+window.onload = detectDevice;
+</script>
+
+window.onload = detectDevice;
+</script>
+
+window.onload = detectDevice;
+</script>
+
+</head>
+
+<body style="font-family: Arial; text-align:center; padding-top:50px;">
+
+<h2>Labour Management System</h2>
+
+
+<p id="message"></p>
+
+<div id="androidSection" style="display:none;">
+    <a href="labour.apk" download>
+        <button>Install Android App</button>
+    </a>
+</div>
+
+<div id="iosSection" style="display:none;">
+    <p>Please open this link in Safari and add to Home Screen.</p>
+</div>
+
+<div id="ios" style="display:none;">
+<p>iPhone detected</p>
+<p>Please contact administrator for iOS installation.</p>
+</div>
+
+<div id="other" style="display:none;">
+<p>This app is only available for mobile devices.</p>
+</div>
+<p id="debug"></p>
+
+<script>
+document.getElementById("debug").innerText = navigator.userAgent;
+</script>
+</body>
+</html>
