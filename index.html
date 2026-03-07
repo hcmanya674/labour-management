@@ -1,9 +1,9 @@
-
 <!DOCTYPE html>
 <html>
 <head>
 <title>Install Labour Management App</title>
-
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a73e8">
 <script>
 function detectDevice() 
 {
@@ -26,12 +26,6 @@ function detectDevice()
         document.getElementById("message").innerText = "This app is only available for mobile devices.";
     }
 }
-
-window.onload = detectDevice;
-</script>
-
-window.onload = detectDevice;
-</script>
 
 window.onload = detectDevice;
 </script>
@@ -67,6 +61,12 @@ window.onload = detectDevice;
 
 <script>
 document.getElementById("debug").innerText = navigator.userAgent;
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js")
+  .then(() => console.log("Service Worker Registered"));
+}
 </script>
 </body>
 </html>
