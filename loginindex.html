@@ -12,7 +12,7 @@
 </head>
 
 <body>
-<div id="installGuide" style="margin-top:20px; font-size:14px;">
+<div id="installGuide" style="margin-top:20px; font-size:14px; background:yellow;">
 Install this app for better experience.<br>
 Tap the browser menu (⋮) and select <b>Add to Home Screen</b>.
 </div>
@@ -77,9 +77,16 @@ if ("serviceWorker" in navigator) {
 navigator.serviceWorker.register("service-worker.js")
 .then(() => console.log("Service Worker Registered"));
 }
- if (window.matchMedia('(display-mode: standalone)').matches) {
+window.addEventListener("load", () => {
 
-document.getElementById("installGuide").style.display = "none";
+if (window.matchMedia('(display-mode: standalone)').matches) {
+
+const guide = document.getElementById("installGuide");
+if(guide) guide.style.display = "none";
+
+}
+
+});
 
 }
 
@@ -87,5 +94,6 @@ document.getElementById("installGuide").style.display = "none";
 
 </body>
 </html>
+
 
 
