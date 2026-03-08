@@ -14,6 +14,10 @@
 
 let name = localStorage.getItem("username");
 
+if(!name){
+window.location.href="index.html";
+}
+
 document.getElementById("welcome").innerText =
 "Welcome " + name + " to Labour Management System";
 
@@ -26,6 +30,5 @@ window.location.href = "index.html";
 }
 
 </script>
-
 </body>
 </html>
