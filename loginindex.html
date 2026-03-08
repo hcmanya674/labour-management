@@ -12,7 +12,10 @@
 </head>
 
 <body>
-
+<div id="installGuide" style="margin-top:20px; font-size:14px;">
+Install this app for better experience.<br>
+Tap the browser menu (⋮) and select <b>Add to Home Screen</b>.
+</div>
 <h2>Labour Management System</h2>
 
 <div class="login-box">
@@ -36,26 +39,28 @@
 <script>
 
 let deferredPrompt;
+const installBtn = document.getElementById("installBtn");
 
 window.addEventListener("beforeinstallprompt", (e) => {
 
 e.preventDefault();
-
 deferredPrompt = e;
 
-document.getElementById("installBtn").style.display = "block";
+installBtn.style.display = "block";
 
 });
 
-document.getElementById("installBtn").addEventListener("click", async () => {
+installBtn.addEventListener("click", async () => {
 
-document.getElementById("installBtn").style.display = "none";
+if (!deferredPrompt) return;
 
 deferredPrompt.prompt();
 
-const choiceResult = await deferredPrompt.userChoice;
+await deferredPrompt.userChoice;
 
 deferredPrompt = null;
+
+installBtn.style.display = "none";
 
 });
 
@@ -67,8 +72,14 @@ if ("serviceWorker" in navigator) {
 navigator.serviceWorker.register("service-worker.js")
 .then(() => console.log("Service Worker Registered"));
 }
+ if (window.matchMedia('(display-mode: standalone)').matches) {
+
+document.getElementById("installGuide").style.display = "none";
+
+}
 
 </script>
 
 </body>
 </html>
+
