@@ -1,8 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <title>Labour Management Login</title>
+
 <link rel="stylesheet" href="style.css">
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a73e8">
+
 </head>
 
 <body>
@@ -17,11 +23,52 @@
 
 <button onclick="login()">Login</button>
 
+<br><br>
+
+<button id="installBtn" style="display:none;">Install App</button>
+
 <p id="message"></p>
 
 </div>
 
 <script src="script.js"></script>
+
+<script>
+
+let deferredPrompt;
+
+window.addEventListener("beforeinstallprompt", (e) => {
+
+e.preventDefault();
+
+deferredPrompt = e;
+
+document.getElementById("installBtn").style.display = "block";
+
+});
+
+document.getElementById("installBtn").addEventListener("click", async () => {
+
+document.getElementById("installBtn").style.display = "none";
+
+deferredPrompt.prompt();
+
+const choiceResult = await deferredPrompt.userChoice;
+
+deferredPrompt = null;
+
+});
+
+</script>
+
+<script>
+
+if ("serviceWorker" in navigator) {
+navigator.serviceWorker.register("service-worker.js")
+.then(() => console.log("Service Worker Registered"));
+}
+
+</script>
 
 </body>
 </html>
