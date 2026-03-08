@@ -36,7 +36,10 @@ Tap the browser menu (⋮) and select <b>Add to Home Screen</b>.
 
 <script src="script.js"></script>
 
+
 <script>
+
+window.addEventListener("load", () => {
 
 let deferredPrompt;
 const installBtn = document.getElementById("installBtn");
@@ -64,6 +67,8 @@ installBtn.style.display = "none";
 
 });
 
+});
+
 </script>
 
 <script>
@@ -82,4 +87,5 @@ document.getElementById("installGuide").style.display = "none";
 
 </body>
 </html>
+
 
