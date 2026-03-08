@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 
 <title>Labour Management Login</title>
@@ -12,10 +13,12 @@
 </head>
 
 <body>
+
 <div id="installGuide" style="margin-top:20px; font-size:14px; background:yellow;">
 Install this app for better experience.<br>
 Tap the browser menu (⋮) and select <b>Add to Home Screen</b>.
 </div>
+
 <h2>Labour Management System</h2>
 
 <div class="login-box">
@@ -36,14 +39,21 @@ Tap the browser menu (⋮) and select <b>Add to Home Screen</b>.
 
 <script src="script.js"></script>
 
-
 <script>
 
-window.addEventListener("load", () => {
-
-let deferredPrompt;
+let deferredPrompt = null;
 const installBtn = document.getElementById("installBtn");
+const guide = document.getElementById("installGuide");
 
+
+// Register Service Worker
+if ("serviceWorker" in navigator) {
+navigator.serviceWorker.register("service-worker.js")
+.then(() => console.log("Service Worker Registered"));
+}
+
+
+// Install prompt event
 window.addEventListener("beforeinstallprompt", (e) => {
 
 e.preventDefault();
@@ -53,9 +63,16 @@ installBtn.style.display = "block";
 
 });
 
+
+// Install button click
 installBtn.addEventListener("click", async () => {
 
-if (!deferredPrompt) return;
+if (!deferredPrompt) {
+
+alert("To install this app:\nTap ⋮ menu → Add to Home Screen");
+return;
+
+}
 
 deferredPrompt.prompt();
 
@@ -67,26 +84,11 @@ installBtn.style.display = "none";
 
 });
 
-});
 
-</script>
-
-<script>
-
-if ("serviceWorker" in navigator) {
-navigator.serviceWorker.register("service-worker.js")
-.then(() => console.log("Service Worker Registered"));
-}
-window.addEventListener("load", () => {
-
+// Hide install guide if app already installed
 if (window.matchMedia('(display-mode: standalone)').matches) {
 
-const guide = document.getElementById("installGuide");
-if(guide) guide.style.display = "none";
-
-}
-
-});
+guide.style.display = "none";
 
 }
 
@@ -94,6 +96,3 @@ if(guide) guide.style.display = "none";
 
 </body>
 </html>
-
-
-
