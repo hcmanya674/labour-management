@@ -1,34 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Install Labour Management App</title>
+
+<title>Labour Management System</title>
+
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1a73e8">
-<script>
-function detectDevice() 
-{
-
-    const ua = navigator.userAgent;
-
-    console.log("User Agent:", ua);
-
-    if (/android/i.test(ua)) {
-        document.getElementById("androidSection").style.display = "block";
-        document.getElementById("message").innerText = "Download Android App";
-    }
-
-    else if (/iphone|ipad|ipod/i.test(ua)) {
-        document.getElementById("iosSection").style.display = "block";
-        document.getElementById("message").innerText = "iPhone installation instructions";
-    }
-
-    else {
-        document.getElementById("message").innerText = "This app is only available for mobile devices.";
-    }
-}
-
-window.onload = detectDevice;
-</script>
 
 </head>
 
@@ -36,37 +13,37 @@ window.onload = detectDevice;
 
 <h2>Labour Management System</h2>
 
+<input type="text" id="username" placeholder="Enter your name">
 
-<p id="message"></p>
+<br><br>
 
-<div id="androidSection" style="display:none;">
-    <a href="labour.apk" download>
-        <button>Install Android App</button>
-    </a>
-</div>
-
-<div id="iosSection" style="display:none;">
-    <p>Please open this link in Safari and add to Home Screen.</p>
-</div>
-
-<div id="ios" style="display:none;">
-<p>iPhone detected</p>
-<p>Please contact administrator for iOS installation.</p>
-</div>
-
-<div id="other" style="display:none;">
-<p>This app is only available for mobile devices.</p>
-</div>
-<p id="debug"></p>
+<button onclick="login()">Enter</button>
 
 <script>
-document.getElementById("debug").innerText = navigator.userAgent;
+
+function login(){
+
+let name = document.getElementById("username").value;
+
+if(name==""){
+alert("Please enter your name");
+return;
+}
+
+localStorage.setItem("username", name);
+
+window.location.href="dashboard.html";
+
+}
+
 </script>
+
+
 <script>
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js")
-  .then(() => console.log("Service Worker Registered"));
+navigator.serviceWorker.register("service_worker.js");
 }
 </script>
+
 </body>
 </html>
