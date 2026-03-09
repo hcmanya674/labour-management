@@ -18,7 +18,10 @@
 Install this app for better experience.<br>
 Tap the browser menu (⋮) and select <b>Add to Home Screen</b>.
 </div>
-
+<div style="margin-top:15px;font-size:13px;">
+To uninstall the app:<br>
+Long press the app icon → Remove App
+</div>
 <h2>Labour Management System</h2>
 
 <div class="login-box">
@@ -31,7 +34,7 @@ Tap the browser menu (⋮) and select <b>Add to Home Screen</b>.
 
 <br><br>
 
-<button id="installBtn" style="display:none;">Install App</button>
+<button id="appActionBtn">Install App</button>
 <button id="openBtn" style="display:none;">Open App</button>
 <p id="message"></p>
 
@@ -42,65 +45,63 @@ Tap the browser menu (⋮) and select <b>Add to Home Screen</b>.
 <script>
 let deferredPrompt = null;
 
-const installBtn = document.getElementById("installBtn");
-const openBtn = document.getElementById("openBtn");
-const guide = document.getElementById("installGuide");
+const appBtn = document.getElementById("appActionBtn");
 
 
-// Register Service Worker
+// Register service worker
 if ("serviceWorker" in navigator) {
 navigator.serviceWorker.register("service-worker.js");
 }
 
 
-// Detect install mode
-if (window.matchMedia('(display-mode: standalone)').matches) {
-
-guide.style.display = "none";
-installBtn.style.display = "none";
-openBtn.style.display = "block";
-
-}
-
-
-// Install prompt
+// Detect install availability
 window.addEventListener("beforeinstallprompt", (e) => {
 
 e.preventDefault();
 deferredPrompt = e;
 
-installBtn.style.display = "block";
+appBtn.innerText = "Install App";
 
 });
 
 
-// Install button click
-installBtn.addEventListener("click", async () => {
+// Detect if app already installed
+if (window.matchMedia('(display-mode: standalone)').matches) {
 
-if (!deferredPrompt) {
+appBtn.innerText = "Open App";
 
-alert("Tap ⋮ → Add to Home Screen to install the app");
+}
+
+
+// Button click behaviour
+appBtn.addEventListener("click", async () => {
+
+if (window.matchMedia('(display-mode: standalone)').matches) {
+
+window.location.href = "loginindex.html";
 return;
 
 }
+
+if (deferredPrompt) {
 
 deferredPrompt.prompt();
 await deferredPrompt.userChoice;
 
 deferredPrompt = null;
 
+}
+
+else {
+
+alert("To install:\nTap ⋮ → Add to Home Screen");
+
+}
+
 });
-
-
-// Open App button
-openBtn.addEventListener("click", () => {
-
-window.location.href = "loginindex.html";
-
-});
-
 </script>
 
 </body>
 </html>
+
 
