@@ -32,7 +32,7 @@ Tap the browser menu (⋮) and select <b>Add to Home Screen</b>.
 <br><br>
 
 <button id="installBtn" style="display:none;">Install App</button>
-
+<button id="openBtn" style="display:none;">Open App</button>
 <p id="message"></p>
 
 </div>
@@ -40,20 +40,30 @@ Tap the browser menu (⋮) and select <b>Add to Home Screen</b>.
 <script src="script.js"></script>
 
 <script>
-
 let deferredPrompt = null;
+
 const installBtn = document.getElementById("installBtn");
+const openBtn = document.getElementById("openBtn");
 const guide = document.getElementById("installGuide");
 
 
 // Register Service Worker
 if ("serviceWorker" in navigator) {
-navigator.serviceWorker.register("service-worker.js")
-.then(() => console.log("Service Worker Registered"));
+navigator.serviceWorker.register("service-worker.js");
 }
 
 
-// Install prompt event
+// Detect install mode
+if (window.matchMedia('(display-mode: standalone)').matches) {
+
+guide.style.display = "none";
+installBtn.style.display = "none";
+openBtn.style.display = "block";
+
+}
+
+
+// Install prompt
 window.addEventListener("beforeinstallprompt", (e) => {
 
 e.preventDefault();
@@ -69,30 +79,28 @@ installBtn.addEventListener("click", async () => {
 
 if (!deferredPrompt) {
 
-alert("To install this app:\nTap ⋮ menu → Add to Home Screen");
+alert("Tap ⋮ → Add to Home Screen to install the app");
 return;
 
 }
 
 deferredPrompt.prompt();
-
 await deferredPrompt.userChoice;
 
 deferredPrompt = null;
 
-installBtn.style.display = "none";
-
 });
 
 
-// Hide install guide if app already installed
-if (window.matchMedia('(display-mode: standalone)').matches) {
+// Open App button
+openBtn.addEventListener("click", () => {
 
-guide.style.display = "none";
+window.location.href = "loginindex.html";
 
-}
+});
 
 </script>
 
 </body>
 </html>
+
