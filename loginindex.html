@@ -12,20 +12,6 @@
 
 <body>
 
-<h2>Labour Management System</h2>
-
-<div class="login-box">
-
-<input type="text" id="userid" placeholder="Enter User ID"><br><br>
-
-<input type="password" id="password" placeholder="Enter Password"><br><br>
-
-<button onclick="login()">Login</button>
-
-<p id="message"></p>
-
-</div>
-
 <!-- Install Banner -->
 
 <div id="installBanner" class="install-banner">
@@ -41,6 +27,26 @@ Install this app
 
 </div>
 
+<!-- Login Page -->
+
+<div id="loginPage" style="display:none;">
+
+<h2>Labour Management System</h2>
+
+<div class="login-box">
+
+<input type="text" id="userid" placeholder="Enter User ID"><br><br>
+
+<input type="password" id="password" placeholder="Enter Password"><br><br>
+
+<button onclick="login()">Login</button>
+
+<p id="message"></p>
+
+</div>
+
+</div>
+
 <script src="script.js"></script>
 
 <script>
@@ -49,32 +55,59 @@ let deferredPrompt;
 
 const banner = document.getElementById("installBanner");
 const installBtn = document.getElementById("installBtn");
+const loginPage = document.getElementById("loginPage");
+
+
+/* Detect install availability */
 
 window.addEventListener("beforeinstallprompt",(e)=>{
 
 e.preventDefault();
 
-deferredPrompt=e;
+deferredPrompt = e;
 
-banner.style.display="flex";
+banner.style.display = "flex";
 
 });
 
-installBtn.addEventListener("click",async()=>{
 
-banner.style.display="none";
+/* Install button */
+
+installBtn.addEventListener("click", async ()=>{
 
 if(deferredPrompt){
 
 deferredPrompt.prompt();
 
-await deferredPrompt.userChoice;
+const result = await deferredPrompt.userChoice;
 
-deferredPrompt=null;
+if(result.outcome === "accepted"){
+
+banner.style.display = "none";
+
+loginPage.style.display = "block";
+
+}
+
+deferredPrompt = null;
 
 }
 
 });
+
+
+/* If already installed */
+
+if (window.matchMedia('(display-mode: standalone)').matches){
+
+banner.style.display = "none";
+
+loginPage.style.display = "block";
+
+}
+
+
+/* Register Service Worker */
 
 if ("serviceWorker" in navigator) {
 navigator.serviceWorker.register("service_worker.js");
