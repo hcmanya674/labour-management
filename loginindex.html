@@ -22,9 +22,8 @@
 <b>Labour Management</b><br>
 Install this app
 </div>
-
 <button id="installBtn">Install</button>
-
+<p id="installStatus"></p>
 </div>
 
 <!-- Login Page -->
@@ -56,7 +55,7 @@ let deferredPrompt;
 const banner = document.getElementById("installBanner");
 const installBtn = document.getElementById("installBtn");
 const loginPage = document.getElementById("loginPage");
-
+const status = document.getElementById("installStatus");
 
 /* Detect install availability */
 
@@ -75,7 +74,11 @@ banner.style.display = "flex";
 
 installBtn.addEventListener("click", async ()=>{
 
-if(deferredPrompt){
+if(!deferredPrompt) return;
+
+status.innerText = "Installing app...";
+
+installBtn.disabled = true;
 
 deferredPrompt.prompt();
 
@@ -83,17 +86,26 @@ const result = await deferredPrompt.userChoice;
 
 if(result.outcome === "accepted"){
 
-banner.style.display = "none";
+status.innerText = "App Installed Successfully";
 
-loginPage.style.display = "block";
+setTimeout(()=>{
+banner.style.display="none";
+loginPage.style.display="block";
+},2000);
+
+}
+
+else{
+
+status.innerText = "Installation cancelled";
+installBtn.disabled=false;
 
 }
 
 deferredPrompt = null;
 
-}
-
 });
+
 
 
 /* If already installed */
@@ -117,3 +129,4 @@ navigator.serviceWorker.register("service_worker.js");
 
 </body>
 </html>
+
