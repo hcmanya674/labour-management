@@ -54,6 +54,11 @@ Long press the app icon → Remove App
 <script src="script.js"></script>
 
 <script>
+  if (window.matchMedia('(display-mode: standalone)').matches) {
+
+document.getElementById("installBanner").style.display="none";
+
+}
 let deferredPrompt = null;
 
 const appBtn = document.getElementById("appActionBtn");
@@ -110,10 +115,41 @@ alert("To install:\nTap ⋮ → Add to Home Screen");
 }
 
 });
+  let deferredPrompt;
+
+const banner = document.getElementById("installBanner");
+const installBtn = document.getElementById("installBtn");
+
+window.addEventListener("beforeinstallprompt", (e)=>{
+
+e.preventDefault();
+
+deferredPrompt = e;
+
+banner.style.display="flex";
+
+});
+
+installBtn.addEventListener("click", async ()=>{
+
+banner.style.display="none";
+
+if(deferredPrompt){
+
+deferredPrompt.prompt();
+
+await deferredPrompt.userChoice;
+
+deferredPrompt=null;
+
+}
+
+});
 </script>
 
 </body>
 </html>
+
 
 
 
