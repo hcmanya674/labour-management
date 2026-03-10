@@ -1,38 +1,17 @@
 <!DOCTYPE html>
 <html>
-
 <head>
 
 <title>Labour Management Login</title>
 
 <link rel="stylesheet" href="style.css">
-
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1a73e8">
 
 </head>
 
 <body>
-<div id="installBanner" class="install-banner">
 
-<img src="labourproject.png" class="install-icon">
-
-<div class="install-text">
-<b>Labour Management</b><br>
-Install this app for quick access
-</div>
-
-<button id="installBtn">Install</button>
-
-</div>
-<div id="installGuide" style="margin-top:20px; font-size:14px; background:yellow;">
-Install this app for better experience.<br>
-Tap the browser menu (⋮) and select <b>Add to Home Screen</b>.
-</div>
-<div style="margin-top:15px;font-size:13px;">
-To uninstall the app:<br>
-Long press the app icon → Remove App
-</div>
 <h2>Labour Management System</h2>
 
 <div class="login-box">
@@ -43,94 +22,45 @@ Long press the app icon → Remove App
 
 <button onclick="login()">Login</button>
 
-<br><br>
-
-<button id="appActionBtn">Install App</button>
-<button id="openBtn" style="display:none;">Open App</button>
 <p id="message"></p>
+
+</div>
+
+<!-- Install Banner -->
+
+<div id="installBanner" class="install-banner">
+
+<img src="labourproject.png" class="install-icon">
+
+<div class="install-text">
+<b>Labour Management</b><br>
+Install this app
+</div>
+
+<button id="installBtn">Install</button>
 
 </div>
 
 <script src="script.js"></script>
 
 <script>
-  if (window.matchMedia('(display-mode: standalone)').matches) {
 
-document.getElementById("installBanner").style.display="none";
-
-}
-let deferredPrompt = null;
-
-const appBtn = document.getElementById("appActionBtn");
-
-
-// Register service worker
-if ("serviceWorker" in navigator) {
-navigator.serviceWorker.register("service-worker.js");
-}
-
-
-// Detect install availability
-window.addEventListener("beforeinstallprompt", (e) => {
-
-e.preventDefault();
-deferredPrompt = e;
-
-appBtn.innerText = "Install App";
-
-});
-
-
-// Detect if app already installed
-if (window.matchMedia('(display-mode: standalone)').matches) {
-
-appBtn.innerText = "Open App";
-
-}
-
-
-// Button click behaviour
-appBtn.addEventListener("click", async () => {
-
-if (window.matchMedia('(display-mode: standalone)').matches) {
-
-window.location.href = "loginindex.html";
-return;
-
-}
-
-if (deferredPrompt) {
-
-deferredPrompt.prompt();
-await deferredPrompt.userChoice;
-
-deferredPrompt = null;
-
-}
-
-else {
-
-alert("To install:\nTap ⋮ → Add to Home Screen");
-
-}
-
-});
-  let deferredPrompt;
+let deferredPrompt;
 
 const banner = document.getElementById("installBanner");
 const installBtn = document.getElementById("installBtn");
 
-window.addEventListener("beforeinstallprompt", (e)=>{
+window.addEventListener("beforeinstallprompt",(e)=>{
 
 e.preventDefault();
 
-deferredPrompt = e;
+deferredPrompt=e;
 
 banner.style.display="flex";
 
 });
 
-installBtn.addEventListener("click", async ()=>{
+installBtn.addEventListener("click",async()=>{
 
 banner.style.display="none";
 
@@ -145,11 +75,12 @@ deferredPrompt=null;
 }
 
 });
+
+if ("serviceWorker" in navigator) {
+navigator.serviceWorker.register("service_worker.js");
+}
+
 </script>
 
 </body>
 </html>
-
-
-
-
