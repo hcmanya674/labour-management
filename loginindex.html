@@ -50,12 +50,14 @@ Install this app
 
 <script>
 
+
 let deferredPrompt;
 
 const banner = document.getElementById("installBanner");
 const installBtn = document.getElementById("installBtn");
 const loginPage = document.getElementById("loginPage");
 const status = document.getElementById("installStatus");
+
 
 /* Detect install availability */
 
@@ -70,41 +72,37 @@ banner.style.display = "flex";
 });
 
 
-/* Install button */
+/* Install button click */
 
 installBtn.addEventListener("click", async ()=>{
 
 if(!deferredPrompt) return;
+
 status.innerHTML = "<div class='spinner'></div> Installing...";
 
 installBtn.disabled = true;
 
 deferredPrompt.prompt();
 
-const result = await deferredPrompt.userChoice;
+await deferredPrompt.userChoice;
 
-if(result.outcome === "accepted"){
+deferredPrompt = null;
+
+});
+
+
+/* Detect when app is installed */
+
+window.addEventListener("appinstalled", () => {
 
 status.innerText = "App Installed Successfully";
 
 setTimeout(()=>{
 banner.style.display="none";
 loginPage.style.display="block";
-},2000);
-
-}
-
-else{
-
-status.innerText = "Installation cancelled";
-installBtn.disabled=false;
-
-}
-
-deferredPrompt = null;
+},1500);
 
 });
-
 
 
 /* If already installed */
@@ -112,7 +110,6 @@ deferredPrompt = null;
 if (window.matchMedia('(display-mode: standalone)').matches){
 
 banner.style.display = "none";
-
 loginPage.style.display = "block";
 
 }
@@ -121,13 +118,19 @@ loginPage.style.display = "block";
 /* Register Service Worker */
 
 if ("serviceWorker" in navigator) {
-navigator.serviceWorker.register("service_worker.js");
+
+navigator.serviceWorker.register("service_worker.js")
+.then(()=>console.log("Service Worker Registered"));
+
 }
 
 </script>
 
+
+
 </body>
 </html>
+
 
 
 
