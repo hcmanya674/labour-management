@@ -75,8 +75,7 @@ banner.style.display = "flex";
 installBtn.addEventListener("click", async ()=>{
 
 if(!deferredPrompt) return;
-
-status.innerText = "Installing app...";
+status.innerHTML = "<div class='spinner'></div> Installing...";
 
 installBtn.disabled = true;
 
@@ -129,4 +128,5 @@ navigator.serviceWorker.register("service_worker.js");
 
 </body>
 </html>
+
 
