@@ -1,7 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <title>Dashboard</title>
+
+<link rel="manifest" href="manifest.json">
+
 </head>
 
 <body>
@@ -15,7 +19,7 @@
 let name = localStorage.getItem("username");
 
 if(!name){
-window.location.href="index.html";
+window.location.href="loginindex.html";
 }
 
 document.getElementById("welcome").innerText =
@@ -25,10 +29,11 @@ function logout(){
 
 localStorage.removeItem("username");
 
-window.location.href = "index.html";
+window.location.href = "loginindex.html";
 
 }
 
 </script>
+
 </body>
 </html>
