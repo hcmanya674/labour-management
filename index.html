@@ -1,48 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
-
-<title>Labour Management System</title>
+<title>Labour Management</title>
 
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1a73e8">
 
 </head>
 
-<body style="font-family: Arial; text-align:center; padding-top:50px;">
-
-<h2>Labour Management System</h2>
-
-<input type="text" id="username" placeholder="Enter your name">
-
-<br><br>
-
-<button onclick="login()">Enter</button>
+<body>
 
 <script>
-
-function login(){
-
-let name = document.getElementById("username").value;
-
-if(name==""){
-alert("Please enter your name");
-return;
-}
-
-localStorage.setItem("username", name);
-
-window.location.href="dashboard.html";
-
-}
-
-</script>
-
-
-<script>
-if ("serviceWorker" in navigator) {
-navigator.serviceWorker.register("service_worker.js");
-}
+window.location.href = "loginindex.html";
 </script>
 
 </body>
