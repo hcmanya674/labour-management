@@ -14,8 +14,9 @@
 
 <!-- Install Banner -->
 
-<div id="installBanner" class="install-banner">
 
+<button id="installBtn">Install</button>
+<p id="installStatus"></p>
 <img src="labourproject.png" class="install-icon">
 
 <div class="install-text">
@@ -56,9 +57,8 @@ let deferredPrompt;
 const banner = document.getElementById("installBanner");
 const installBtn = document.getElementById("installBtn");
 const loginPage = document.getElementById("loginPage");
+const status = document.getElementById("installStatus");
 
-
-/* Detect install availability */
 
 window.addEventListener("beforeinstallprompt",(e)=>{
 
@@ -66,16 +66,18 @@ e.preventDefault();
 
 deferredPrompt = e;
 
-banner.style.display = "flex";
+banner.style.display="flex";
 
 });
 
 
-/* Install button */
-
 installBtn.addEventListener("click", async ()=>{
 
-if(deferredPrompt){
+if(!deferredPrompt) return;
+
+status.innerText = "Installing app...";
+
+installBtn.disabled = true;
 
 deferredPrompt.prompt();
 
@@ -83,37 +85,28 @@ const result = await deferredPrompt.userChoice;
 
 if(result.outcome === "accepted"){
 
-banner.style.display = "none";
+status.innerText = "App Installed Successfully";
 
-loginPage.style.display = "block";
+setTimeout(()=>{
+banner.style.display="none";
+loginPage.style.display="block";
+},2000);
+
+}
+
+else{
+
+status.innerText = "Installation cancelled";
+installBtn.disabled=false;
 
 }
 
 deferredPrompt = null;
 
-}
-
 });
-
-
-/* If already installed */
-
-if (window.matchMedia('(display-mode: standalone)').matches){
-
-banner.style.display = "none";
-
-loginPage.style.display = "block";
-
-}
-
-
-/* Register Service Worker */
-
-if ("serviceWorker" in navigator) {
-navigator.serviceWorker.register("service_worker.js");
-}
 
 </script>
 
 </body>
 </html>
+
