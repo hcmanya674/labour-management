@@ -22,9 +22,12 @@
 <b>Labour Management</b><br>
 Install this app
 </div>
+
 <button id="installBtn">Install</button>
 <p id="installStatus"></p>
+
 </div>
+
 
 <!-- Login Page -->
 
@@ -46,6 +49,7 @@ Install this app
 
 </div>
 
+
 <script src="script.js"></script>
 
 <script>
@@ -66,16 +70,14 @@ e.preventDefault();
 
 deferredPrompt = e;
 
-/* show banner after 2 seconds */
-
 setTimeout(()=>{
-banner.style.display = "flex";
+banner.style.display="flex";
 },2000);
 
 });
 
 
-/* Install button click */
+/* Install button */
 
 installBtn.addEventListener("click", async ()=>{
 
@@ -83,72 +85,59 @@ if(!deferredPrompt) return;
 
 status.innerHTML = "<div class='spinner'></div> Installing...";
 
-installBtn.disabled = true;
+installBtn.disabled=true;
 
 deferredPrompt.prompt();
 
-await deferredPrompt.userChoice;
+const result = await deferredPrompt.userChoice;
 
-deferredPrompt = null;
+if(result.outcome==="accepted"){
+
+status.innerText="App Installing... Please wait";
+
+}else{
+
+status.innerText="Installation cancelled";
+installBtn.disabled=false;
+
+}
+
+deferredPrompt=null;
 
 });
 
 
-/* Detect when app is installed */
+/* Detect when app installed */
 
-window.addEventListener("appinstalled", () => {
+window.addEventListener("appinstalled",()=>{
 
-status.innerText = "App Installed Successfully";
+status.innerText="App Installed! Open it from your home screen";
 
-setTimeout(()=>{
+installBtn.style.display="none";
+
+});
+
+
+/* If opened from installed app */
+
+if(window.matchMedia('(display-mode: standalone)').matches){
+
 banner.style.display="none";
 loginPage.style.display="block";
-},1500);
-
-});
-
-
-/* If already installed */
-
-if (window.matchMedia('(display-mode: standalone)').matches){
-
-banner.style.display = "none";
-loginPage.style.display = "block";
 
 }
-
-
-/* Auto-hide banner if user ignores it */
-
-setTimeout(()=>{
-
-if(banner.style.display === "flex"){
-banner.style.display = "none";
-loginPage.style.display = "block";
-}
-
-},15000);  // 15 seconds
 
 
 /* Register Service Worker */
 
-if ("serviceWorker" in navigator) {
+if("serviceWorker" in navigator){
 
 navigator.serviceWorker.register("service_worker.js")
 .then(()=>console.log("Service Worker Registered"));
 
 }
 
-
-
 </script>
-
-
 
 </body>
 </html>
-
-
-
-
-
