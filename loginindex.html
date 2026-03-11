@@ -30,7 +30,13 @@ Install this app
 
 
 <!-- Login Page -->
+<div id="splashScreen">
 
+<img src="labourproject.png" width="120">
+
+<h2>Labour Management</h2>
+
+</div>
 <div id="loginPage" style="display:none;">
 
 <h2>Labour Management System</h2>
@@ -105,7 +111,15 @@ installBtn.disabled=false;
 deferredPrompt=null;
 
 });
+window.addEventListener("load",()=>{
 
+setTimeout(()=>{
+
+document.getElementById("splashScreen").style.display="none";
+
+},2000);
+
+});
 
 /* Detect when app installed */
 
@@ -141,3 +155,4 @@ navigator.serviceWorker.register("service_worker.js")
 
 </body>
 </html>
+
