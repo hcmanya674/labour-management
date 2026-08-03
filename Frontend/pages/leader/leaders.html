@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Leader Dashboard</title>
+
+<link rel="stylesheet" href="../../css/style.css">
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="sidebar">
+
+<h2>Leader Panel</h2>
+
+<button onclick="showDashboard()">Dashboard</button>
+<button onclick="showCreateRO()">Create RO</button>
+<button onclick="showRepairOrders()">Repair Orders</button>
+<button onclick="logout()">Logout</button>
+
+</div>
+
+<div class="main">
+
+<h2 id="leaderName">WELCOME</h2>
+<br>
+<h3 id="leaderRegion" >REGION</h3>
+<br>
+<div class="cards">
+
+    <div class="card">
+        <h1 id="todayCount">0</h1>
+        <p>Today's Repair Orders</p>
+    </div>
+
+</div>
+
+<button onclick="location=' ../../pages/leader/repairOrders.html'">
+
+Repair Orders
+
+</button>
+<div>
+<br></div>
+<button onclick="showCreateRO()">
+
++ Create Repair Order
+
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<script src="../../js/common/firebase.js"></script>
+<script src="../../js/common/leader-common.js"></script>
+<script src="../../js/leader/leaders.js"></script>
+
+</body>
+
+</html>
+   

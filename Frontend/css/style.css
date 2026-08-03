@@ -1,0 +1,801 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,Helvetica,sans-serif;
+}
+
+html,
+body{
+    width:100%;
+    height:100%;
+    margin:0;
+    padding:0;
+}
+
+body{
+    font-family: Arial, sans-serif;
+    background:#f4f7fb;
+}
+/* LOGIN */
+.login-page{
+    display: none;
+
+    position: fixed;
+
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
+    background: #f4f7fb;
+}
+
+
+.login-box{
+
+    width:90%;
+    max-width:380px;
+
+    background:white;
+
+    padding:35px;
+
+    border-radius:15px;
+
+    box-shadow:0 10px 30px rgba(0,0,0,0.15);
+
+    text-align:center;
+}
+
+.login-box h1{
+
+    margin-bottom:10px;
+
+}
+
+.login-box p{
+
+    margin-bottom:20px;
+
+    color:gray;
+
+}
+
+.login-box input{
+
+    width:100%;
+
+    padding:12px;
+
+    margin:10px 0;
+
+    border:1px solid #ccc;
+
+    border-radius:8px;
+
+    box-sizing:border-box;
+}
+.login-box button{
+
+    width:100%;
+
+    margin-top:12px;
+
+    padding:12px;
+
+    border:none;
+
+    border-radius:8px;
+
+    cursor:pointer;
+
+    font-size:16px;
+}
+
+.login-box button:hover{
+
+    background: #1558b0;
+
+}
+
+.login-box button:first-of-type{
+
+    background:#1976d2;
+
+    color:white;
+
+}
+
+.login-box button:last-of-type{
+
+    background:#43a047;
+
+    color:white;
+
+}
+
+#message{
+
+    margin-top:15px;
+
+    color:red;
+
+}
+
+
+.popup{
+
+    position:fixed;
+
+    top:50%;
+
+    left:50%;
+
+    transform:translate(-50%,-50%);
+
+    width:350px;
+
+    background:white;
+
+    padding:25px;
+
+    border-radius:12px;
+
+    box-shadow:0 0 20px rgba(0,0,0,.3);
+
+    z-index:1000;
+
+}
+
+.popup input,
+.popup select{
+
+    width:100%;
+
+    padding:10px;
+
+    margin:10px 0;
+
+}
+
+.popup button{
+
+    width:100%;
+
+    padding:12px;
+
+    margin-top:10px;
+
+}
+/* =========================================
+   BUTTONS
+========================================= */
+
+button{
+
+    background:#1a73e8;
+
+    color:white;
+
+    border:none;
+
+    padding:10px 18px;
+
+    border-radius:8px;
+
+    cursor:pointer;
+
+    transition:.3s;
+
+    font-size:15px;
+
+}
+
+button:hover{
+
+    background:#0d5ec9;
+
+}
+
+.edit-btn{
+
+    background:#ff9800;
+
+}
+
+.edit-btn:hover{
+
+    background:#e68900;
+
+}
+
+.delete-btn{
+
+    background:#e53935;
+
+}
+
+.delete-btn:hover{
+
+    background:#c62828;
+
+}
+
+.logout-btn{
+
+    background:#616161;
+
+}
+
+
+/* =========================================
+   DASHBOARD
+========================================= */
+
+.dashboard-container{
+
+    width:95%;
+
+    max-width:1200px;
+
+    margin:30px auto;
+
+}
+
+.top-bar{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:20px;
+
+}
+
+.card{
+
+    background:white;
+
+    border-radius:12px;
+
+    padding:20px;
+
+    box-shadow:0px 3px 10px rgba(0,0,0,.12);
+
+    margin-bottom:20px;
+
+}
+
+
+/* =========================================
+   ADD DATA
+========================================= */
+
+.add-section{
+
+    display:flex;
+
+    gap:10px;
+
+    margin-bottom:20px;
+
+}
+
+.add-section input{
+
+    flex:1;
+
+    padding:12px;
+
+    border:1px solid #ccc;
+
+    border-radius:8px;
+
+}
+
+/* Repair Orders Table */
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    background:#fff;
+    border-radius:10px;
+    overflow:hidden;
+    box-shadow:0 2px 8px rgba(0,0,0,0.1);
+}
+
+table thead{
+    background:#1f6fd6;
+    color:white;
+}
+
+table th{
+    padding:14px 12px;
+    text-align:center;
+    font-size:16px;
+    font-weight:600;
+}
+
+table td{
+    padding:12px;
+    text-align:center;
+    font-size:15px;
+    border-bottom:1px solid #e5e5e5;
+}
+
+table tr:hover{
+    background:#f5f9ff;
+}
+
+
+/* =========================================
+   ADMIN PANEL
+========================================= */
+
+.admin-container{
+
+    width:95%;
+
+    max-width:1200px;
+
+    margin:auto;
+
+    margin-top:30px;
+
+}
+
+.admin-container input{
+
+    width:320px;
+
+    padding:12px;
+
+    border:1px solid #ccc;
+
+    border-radius:8px;
+
+}
+
+.admin-container select{
+
+    width:320px;
+
+    padding:12px;
+
+    border-radius:8px;
+
+}
+
+.admin-container h1{
+
+    margin-bottom:20px;
+
+}
+
+
+/* =========================================
+   INSTALL BANNER
+========================================= */
+.install-banner{
+
+    position:fixed;
+
+    top:20px;
+
+    left:50%;
+
+    transform:translateX(-50%);
+
+    width:520px;
+
+    background:white;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:18px;
+
+    border-radius:15px;
+
+    box-shadow:0px 5px 20px rgba(0,0,0,.2);
+
+    z-index:9999;
+
+}
+
+.install-left{
+
+    display:flex;
+
+    align-items:center;
+
+}
+
+.install-icon{
+
+    width:70px;
+
+    height:70px;
+
+    margin-right:20px;
+
+}
+
+.install-text h1{
+
+    font-size:32px;
+
+}
+
+.install-text h2{
+
+    color:#444;
+
+}
+
+#installBtn{
+
+    background:#1976d2;
+
+    color:white;
+
+    padding:12px 25px;
+
+    border:none;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+}
+
+
+/* =========================================
+   SPLASH SCREEN
+========================================= */
+
+#splashScreen{
+
+    position:fixed;
+
+    top:0;
+
+    left:0;
+
+    width:100%;
+
+    height:100%;
+
+    background:white;
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+    align-items:center;
+
+    z-index:9999;
+
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media(max-width:768px){
+
+.login-box{
+
+    width:95%;
+
+}
+
+table{
+
+    font-size:14px;
+
+}
+
+button{
+
+    padding:8px 12px;
+
+}
+
+.admin-container input,
+
+.admin-container select{
+
+    width:100%;
+
+}
+
+.add-section{
+
+    flex-direction:column;
+
+}
+
+}
+.deactivate-btn{
+
+    background:#dc3545;
+    color:white;
+    border:none;
+    padding:8px 15px;
+    border-radius:6px;
+    cursor:pointer;
+
+}
+
+.deactivate-btn:hover{
+
+    background:#b02a37;
+
+}
+
+.activate-btn{
+
+    background:#198754;
+    color:white;
+    border:none;
+    padding:8px 15px;
+    border-radius:6px;
+    cursor:pointer;
+
+}
+
+.activate-btn:hover{
+
+    background:#157347;
+
+}
+.container{
+
+    display:flex;
+
+    min-height:100vh;
+
+}
+
+.sidebar{
+
+    width:250px;
+
+    background:#1e293b;
+
+    color:white;
+
+    padding:20px;
+
+}
+
+.sidebar h2{
+
+    margin-bottom:25px;
+
+    text-align:center;
+
+}
+
+.sidebar button{
+
+    width:100%;
+
+    margin-bottom:12px;
+
+    padding:12px;
+
+    border:none;
+
+    background:#334155;
+
+    color:white;
+
+    border-radius:8px;
+
+    cursor:pointer;
+
+}
+
+.sidebar button:hover{
+
+    background:#2563eb;
+
+}
+
+.main{
+
+    flex:1;
+
+    padding:30px;
+
+    background:#f4f7fb;
+
+}
+
+.form-box{
+
+    background:white;
+
+    padding:20px;
+
+    border-radius:10px;
+
+    box-shadow:0 2px 10px rgba(0,0,0,.1);
+
+    width:420px;
+
+}
+
+.form-box input{
+
+    width:100%;
+
+    padding:10px;
+
+    margin:10px 0;
+
+}
+
+.form-box button{
+
+    width:100%;
+
+}
+
+.ro-card{
+    width:550px;
+    margin:40px auto;
+    background:#fff;
+    padding:30px;
+    border-radius:15px;
+    box-shadow:0 5px 20px rgba(0,0,0,.15);
+}
+
+.ro-card h2{
+    text-align:center;
+    color:#1565c0;
+    margin-bottom:25px;
+}
+
+.row{
+    display:flex;
+    justify-content:space-between;
+    padding:14px 0;
+    border-bottom:1px solid #eee;
+}
+
+.row label{
+    font-weight:bold;
+    color:#444;
+}
+
+.row span{
+    color:#333;
+}
+
+.btn-group{
+    display:flex;
+    justify-content:center;
+    gap:20px;
+    margin-top:30px;
+}
+
+.edit-btn{
+    background:#0d60b4;
+    color:white;
+    border:none;
+    padding:12px 30px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:16px;
+}
+
+.edit-btn:hover{
+    background:#0f56c1;
+}
+
+.back-btn{
+    background:#140b5072;
+    color:rgb(246, 245, 248);
+    border:none;
+    padding:12px 30px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:16px;
+}
+
+.back-btn:hover{
+    background:#d40b66;
+}
+.save-btn{
+
+    background:#2e7d32;
+    color:white;
+    border:none;
+    padding:12px 28px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:16px;
+    margin-left:10px;
+
+}
+
+.save-btn:hover{
+
+    background:#1b5e20;
+
+}
+
+.spinner{
+
+    display:inline-block;
+
+    width:16px;
+
+    height:16px;
+
+    border:3px solid #ddd;
+
+    border-top:3px solid #2196F3;
+
+    border-radius:50%;
+
+    animation:spin 0.8s linear infinite;
+
+    vertical-align:middle;
+
+    margin-right:8px;
+
+}
+
+@keyframes spin{
+
+    0%{
+        transform:rotate(0deg);
+    }
+
+    100%{
+        transform:rotate(360deg);
+    }
+
+}
+
+.view-btn{
+    background:#084089;
+    color:rgb(245, 249, 250);
+    border:none;
+    padding:8px 18px;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:14px;
+}
+
+.view-btn:hover{
+    background:#286eca;
+}
+
+#labourSummaryTable tr:last-child{
+    background:#184a63;
+    font-weight:bold;
+}
+
+#labourSummaryTable td:last-child{
+    font-weight:bold;
+}

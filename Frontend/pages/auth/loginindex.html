@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Labour Management System</title>
+
+    <link rel="stylesheet" href="../../css/style.css">
+
+    <!-- PWA -->
+    <link rel="manifest" href="../../manifest.json">
+    <meta name="theme-color" content="#1a73e8">
+
+</head>
+
+<body>
+
+<!-- ================= Splash Screen ================= -->
+
+<div id="splashScreen">
+
+    <img
+    src="../../images/labourproject.png"
+    class="install-icon">
+
+    <h2>Labour Management System</h2>
+
+</div>
+<!-- ================= Install Banner ================= -->
+<div id="installBanner" class="install-banner">
+
+    <div class="install-left">
+
+        <img src="../../images/labourproject.png" class="install-icon">
+
+        <div class="install-text">
+
+            <h1>Labour Management</h1>
+
+            <h2>Install this App</h2>
+
+        </div>
+
+    </div>
+
+    <button id="installBtn">
+        Install
+    </button>
+
+</div>
+
+
+<!-- ================= Login Card ================= -->
+
+<div id="loginPage" class="login-page">
+    <div class="login-box">
+        <h1>Labour Management</h1>
+        <p>Please login to continue</p>
+        <input
+            type="email"
+            id="userid"
+            placeholder="Email">
+        <input
+            type="password"
+            id="password"
+            placeholder="Password">
+        <button type="button" id="loginBtn"  onclick="login()">
+            Log In
+        </button>
+        <p id="message"></p>
+    </div>
+
+</div>
+
+<!-- Firebase -->
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+
+<script src="../../js/common/firebase.js"></script>
+
+<script src="../../js/common/script.js"></script>
+
+<script src="../../js/common/api.js"></script>
+<script>
+
+let deferredPrompt;
+
+const splash = document.getElementById("splashScreen");
+const loginPage = document.getElementById("loginPage");
+const banner = document.getElementById("installBanner");
+const installBtn = document.getElementById("installBtn");
+
+// Hide login and banner initially
+//loginPage.style.display = "none";
+//banner.style.display = "none";
+
+// ================= Splash Screen =================
+
+/*window.onload = function () {
+
+    setTimeout(function () {
+
+        splash.style.display = "none";
+
+        // If app is already installed, show login
+        if (
+            window.matchMedia("(display-mode: standalone)").matches ||
+            window.navigator.standalone === true
+        ) {
+        
+loginPage.style.display = "flex";
+        }
+
+    }, 2000);
+
+};
+
+*/
+window.onload = function () {
+
+    setTimeout(function () {
+
+        splash.style.display = "none";
+
+        // Always show login page while developing
+        loginPage.style.display = "flex";
+
+    }, 2000);
+
+};
+// ================= Install Prompt =================
+
+window.addEventListener("beforeinstallprompt",(e)=>{
+
+    e.preventDefault();
+
+    deferredPrompt = e;
+
+    // Show install banner only if app is NOT installed
+    if(!window.matchMedia("(display-mode: standalone)").matches){
+
+        banner.style.display = "flex";
+
+    }
+
+});
+
+// ================= Install Button =================
+
+installBtn.addEventListener("click", async ()=>{
+
+    if(!deferredPrompt) return;
+
+    deferredPrompt.prompt();
+
+    const result = await deferredPrompt.userChoice;
+
+    if(result.outcome === "accepted"){
+
+        console.log("User accepted installation");
+
+    }
+
+    deferredPrompt = null;
+
+});
+
+// ================= After Installation =================
+
+window.addEventListener("appinstalled", ()=>{
+
+    console.log("App Installed");
+
+    banner.style.display = "none";
+
+    alert("Installation Complete!\nPlease open the Labour Management app from your Desktop/Home Screen.");
+
+});
+
+// ================= Service Worker =================
+
+if("serviceWorker" in navigator){
+
+    navigator.serviceWorker.register("../../service_worker.js");
+
+}   
+testBackend();
+</script>
+
+</body>
+
+</html>

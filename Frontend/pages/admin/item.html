@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Item Code Management</title>
+    <link rel="stylesheet" href="../../css/style.css">
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h2>Admin Panel</h2>
+
+        <button onclick="showDashboard()">Dashboard</button>
+        <button onclick="showRegions()">Region Management</button>
+        <button onclick="showItemCodes()">Item Codes</button>
+        <button onclick="showLeaders()">Leader Management</button>
+        <button onclick="showReports()">Reports</button>
+        <button onclick="logout()">Logout</button>
+
+    </div>
+
+    <!-- Main -->
+    <div class="main">
+
+        <h1>Item Code Management</h1>
+
+        <div class="form-box">
+
+            <label>Item Code</label>
+          <input type="text" id="itemCode" maxlength="10" style="text-transform:uppercase;">
+
+            <label>Description</label>
+            <input
+    type="text" id="itemDescription" maxlength="40" style="text-transform:uppercase;">
+
+            <button onclick="saveItem()">Save Item Code</button>
+
+        </div>
+
+        <br>
+
+        <input
+            type="text"
+            id="searchItem"
+            placeholder="Search Item Code or Description">
+
+        <div
+            id="itemMessage"
+            style="color:red;font-weight:bold;margin-top:5px;">
+        </div>
+
+        <br><br>
+
+        <table id="itemTable">
+
+            <tr>
+                <th>Item Code</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Edit</th>
+                <th>Deactivate</th>
+                <th>Activate</th>
+            </tr>
+
+        </table>
+
+    </div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<script src="../../js/common/firebase.js"></script>
+<script src="../../js/common/admin-common.js"></script>
+<script src="../../js/admin/item.js?v=2"></script>
+
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Repair Order Details</title>
+
+    <link rel="stylesheet" href="../../css/style.css">
+
+</head>
+
+<body>
+<div class="ro-card">
+
+    <h2> View Repair Order Details</h2>
+
+    <div class="row">
+        <label>RO Number</label>
+        <span id="roNumber"></span>
+    </div>
+     <div class="row">
+    <label>Date</label>
+    <span id="createdDate"></span>
+</div>
+
+</div>
+    <div class="row">
+    <label>Vehicle Number</label>
+
+    <input
+        type="text"
+        id="vehicleNumber"
+        disabled>
+    </div>
+
+    <div class="row">
+        <label>Labour Name</label>
+       <input type="text" id="labourName" disabled>
+    </div>
+
+    <div class="row">
+        <label>Work Done</label>
+       <select id="itemCode" disabled> </select>
+    </div>
+
+
+    <div class="btn-group">
+
+    <button class="edit-btn" onclick="enableEdit()">
+        Edit
+    </button>
+
+    <button class="save-btn"
+            id="updateBtn"
+            onclick="updateRO()"
+            style="display:none;">
+        Update
+    </button>
+
+    <button class="back-btn"
+            onclick="history.back()">
+        Back
+    </button>
+
+</div>
+
+</div>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+<script src="../../js/common/firebase.js"></script>
+<script src="../../js/leader/viewRO.js"></script>
+
+</body>
+
+</html>

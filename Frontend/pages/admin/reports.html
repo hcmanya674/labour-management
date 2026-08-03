@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Reports</title>
+
+<link rel="stylesheet" href="../../css/style.css">
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="sidebar">
+
+<h2>Admin Panel</h2>
+
+<button onclick="showDashboard()">Dashboard</button>
+
+<button onclick="showRegions()">Region Management</button>
+
+<button onclick="showItemCodes()">Item Codes</button>
+
+<button onclick="showLeaders()">Leader Management</button>
+
+<button onclick="showReports()"> Reports</button>
+
+<button onclick="logout()">Logout</button>
+
+</div>
+
+<div class="main">
+
+<h2>Repair Order Reports</h2>
+
+<div class="form-box">
+
+<label>From Date</label>
+
+<input type="date" id="fromDate">
+
+<label>To Date</label>
+
+<input type="date" id="toDate">
+<label>Region</label>
+
+<select id="reportRegion">
+    <option value="">All Regions</option>
+</select>
+
+<br><br>
+
+<br><br>
+
+<button id="generateBtn" onclick="generateReport()">
+Generate Report
+</button>
+<br><br>
+<button id="exportBtn" onclick="exportPDF()" disabled>
+
+Export PDF
+
+</button>
+
+</div>
+
+<br>
+
+<table id="reportTable">
+
+<thead>
+
+<tr>
+
+<th>RO Number</th>
+
+<th>Date</th>
+
+<th>Region</th>
+
+<th>Labour</th>
+
+<th>Vehicle</th>
+
+<th>Work Done</th>
+
+</tr>
+
+</thead>
+<tbody id="reportBody">
+
+</tbody>
+
+</table>
+<br><br>
+
+<h3>Work Type Summary</h3>
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Work Type</th>
+
+<th>Count</th>
+
+</tr>
+
+</thead>
+
+<tbody id="workSummary">
+
+</tbody>
+
+</table>
+<br><br>
+
+<h3>Labour Wise Work Summary</h3>
+
+<table id="labourSummaryTable">
+
+    <thead id="labourSummaryHead">
+
+    </thead>
+
+    <tbody id="labourSummaryBody">
+
+    </tbody>
+
+</table>
+</div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<script src="../../js/common/firebase.js"></script>
+
+<script src="../../js/common/admin-common.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+<script src="../../js/admin/reports.js"></script>
+
+
+</body>
+
+</html>

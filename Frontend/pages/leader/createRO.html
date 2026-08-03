@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Create Repair Order</title>
+
+<link rel="stylesheet" href="../../css/style.css">
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- Sidebar -->
+
+    <div class="sidebar">
+
+        <h2>Leader Panel</h2>
+
+        <button onclick="showDashboard()">Dashboard</button>
+
+        <button onclick="showCreateRO()">Create RO</button>
+
+        <button onclick="showRepairOrders()">Repair Orders</button>
+
+        <button onclick="logout()">Logout</button>
+
+    </div>
+
+    <!-- Main -->
+
+    <div class="main">
+
+        <h2>Create Repair Order</h2>
+
+        <div class="form-box">
+
+            <label>Leader Name</label>
+
+            <input
+                type="text"
+                id="leaderName"
+                readonly>
+
+            <label>Region</label>
+
+            <input
+                type="text"
+                id="region"
+                readonly>
+
+            <label>Vehicle Number</label>
+
+            <input
+                type="text"
+                id="vehicleNumber"
+                placeholder="Enter Vehicle Number">
+
+            <label>Labour Name</label>
+
+            <input type="text"
+                 id="labourName"
+                 placeholder="Enter Labour Name"
+                 maxlength="20">
+
+
+            <label>Item Code</label>
+
+            <select id="itemCode">
+             <option value="">-- Select Item Code --</option>
+            </select>
+          
+
+            <br><br>
+
+            <button id="saveBtn" onclick="saveRO()">
+            Save Repair Order
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<script src="../../js/common/firebase.js"></script>
+
+<script src="../../js/common/leader-common.js"></script>
+
+<script src="../../js/leader/createRO.js"></script>
+
+</body>
+
+</html>

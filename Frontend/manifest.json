@@ -1,0 +1,36 @@
+{
+  "name": "Labour Management System",
+  "short_name": "LabourApp",
+
+  "description": "A Progressive Web Application for managing labour resources, data entries, and administrators.",
+
+  "start_url": "../pages/auth/loginindex.html",
+
+  "scope": "./",
+
+  "display": "standalone",
+
+  "orientation": "portrait",
+
+  "background_color": "#ffffff",
+
+  "theme_color": "#1a73e8",
+
+  "icons": [
+
+    {
+      "src": "images/labourproject.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+
+    {
+      "src": "images/labourproject2.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+
+  ]
+}
