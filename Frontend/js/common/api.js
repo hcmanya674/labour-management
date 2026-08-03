@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:3000";
+const API_URL = "https://labour-management-backend-y6g2.onrender.com";
 
 async function testBackend() {
     try {
