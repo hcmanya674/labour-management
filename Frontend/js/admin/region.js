@@ -1,4 +1,4 @@
-// Load Admin Layout
+///Load Admin Layout
 loadAdminLayout("Region Management", `
 <div class="form-box">
     <label>Region ID</label>
