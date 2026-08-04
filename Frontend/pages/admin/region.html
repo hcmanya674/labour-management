@@ -1,42 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Region Management</title>
     <link rel="stylesheet" href="../../css/style.css">
 </head>
-
 <body>
-
 <div class="container">
 
     <!-- Sidebar -->
     <div class="sidebar">
         <h2>Admin Panel</h2>
-
         <button onclick="showDashboard()">Dashboard</button>
         <button onclick="showRegions()">Region Management</button>
         <button onclick="showItemCodes()">Item Codes</button>
         <button onclick="showLeaders()">Leader Management</button>
         <button onclick="showReports()">Reports</button>
         <button onclick="logout()">Logout</button>
-
     </div>
 
     <!-- Main -->
-   <div class="form-box">
+    <div class="main">
 
-    <label>Region ID</label>
-  <input type="text" id="regionId" maxlength="5" placeholder="Enter Region ID" oninput="this.value=this.value.toUpperCase()" style="text-transform:uppercase">
+        <h1>Region Management</h1>
 
-    <label>Region Name</label>
-  <input type="text" id="regionName" maxlength="30" placeholder="Enter Region Name" oninput="this.value=this.value.toUpperCase()" style="text-transform:uppercase">
+        <div class="form-box">
+            <label>Region ID</label>
+            <input type="text" id="regionId" maxlength="5" 
+                placeholder="Enter Region ID" 
+                oninput="this.value=this.value.toUpperCase()" 
+                style="text-transform:uppercase">
 
-    <button onclick="saveRegion()">Save Region</button>
+            <label>Region Name</label>
+            <input type="text" id="regionName" maxlength="30" 
+                placeholder="Enter Region Name" 
+                oninput="this.value=this.value.toUpperCase()" 
+                style="text-transform:uppercase">
 
-</div>
+            <button onclick="saveRegion()">Save Region</button>
+        </div>
 
         <br>
 
@@ -54,7 +57,6 @@
         <br><br>
 
         <table id="regionTable">
-
             <tr>
                 <th>Region ID</th>
                 <th>Region Name</th>
@@ -63,18 +65,15 @@
                 <th>Deactivate</th>
                 <th>Activate</th>
             </tr>
-
         </table>
 
     </div>
-
 </div>
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
 <script src="../../js/common/firebase.js"></script>
 <script src="../../js/common/admin-common.js"></script>
 <script src="../../js/admin/region.js"></script>
