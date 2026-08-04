@@ -2,14 +2,17 @@
 loadAdminLayout("Region Management", `
 <div class="form-box">
     <label>Region ID</label>
-    <input type="text" id="regionId">
+    <input type="text" id="regionId" 
+        oninput="this.value=this.value.toUpperCase()" 
+        style="text-transform:uppercase">
 
     <label>Region Name</label>
-    <input type="text" id="regionName">
+    <input type="text" id="regionName" 
+        oninput="this.value=this.value.toUpperCase()" 
+        style="text-transform:uppercase">
 
     <button onclick="saveRegion()">Save Region</button>
 </div>
-
 <br>
 
 <input
