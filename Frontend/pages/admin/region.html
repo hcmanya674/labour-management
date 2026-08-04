@@ -26,21 +26,17 @@
     </div>
 
     <!-- Main -->
-    <div class="main">
+    <div class="form-box">
 
-        <h1>Region Management</h1>
+    <label>Region ID</label>
+    <input type="text" id="regionId" maxlength="5" placeholder="Enter Region ID" style="text-transform:uppercase">
 
-        <div class="form-box">
+    <label>Region Name</label>
+    <input type="text" id="regionName" maxlength="30" placeholder="Enter Region Name" style="text-transform:uppercase">
 
-            <label>Region ID</label>
-            <input type="text" id="regionId" maxlength="5" placeholder="Enter Region ID">
+    <button onclick="saveRegion()">Save Region</button>
 
-            <label>Region Name</label>
-            <input type="text" id="regionName" maxlength="30" placeholder="Enter Region Name">
-
-            <button onclick="saveRegion()">Save Region</button>
-
-        </div>
+</div>
 
         <br>
 
