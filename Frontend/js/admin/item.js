@@ -10,8 +10,6 @@ loadAdminLayout("Item Code Management", `
     
     <label>Cost / Amount</label>
    <input type="number" id="itemCost" placeholder="Enter Cost">  
-
-
     <button onclick="saveItem()">Save Item Code</button>
 
 </div>
