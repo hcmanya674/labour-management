@@ -1,6 +1,6 @@
 
 
-const BACKEND_URL = "https://labour-management-backend-y6g2.onrender.com/createLeader";
+const BACKEND_URL = "https://labour-management-backend-y6g2.onrender.com";
 let editLeaderId = null;
 
 loadAdminLayout("Leader Management",`
