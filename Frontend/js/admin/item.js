@@ -7,6 +7,10 @@ loadAdminLayout("Item Code Management", `
 
     <label>Description</label>
     <input type="text" id="description" placeholder="Enter Description">
+    
+    <label>Cost / Amount</label>
+   <input type="number" id="itemCost" placeholder="Enter Cost">  
+
 
     <button onclick="saveItem()">Save Item Code</button>
 
@@ -33,6 +37,7 @@ loadAdminLayout("Item Code Management", `
     <th>Description</th>
     <th>Status</th>
     <th>Edit</th>
+      <th>Edit Cost</th>
     <th>Deactivate</th>
     <th>Activate</th>
 </tr>
@@ -56,8 +61,13 @@ async function saveItem() {
         .value
         .trim()
         .toUpperCase();
+    
+    const cost = document.getElementById("itemCost")//cost
+    .value
+    .trim();
+    
 
-    if(code === "" || description === ""){
+  if(code === "" || description === "" || cost === ""){//cost
 
         alert("Please fill all fields.");
 
@@ -118,6 +128,8 @@ async function saveItem() {
         itemCode: code,
 
         description: description,
+        
+         cost: Number(cost),//cost
 
         active: true,
 
@@ -131,6 +143,7 @@ async function saveItem() {
 
         document.getElementById("itemCode").value="";
         document.getElementById("itemDescription").value="";
+        document.getElementById("itemCost").value="";//cost
 
         loadItems();
 
@@ -148,8 +161,10 @@ function loadItems() {
         <tr>
             <th>Item Code</th>
             <th>Description</th>
+            <th>Cost</th>
             <th>Status</th>
             <th>Edit</th>
+            <th>Edit Cost</th>
             <th>Action</th>
         </tr>
         `;
@@ -162,10 +177,11 @@ function loadItems() {
 
             row.insertCell(0).textContent = data.itemCode;
             row.insertCell(1).textContent = data.description;
-            row.insertCell(2).textContent =
+            row.insertCell(2).textContent = data.cost;//cost
+            row.insertCell(3).textContent =
                 data.active ? "Active" : "Inactive";
 
-            const editCell = row.insertCell(3);
+            const editCell = row.insertCell(4);
 
             const editBtn = document.createElement("button");
             editBtn.textContent = "Edit";
@@ -176,11 +192,22 @@ function loadItems() {
             };
 
             editCell.appendChild(editBtn);
+//EDIT COST BUTTON 
+            const costCell = row.insertCell(5);
+
+            const costBtn = document.createElement("button");
+           costBtn.textContent = "Edit Cost";
+
+           costBtn.onclick = function () {
+            editCost(doc.id, data.cost);
+        };
+
+       costCell.appendChild(costBtn);
 
             // Action Button
-const actionCell = row.insertCell(4);
+        const actionCell = row.insertCell(6);
 
-const actionBtn = document.createElement("button");
+        const actionBtn = document.createElement("button");
 
 if (data.active) {
 
@@ -300,6 +327,43 @@ db.collection("itemcodes")
 
 });
 
+
+}
+//edit cost
+async function editCost(id, currentCost) {
+
+    const newCost = prompt("Edit Cost", currentCost);
+
+    if (newCost == null)
+        return;
+
+    const cost = Number(newCost);
+
+    if (isNaN(cost) || cost < 0) {
+
+        alert("Please enter a valid cost.");
+
+        return;
+
+    }
+
+    db.collection("itemcodes")
+        .doc(id)
+        .update({
+
+            cost: cost
+
+        })
+        .then(() => {
+
+            alert("Cost Updated Successfully.");
+
+        })
+        .catch((error) => {
+
+            alert(error.message);
+
+        });
 
 }
 
