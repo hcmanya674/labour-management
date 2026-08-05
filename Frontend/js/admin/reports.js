@@ -84,7 +84,7 @@ exportBtn.disabled = true;
 
         let html="";
         let workSummary = {};
-        let labourSummary = {};
+        let advisorSummary = {};
         let allWorkTypes = new Set();
         for(const doc of snapshot.docs){
 
@@ -144,24 +144,24 @@ if(itemDoc.exists){
 
          }
          //--------------------------------------
-        // Labour Wise Summary
+        // Advisor Wise Summary
         //--------------------------------------
 
             allWorkTypes.add(workDone);
 
-            if(!labourSummary[ro.labourName]){
+            if(!advisorSummary[ro.advisorName]){
 
-                labourSummary[ro.labourName]={};
-
-            }
-
-            if(!labourSummary[ro.labourName][workDone]){
-
-                labourSummary[ro.labourName][workDone]=0;
+                advisorSummary[ro.advisorName]={};
 
             }
 
-            labourSummary[ro.labourName][workDone]++;
+            if(!advisorSummary[ro.advisorName][workDone]){
+
+                advisorSummary[ro.advisorName][workDone]=0;
+
+            }
+
+            advisorSummary[ro.advisorName][workDone]++;
             //--------------------------------------------------
             // Format Date
             //--------------------------------------------------
@@ -179,7 +179,7 @@ if(itemDoc.exists){
 
                 <td>${regionName}</td>
                  
-                <td>${ro.labourName}</td>
+                <td>${ro.advisorName}</td>
 
                 <td>${ro.vehicleNumber}</td>
 
@@ -210,12 +210,12 @@ for (const work in workSummary) {
 document.getElementById("workSummary").innerHTML = summaryHTML;
 
 //------------------------------------------------
-// Labour Wise Summary Table
+// Advisor Wise Summary Table
 //------------------------------------------------
 
 let workTypes = Array.from(allWorkTypes);
 
-let head ="<tr><th>Labour Name</th>";
+let head ="<tr><th>Advisor Name</th>";
 
 workTypes.forEach(work=>{
 
@@ -225,7 +225,7 @@ workTypes.forEach(work=>{
 
 head += "<th>Total</th></tr>";
 
-document.getElementById("labourSummaryHead").innerHTML = head;
+document.getElementById("advisorSummaryHead").innerHTML = head;
 
 
 let body="";
@@ -234,17 +234,17 @@ let columnTotals={};
 
 let grandTotal=0;
 
-for(const labour in labourSummary){
+for(const advisor in advisorSummary){
 
     body += `<tr>`;
 
-    body += `<td>${labour}</td>`;
+    body += `<td>${advisor}</td>`;
 
     let rowTotal=0;
 
     workTypes.forEach(work=>{
 
-        let count = labourSummary[labour][work] || 0;
+        let count = advisorSummary[advisor][work] || 0;
 
         body += `<td>${count}</td>`;
 
@@ -276,7 +276,7 @@ body += `<td>${grandTotal}</td>`;
 
 body += `</tr>`;
 
-document.getElementById("labourSummaryBody").innerHTML=body;
+document.getElementById("advisorSummaryBody").innerHTML=body;
 //--------------------------------------------------
 // Display Report
 //--------------------------------------------------

@@ -1,6 +1,6 @@
 
 
-const BACKEND_URL = "http://localhost:3000";
+const BACKEND_URL = "https://labour-management-backend-y6g2.onrender.com/createLeader";
 let editLeaderId = null;
 
 loadAdminLayout("Leader Management",`
@@ -11,17 +11,17 @@ loadAdminLayout("Leader Management",`
 <br>
 
 <label>Leader Name</label>
-<input type="text" id="leaderName">
+<input type="text" id="leaderName" placeholder="Enter Leader Name" style="text-transform:uppercase">
 
 <label>Email</label>
-<input type="email" id="leaderEmail">
+<input type="email" id="leaderEmail" placeholder="Enter Email">
 
 <label>Initial Password</label>
 <input type="password" id="leaderPassword"
  placeholder="Enter Initial Password">
 
 <label>Phone Number</label>
-<input type="text" id="leaderPhone">
+<input type="text" id="leaderPhone" placeholder="Enter Phone Number">
 
 <label>Region</label>
 <select id="leaderRegion">
@@ -303,13 +303,15 @@ async function loadLeaders() {
                </td>
                 <td>
 
-                    <button onclick="toggleLeader('${doc.id}', ${leader.active})">
+    <button
+        class="${leader.active ? 'deactivate-btn' : 'activate-btn'}"
+        onclick="toggleLeader('${doc.id}', ${leader.active})">
 
-                        ${leader.active ? "Deactivate" : "Activate"}
+        ${leader.active ? "Deactivate" : "Activate"}
 
-                    </button>
+    </button>
 
-                </td>
+</td>
 
             </tr>
 

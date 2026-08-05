@@ -532,38 +532,36 @@ button{
 }
 
 }
-.deactivate-btn{
-
-    background:#dc3545;
-    color:white;
-    border:none;
-    padding:8px 15px;
-    border-radius:6px;
-    cursor:pointer;
-
-}
-
-.deactivate-btn:hover{
-
-    background:#b02a37;
-
-}
-
+/* Activate Button */
 .activate-btn{
-
-    background:#198754;
-    color:white;
-    border:none;
-    padding:8px 15px;
-    border-radius:6px;
-    cursor:pointer;
-
+    background-color:#dc3545;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
 }
 
 .activate-btn:hover{
+    background-color:#c82333 ;
+}
 
-    background:#157347;
+/* Deactivate Button */
+.deactivate-btn{
+    background-color:  #28a745;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+}
 
+.deactivate-btn:hover{
+    background-color:#218838 ;
 }
 .container{
 
@@ -791,11 +789,11 @@ button{
     background:#286eca;
 }
 
-#labourSummaryTable tr:last-child{
+#advisorSummaryTable tr:last-child{
     background:#184a63;
     font-weight:bold;
 }
 
-#labourSummaryTable td:last-child{
+#advisorSummaryTable td:last-child{
     font-weight:bold;
 }

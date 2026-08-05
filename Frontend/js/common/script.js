@@ -133,7 +133,16 @@ function login() {
     btn.innerHTML = "Log In";
 
 });
+
 }
+document.getElementById("loginForm")
+.addEventListener("submit", function(event){
+
+    event.preventDefault();
+
+    login();
+
+});
 // -------------------------------
 // Auto Login
 // -------------------------------
@@ -183,3 +192,60 @@ function logout(){
   localStorage.clear();
   window.location.href = "../../pages/auth/loginindex.html";
 }
+// ------------------------------------
+// Forgot Password
+// ------------------------------------
+
+document.getElementById("forgotPasswordLink")
+.addEventListener("click", function(event){
+
+    event.preventDefault();
+
+    const email =
+    document.getElementById("userid")
+    .value
+    .trim();
+
+    if(email === ""){
+
+        alert("Please enter your registered email address first.");
+
+        return;
+
+    }
+
+    auth.sendPasswordResetEmail(email)
+
+    .then(()=>{
+
+        alert(
+            "Password reset link has been sent to your email.\n\nPlease check your inbox."
+        );
+
+    })
+
+    .catch((error)=>{
+
+        console.log(error);
+
+        if(error.code==="auth/user-not-found"){
+
+            alert("No account exists with this email.");
+
+        }
+
+        else if(error.code==="auth/invalid-email"){
+
+            alert("Please enter a valid email address.");
+
+        }
+
+        else{
+
+            alert(error.message);
+
+        }
+
+    });
+
+});

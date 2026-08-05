@@ -81,7 +81,7 @@ async function loadRepairOrders() {
 
                 <td>${ro.vehicleNumber}</td>
 
-                <td>${ro.labourName}</td>
+                <td>${ro.advisorName}</td>
 
                 <td>${ro.itemCode}</td>
 

@@ -53,11 +53,11 @@ db.collection("repairorders")
         repairData.vehicleNumber;
 
     //--------------------------------------------------
-    // Labour Name
+    // advisor Name
     //--------------------------------------------------
 
-    document.getElementById("labourName").value =
-        repairData.labourName;
+    document.getElementById("advisorName").value =
+        repairData.advisorName;
 
     //--------------------------------------------------
     // Item Code
@@ -124,7 +124,7 @@ function enableEdit(){
 
     document.getElementById("vehicleNumber").disabled = false;
 
-    document.getElementById("labourName").disabled = false;
+    document.getElementById("advisorName").disabled = false;
 
     document.getElementById("itemCode").disabled = false;
 
@@ -146,8 +146,8 @@ async function updateRO(){
     .trim()
     .toUpperCase();
 
-    const labourName =
-    document.getElementById("labourName")
+    const advisorName =
+    document.getElementById("advisorName")
     .value
     .trim()
     .toUpperCase();
@@ -160,7 +160,7 @@ async function updateRO(){
     //--------------------------------------------------
 
     if(vehicleNumber === "" ||
-       labourName === "" ||
+       advisorName === "" ||
        itemCode === ""){
 
         alert("Please fill all fields.");
@@ -170,30 +170,30 @@ async function updateRO(){
     }
 
     //--------------------------------------------------
-    // Labour Name Validation
+    // Advisor Name Validation
     //--------------------------------------------------
 
     const namePattern = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
 
-    if(!namePattern.test(labourName)){
+    if(!namePattern.test(advisorName)){
 
-        alert("Labour name can contain only letters and spaces.");
-
-        return;
-
-    }
-
-    if(labourName.length < 3){
-
-        alert("Labour name must contain at least 3 characters.");
+        alert("Advisor name can contain only letters and spaces.");
 
         return;
 
     }
 
-    if(labourName.length > 20){
+    if(advisorName.length < 3){
 
-        alert("Labour name cannot exceed 20 characters.");
+        alert("Advisor name must contain at least 3 characters.");
+
+        return;
+
+    }
+
+    if(advisorName.length > 20){
+
+        alert("Advisor name cannot exceed 20 characters.");
 
         return;
 
@@ -211,7 +211,7 @@ async function updateRO(){
 
             vehicleNumber: vehicleNumber,
 
-            labourName: labourName,
+            advisorName: advisorName,
 
             itemCode: itemCode
 

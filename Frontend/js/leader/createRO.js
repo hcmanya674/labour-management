@@ -103,7 +103,7 @@ function loadItems() {
 async function saveRO() {
 
     const saveBtn = document.getElementById("saveBtn");
-
+    const roNumber =document.getElementById("roNumber").value.trim().toUpperCase();
     saveBtn.disabled = true;
     saveBtn.innerHTML = "Saving...";
 
@@ -114,8 +114,8 @@ async function saveRO() {
     .value.trim()
     .toUpperCase();
 
-    const labourName =
-        document.getElementById("labourName")
+    const advisorName =
+        document.getElementById("advisorName")
         .value.trim()
         .toUpperCase();
 
@@ -123,25 +123,14 @@ async function saveRO() {
         document.getElementById("itemCode").value;
 
         // -----------------------------------
-        // Labour Name Validation
+        // Advisor Name Validation
         // -----------------------------------
 
         const namePattern = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
 
-        if (!namePattern.test(labourName)) {
+        if (!namePattern.test(advisorName)) {
 
-            alert("Labour name can contain only letters and spaces.");
-
-            saveBtn.disabled = false;
-            saveBtn.innerHTML = "Save Repair Order";
-
-            return;
-
-        }
-
-        if (labourName.length < 3) {
-
-            alert("Labour name must contain at least 3 characters.");
+            alert("Advisor name can contain only letters and spaces.");
 
             saveBtn.disabled = false;
             saveBtn.innerHTML = "Save Repair Order";
@@ -150,9 +139,20 @@ async function saveRO() {
 
         }
 
-        if (labourName.length > 30) {
+        if (advisorName.length < 3) {
 
-            alert("Labour name cannot exceed 30 characters.");
+            alert("Advisor name must contain at least 3 characters.");
+
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = "Save Repair Order";
+
+            return;
+
+        }
+
+        if (advisorName.length > 30) {
+
+            alert("Advisor name cannot exceed 30 characters.");
 
             saveBtn.disabled = false;
             saveBtn.innerHTML = "Save Repair Order";
@@ -166,9 +166,10 @@ async function saveRO() {
         return;
        }
         if (
-            vehicleNumber == "" ||
-            labourName == "" ||
-            itemCode == ""
+        roNumber == "" ||
+        vehicleNumber == "" ||
+        advisorName == "" ||
+        itemCode == ""
         ) {
 
             alert("Please fill all required fields.");
@@ -179,114 +180,74 @@ async function saveRO() {
             return;
         }
 
-        //-------------------------------------------------
-        // Today's Date
-        //-------------------------------------------------
-
         const now = new Date();
 
         const yyyy = now.getFullYear();
 
-        const mm = String(now.getMonth() + 1).padStart(2, "0");
+        const months = [
+            "Jan","Feb","Mar","Apr",
+            "May","Jun","Jul","Aug",
+            "Sep","Oct","Nov","Dec"
+        ];
 
-        const dd = String(now.getDate()).padStart(2, "0");
+        const dd = String(now.getDate()).padStart(2,"0");
 
-        const counterId = `${yyyy}-${mm}-${dd}`;
+        const displayDate =
+        dd + "-" +
+        months[now.getMonth()] +
+        "-" +
+        yyyy;
 
-        //-------------------------------------------------
-        // Transaction
-        //-------------------------------------------------
+        const documentId =
+        displayDate + " | " + roNumber;
 
-        let roNumber = "";
+        // Check duplicate RO Number
+        const existing = await db.collection("repairorders")
+        .where("roNumber","==",roNumber)
+        .get();
 
-        await db.runTransaction(async (transaction) => {
+        if(!existing.empty){
 
-            const counterRef =
-                db.collection("counters")
-                .doc(counterId);
+            alert("RO Number already exists.");
 
-            const counterDoc =
-                await transaction.get(counterRef);
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = "Save Repair Order";
 
-            let lastNumber = 0;
+            return;
 
-            if (counterDoc.exists) {
+        }
 
-                lastNumber =
-                    counterDoc.data().lastNumber;
+        await db.collection("repairorders")
+        .doc(documentId)
+        .set({
 
-            }
+            roNumber: roNumber,
 
-            lastNumber++;
+            documentId: documentId,
 
-            transaction.set(counterRef, {
+            leaderUid: uid,
 
-                lastNumber: lastNumber
+            Name: leaderData.name,
 
-            });
+            region: leaderData.region,
 
-            roNumber =
-                "RO" +
-                String(lastNumber).padStart(4, "0");
+            advisorName: advisorName,
 
-            //-------------------------------------------------
+            vehicleNumber: vehicleNumber,
 
-            const months = [
+            itemCode: itemCode,
 
-                "Jan","Feb","Mar","Apr",
-                "May","Jun","Jul","Aug",
-                "Sep","Oct","Nov","Dec"
-
-            ];
-
-            const displayDate =
-                dd + "-" +
-                months[now.getMonth()] +
-                "-" +
-                yyyy;
-
-            const documentId =
-                displayDate + " | " + roNumber;
-
-            //-------------------------------------------------
-
-            const repairRef =
-                db.collection("repairorders")
-                .doc(documentId);
-
-            transaction.set(repairRef, {
-
-                roNumber: roNumber,
-
-                documentId: documentId,
-
-                leaderUid: uid,
-
-                leaderName: leaderData.name,
-
-                region: leaderData.region,
-
-                labourName: labourName,
-
-                vehicleNumber: vehicleNumber,
-
-                itemCode: itemCode,
- 
-
-                createdAt:
-                    firebase.firestore.FieldValue.serverTimestamp()
-
-            });
+            createdAt:
+            firebase.firestore.FieldValue.serverTimestamp()
 
         });
-
         //-------------------------------------------------
 
         alert("Repair Order Saved Successfully");
-
+        document.getElementById("roNumber").value = "";
         document.getElementById("vehicleNumber").value = "";
 
-        document.getElementById("labourName").value = "";
+        document.getElementById("advisorName").value = "";
 
         document.getElementById("itemCode").value = "";
 
