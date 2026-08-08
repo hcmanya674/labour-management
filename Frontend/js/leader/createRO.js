@@ -64,121 +64,190 @@ function loadRegion() {
 // ==========================================
 // Load Item Codes
 // ==========================================
+
 function loadItems() {
 
-    const select =
-    document.getElementById("itemCode");
+    const container =
+        document.getElementById("itemCodeContainer");
 
-    select.innerHTML =
-    `<option value="">-- Select Item Code --</option>`;
+    container.innerHTML = "Loading items...";
 
     db.collection("itemcodes")
-    .where("active","==",true)
-    .get()
-    .then((snapshot)=>{
+        .where("active", "==", true)
+        .get()
+        .then((snapshot) => {
 
-        snapshot.forEach((doc)=>{
+            container.innerHTML = "";
 
-            const data = doc.data();
+            snapshot.forEach((doc) => {
 
-            const option =
-            document.createElement("option");
+                const data = doc.data();
 
-            option.value = data.itemCode;
+                const itemDiv =
+                    document.createElement("div");
 
-            option.text =
-            data.itemCode + " - " + data.description;
+                itemDiv.className = "item-option";
 
-            select.appendChild(option);
+                itemDiv.innerHTML = `
+
+                    <label>
+
+                        <input
+                            type="checkbox"
+                            name="itemCode"
+                            value="${data.itemCode}">
+
+                        <span>
+                            ${data.itemCode} - ${data.description}
+                        </span>
+
+                    </label>
+
+                `;
+
+                container.appendChild(itemDiv);
+
+            });
+
+        })
+        .catch((error) => {
+
+            console.error("Error loading items:", error);
+
+            container.innerHTML =
+                "Unable to load items.";
 
         });
-
-    });
 
 }
 
 // ==========================================
-// Save Repair Order
+// SAVE REPAIR ORDER
 // ==========================================
+
 async function saveRO() {
 
     const saveBtn = document.getElementById("saveBtn");
-    const roNumber =document.getElementById("roNumber").value.trim().toUpperCase();
+
+    // ------------------------------------------
+    // Get values
+    // ------------------------------------------
+
+    const roNumber =
+        document.getElementById("roNumber")
+        .value
+        .trim()
+        .toUpperCase();
+
+    const vehicleNumber =
+        document.getElementById("vehicleNumber")
+        .value
+        .trim()
+        .toUpperCase();
+
+    const advisorName =
+        document.getElementById("advisorName")
+        .value
+        .trim()
+        .toUpperCase();
+
+    // ------------------------------------------
+    // Get selected item codes
+    // ------------------------------------------
+
+    const selectedItems =
+        Array.from(
+            document.querySelectorAll(
+                'input[name="itemCode"]:checked'
+            )
+        ).map(
+            checkbox => checkbox.value
+        );
+
+    // ------------------------------------------
+    // Validation
+    // ------------------------------------------
+
+    if (!roNumber) {
+
+        alert("Please enter RO Number.");
+        return;
+
+    }
+
+    if (!vehicleNumber) {
+
+        alert("Please enter Vehicle Number.");
+        return;
+
+    }
+
+    if (!advisorName) {
+
+        alert("Please enter Advisor Name.");
+        return;
+
+    }
+
+    // Advisor name validation
+
+    const namePattern =
+        /^[A-Za-z]+(?: [A-Za-z]+)*$/;
+
+    if (!namePattern.test(advisorName)) {
+
+        alert(
+            "Advisor name can contain only letters and spaces."
+        );
+
+        return;
+
+    }
+
+    if (advisorName.length < 3) {
+
+        alert(
+            "Advisor name must contain at least 3 characters."
+        );
+
+        return;
+
+    }
+
+    if (advisorName.length > 30) {
+
+        alert(
+            "Advisor name cannot exceed 30 characters."
+        );
+
+        return;
+
+    }
+
+    // ------------------------------------------
+    // Item validation
+    // ------------------------------------------
+
+    if (selectedItems.length === 0) {
+
+        alert("Please select at least one item.");
+
+        return;
+
+    }
+
+    // ------------------------------------------
+    // Disable button
+    // ------------------------------------------
+
     saveBtn.disabled = true;
     saveBtn.innerHTML = "Saving...";
 
     try {
 
-    const vehicleNumber =
-    document.getElementById("vehicleNumber")
-    .value.trim()
-    .toUpperCase();
-
-    const advisorName =
-        document.getElementById("advisorName")
-        .value.trim()
-        .toUpperCase();
-
-    const itemCode =
-        document.getElementById("itemCode").value;
-
-        // -----------------------------------
-        // Advisor Name Validation
-        // -----------------------------------
-
-        const namePattern = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
-
-        if (!namePattern.test(advisorName)) {
-
-            alert("Advisor name can contain only letters and spaces.");
-
-            saveBtn.disabled = false;
-            saveBtn.innerHTML = "Save Repair Order";
-
-            return;
-
-        }
-
-        if (advisorName.length < 3) {
-
-            alert("Advisor name must contain at least 3 characters.");
-
-            saveBtn.disabled = false;
-            saveBtn.innerHTML = "Save Repair Order";
-
-            return;
-
-        }
-
-        if (advisorName.length > 30) {
-
-            alert("Advisor name cannot exceed 30 characters.");
-
-            saveBtn.disabled = false;
-            saveBtn.innerHTML = "Save Repair Order";
-
-            return;
-
-        }
-
-        if (itemCode === "") {
-         alert("Please select an Item.");
-        return;
-       }
-        if (
-        roNumber == "" ||
-        vehicleNumber == "" ||
-        advisorName == "" ||
-        itemCode == ""
-        ) {
-
-            alert("Please fill all required fields.");
-
-            saveBtn.disabled = false;
-            saveBtn.innerHTML = "Save Repair Order";
-
-            return;
-        }
+        // --------------------------------------
+        // Create date
+        // --------------------------------------
 
         const now = new Date();
 
@@ -190,32 +259,42 @@ async function saveRO() {
             "Sep","Oct","Nov","Dec"
         ];
 
-        const dd = String(now.getDate()).padStart(2,"0");
+        const dd =
+            String(now.getDate()).padStart(2, "0");
 
         const displayDate =
-        dd + "-" +
-        months[now.getMonth()] +
-        "-" +
-        yyyy;
+            dd + "-" +
+            months[now.getMonth()] +
+            "-" +
+            yyyy;
+
+        // --------------------------------------
+        // Document ID
+        // --------------------------------------
 
         const documentId =
-        displayDate + " | " + roNumber;
+            displayDate + " | " + roNumber;
 
+        // --------------------------------------
         // Check duplicate RO Number
-        const existing = await db.collection("repairorders")
-        .where("roNumber","==",roNumber)
-        .get();
+        // --------------------------------------
 
-        if(!existing.empty){
+        const existing =
+            await db.collection("repairorders")
+            .where("roNumber", "==", roNumber)
+            .get();
+
+        if (!existing.empty) {
 
             alert("RO Number already exists.");
-
-            saveBtn.disabled = false;
-            saveBtn.innerHTML = "Save Repair Order";
 
             return;
 
         }
+
+        // --------------------------------------
+        // Save Repair Order
+        // --------------------------------------
 
         await db.collection("repairorders")
         .doc(documentId)
@@ -227,7 +306,7 @@ async function saveRO() {
 
             leaderUid: uid,
 
-            Name: leaderData.name,
+            leaderName: leaderData.name,
 
             region: leaderData.region,
 
@@ -235,29 +314,58 @@ async function saveRO() {
 
             vehicleNumber: vehicleNumber,
 
-            itemCode: itemCode,
+            // MULTIPLE ITEM CODES
+            itemCodes: selectedItems,
+
+            status: "Pending",
 
             createdAt:
-            firebase.firestore.FieldValue.serverTimestamp()
+                firebase.firestore.FieldValue
+                .serverTimestamp()
 
         });
-        //-------------------------------------------------
 
-        alert("Repair Order Saved Successfully");
+        // --------------------------------------
+        // Success
+        // --------------------------------------
+
+        alert(
+            "Repair Order Saved Successfully"
+        );
+
+        // Clear fields
+
         document.getElementById("roNumber").value = "";
+
         document.getElementById("vehicleNumber").value = "";
 
         document.getElementById("advisorName").value = "";
 
-        document.getElementById("itemCode").value = "";
+        // Uncheck all items
+
+        document
+        .querySelectorAll(
+            'input[name="itemCode"]'
+        )
+        .forEach(checkbox => {
+
+            checkbox.checked = false;
+
+        });
 
     }
 
     catch (error) {
 
-        console.error(error);
+        console.error(
+            "Error saving repair order:",
+            error
+        );
 
-        alert(error.message);
+        alert(
+            "Unable to save Repair Order: " +
+            error.message
+        );
 
     }
 
@@ -265,7 +373,8 @@ async function saveRO() {
 
         saveBtn.disabled = false;
 
-        saveBtn.innerHTML = "Save Repair Order";
+        saveBtn.innerHTML =
+            "Save Repair Order";
 
     }
 
