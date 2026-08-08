@@ -69,7 +69,12 @@ function loadItems() {
 
     const container =
         document.getElementById("itemCodeContainer");
-
+    if (!container) {
+        console.error(
+            "ERROR: itemCodeContainer was not found in HTML"
+        );
+        return;
+    }
     container.innerHTML = "Loading items...";
 
     db.collection("itemcodes")
@@ -110,9 +115,12 @@ function loadItems() {
             });
 
         })
-        .catch((error) => {
+          .catch((error) => {
 
-            console.error("Error loading items:", error);
+            console.error(
+                "Error loading items:",
+                error
+            );
 
             container.innerHTML =
                 "Unable to load items.";
