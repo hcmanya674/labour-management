@@ -86,20 +86,14 @@ function loadRegion() {
 
 async function loadItems() {
 
-    const container =
-        document.getElementById("itemCodeContainer");
+    const itemSelect = document.getElementById("itemCode");
 
-    if (!container) {
-
-        console.error(
-            "ERROR: itemCodeContainer not found."
-        );
-
+    if (!itemSelect) {
+        console.error("itemCode select not found.");
         return;
-
     }
 
-    container.innerHTML = "Loading items...";
+    itemSelect.innerHTML = "";
 
     try {
 
@@ -107,61 +101,41 @@ async function loadItems() {
             .where("active", "==", true)
             .get();
 
-        container.innerHTML = "";
+        console.log("Total active items:", snapshot.size);
 
         if (snapshot.empty) {
 
-            container.innerHTML =
-                "No active item codes available.";
+            itemSelect.innerHTML =
+                `<option disabled>No active item codes found</option>`;
 
             return;
-
         }
 
         snapshot.forEach((doc) => {
 
             const data = doc.data();
 
-            const itemDiv =
-                document.createElement("div");
+            console.log("Item:", data);
 
-            itemDiv.className = "item-option";
+            const option = document.createElement("option");
 
-            itemDiv.innerHTML = `
+            option.value = data.itemCode;
 
-                <label>
+            option.textContent =
+                data.itemCode + " - " + data.description;
 
-                    <input
-                        type="checkbox"
-                        name="itemCode"
-                        value="${data.itemCode}">
-
-                    <span>
-                        ${data.itemCode} - ${data.description}
-                    </span>
-
-                </label>
-
-            `;
-
-            container.appendChild(itemDiv);
+            itemSelect.appendChild(option);
 
         });
 
-    }
+    } catch (error) {
 
-    catch (error) {
+        console.error("Error loading items:", error);
 
-        console.error(
-            "Error loading items:",
-            error
-        );
-
-        container.innerHTML =
-            "Unable to load items.";
+        itemSelect.innerHTML =
+            `<option disabled>Unable to load items</option>`;
 
     }
-
 }
 
 // ==========================================
@@ -169,7 +143,7 @@ async function loadItems() {
 // ==========================================
 
 async function saveRO() {
-
+const itemSelect = document.getElementById("itemCode");
     const saveBtn = document.getElementById("saveBtn");
 
     // ------------------------------------------
@@ -198,15 +172,10 @@ async function saveRO() {
     // Get selected item codes
     // ------------------------------------------
 
-    const selectedItems =
-        Array.from(
-            document.querySelectorAll(
-                'input[name="itemCode"]:checked'
-            )
-        ).map(
-            checkbox => checkbox.value
-        );
+   
 
+const selectedItems = Array.from(itemSelect.selectedOptions)
+    .map(option => option.value);
     // ------------------------------------------
     // Validation
     // ------------------------------------------
