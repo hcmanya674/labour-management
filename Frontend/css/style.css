@@ -802,12 +802,15 @@ button{
    ========================================== */
 
 .item-code-container {
+    width: 100%;
+    max-height: 250px;
+    overflow-y: auto;
     border: 1px solid #ccc;
     border-radius: 8px;
     padding: 10px;
-    background: #fff;
-    max-height: 250px;
-    overflow-y: auto;
+    margin-top: 5px;
+    box-sizing: border-box;
+    background: white;
 }
 
 .item-option {
@@ -818,9 +821,9 @@ button{
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 12px 8px;
-    cursor: pointer;
+    padding: 10px;
     border-radius: 6px;
+    cursor: pointer;
 }
 
 .item-checkbox:hover {
@@ -828,13 +831,12 @@ button{
 }
 
 .item-checkbox input[type="checkbox"] {
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
     cursor: pointer;
     flex-shrink: 0;
 }
 
 .item-checkbox span {
     font-size: 16px;
-    cursor: pointer;
 }

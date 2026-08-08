@@ -78,8 +78,6 @@ function loadRegion() {
     });
 
 }
-
-
 // ==========================================
 // LOAD ITEM CODES
 // ==========================================
@@ -90,7 +88,11 @@ async function loadItems() {
         document.getElementById("itemCodeContainer");
 
     if (!container) {
-        console.error("itemCodeContainer not found.");
+
+        console.error(
+            "itemCodeContainer not found."
+        );
+
         return;
     }
 
@@ -98,14 +100,19 @@ async function loadItems() {
 
     try {
 
-        const snapshot = await db.collection("itemcodes")
-            .where("active", "==", true)
-            .get();
+        const snapshot =
+            await db.collection("itemcodes")
+                .where("active", "==", true)
+                .get();
 
-        console.log("Active item count:", snapshot.size);
+        console.log(
+            "Active item count:",
+            snapshot.size
+        );
 
         container.innerHTML = "";
 
+        // No active items
         if (snapshot.empty) {
 
             container.innerHTML =
@@ -118,15 +125,19 @@ async function loadItems() {
 
             const data = doc.data();
 
-            console.log("Loading item:", data);
+            console.log(
+                "Loading item:",
+                data
+            );
 
             const itemDiv =
                 document.createElement("div");
 
-            itemDiv.className = "item-option";
+            itemDiv.className =
+                "item-option";
 
             itemDiv.innerHTML = `
-            
+
                 <label class="item-checkbox">
 
                     <input
@@ -135,7 +146,9 @@ async function loadItems() {
                         value="${data.itemCode}">
 
                     <span>
-                        ${data.itemCode} - ${data.description}
+                        ${data.itemCode}
+                        -
+                        ${data.description}
                     </span>
 
                 </label>
@@ -146,22 +159,26 @@ async function loadItems() {
 
         });
 
-    } catch (error) {
+    }
 
-        console.error("Error loading items:", error);
+    catch (error) {
+
+        console.error(
+            "Error loading items:",
+            error
+        );
 
         container.innerHTML =
             "<p>Unable to load item codes.</p>";
 
     }
 }
-
 // ==========================================
 // SAVE REPAIR ORDER
 // ==========================================
 
 async function saveRO() {
-const itemSelect = document.getElementById("itemCode");
+
     const saveBtn = document.getElementById("saveBtn");
 
     // ------------------------------------------
