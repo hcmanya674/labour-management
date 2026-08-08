@@ -2,35 +2,53 @@
 // CREATE REPAIR ORDER
 // ==========================================
 
-// uid comes from leader-common.js
 let leaderData = {};
-
 let isSaving = false;
 
-// Load logged-in leader
-auth.onAuthStateChanged(async (user) => {
+// ==========================================
+// LOAD LOGGED-IN LEADER
+// ==========================================
 
-    if (!user) {
-        location = "../pages/auth/loginindex.html";
-        return;
-    }
+document.addEventListener("DOMContentLoaded", function () {
 
-    const doc = await db.collection("users")
-        .doc(user.uid)
-        .get();
+    auth.onAuthStateChanged(async (user) => {
 
-    if (!doc.exists) {
-        alert("Leader record not found.");
-        return;
-    }
+        if (!user) {
+            location = "../pages/auth/loginindex.html";
+            return;
+        }
 
-    leaderData = doc.data();
+        try {
 
-    document.getElementById("leaderName").value = leaderData.name;
+            const doc = await db.collection("users")
+                .doc(user.uid)
+                .get();
 
-    loadRegion();
+            if (!doc.exists) {
 
-    loadItems();
+                alert("Leader record not found.");
+                return;
+
+            }
+
+            leaderData = doc.data();
+
+            document.getElementById("leaderName").value =
+                leaderData.name;
+
+            // Load region
+            loadRegion();
+
+            // Load item codes
+            loadItems();
+
+        } catch (error) {
+
+            console.error("Error loading leader:", error);
+
+        }
+
+    });
 
 });
 
@@ -61,71 +79,88 @@ function loadRegion() {
 
 }
 
+
 // ==========================================
-// Load Item Codes
+// LOAD ITEM CODES
 // ==========================================
 
-function loadItems() {
+async function loadItems() {
 
     const container =
         document.getElementById("itemCodeContainer");
+
     if (!container) {
+
         console.error(
-            "ERROR: itemCodeContainer was not found in HTML"
+            "ERROR: itemCodeContainer not found."
         );
+
         return;
+
     }
+
     container.innerHTML = "Loading items...";
 
-    db.collection("itemcodes")
-        .where("active", "==", true)
-        .get()
-        .then((snapshot) => {
+    try {
 
-            container.innerHTML = "";
+        const snapshot = await db.collection("itemcodes")
+            .where("active", "==", true)
+            .get();
 
-            snapshot.forEach((doc) => {
+        container.innerHTML = "";
 
-                const data = doc.data();
-
-                const itemDiv =
-                    document.createElement("div");
-
-                itemDiv.className = "item-option";
-
-                itemDiv.innerHTML = `
-
-                    <label>
-
-                        <input
-                            type="checkbox"
-                            name="itemCode"
-                            value="${data.itemCode}">
-
-                        <span>
-                            ${data.itemCode} - ${data.description}
-                        </span>
-
-                    </label>
-
-                `;
-
-                container.appendChild(itemDiv);
-
-            });
-
-        })
-          .catch((error) => {
-
-            console.error(
-                "Error loading items:",
-                error
-            );
+        if (snapshot.empty) {
 
             container.innerHTML =
-                "Unable to load items.";
+                "No active item codes available.";
+
+            return;
+
+        }
+
+        snapshot.forEach((doc) => {
+
+            const data = doc.data();
+
+            const itemDiv =
+                document.createElement("div");
+
+            itemDiv.className = "item-option";
+
+            itemDiv.innerHTML = `
+
+                <label>
+
+                    <input
+                        type="checkbox"
+                        name="itemCode"
+                        value="${data.itemCode}">
+
+                    <span>
+                        ${data.itemCode} - ${data.description}
+                    </span>
+
+                </label>
+
+            `;
+
+            container.appendChild(itemDiv);
 
         });
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Error loading items:",
+            error
+        );
+
+        container.innerHTML =
+            "Unable to load items.";
+
+    }
 
 }
 
@@ -238,11 +273,14 @@ async function saveRO() {
 
     if (selectedItems.length === 0) {
 
-        alert("Please select at least one item.");
+    alert("Please select at least one item.");
 
-        return;
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = "Save Repair Order";
 
-    }
+    return;
+
+}
 
     // ------------------------------------------
     // Disable button
