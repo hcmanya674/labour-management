@@ -797,57 +797,44 @@ button{
 #advisorSummaryTable td:last-child{
     font-weight:bold;
 }
-
 /* ==========================================
-   ITEM CODE SELECTION
-========================================== */
+   ITEM CODE CHECKBOXES
+   ========================================== */
 
 .item-code-container {
-
     border: 1px solid #ccc;
-
     border-radius: 8px;
-
     padding: 10px;
-
-    max-height: 220px;
-
-    overflow-y: auto;
-
     background: #fff;
-
+    max-height: 250px;
+    overflow-y: auto;
 }
 
 .item-option {
-
-    padding: 8px;
-
-    border-bottom: 1px solid #eee;
-
+    margin-bottom: 8px;
 }
 
-.item-option:last-child {
-
-    border-bottom: none;
-
-}
-
-.item-option label {
-
+.item-checkbox {
     display: flex;
-
     align-items: center;
-
     gap: 10px;
-
+    padding: 12px 8px;
     cursor: pointer;
-
+    border-radius: 6px;
 }
 
-.item-option input[type="checkbox"] {
+.item-checkbox:hover {
+    background: #f2f2f2;
+}
 
-    width: 18px;
+.item-checkbox input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
 
-    height: 18px;
-
+.item-checkbox span {
+    font-size: 16px;
+    cursor: pointer;
 }
