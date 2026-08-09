@@ -327,6 +327,283 @@ btn.innerHTML = "Generate Report";
 });
 
 }
+
+// ======================================================
+// ADVISOR ITEM & AMOUNT REPORT
+// ======================================================
+
+async function generateAdvisorItemReport() {
+
+    const fromDate =
+        document.getElementById("fromDate").value;
+
+    const toDate =
+        document.getElementById("toDate").value;
+
+    if (!fromDate || !toDate) {
+
+        alert("Please select From Date and To Date.");
+
+        return;
+    }
+
+    const from = new Date(fromDate);
+    from.setHours(0, 0, 0, 0);
+
+    const to = new Date(toDate);
+    to.setHours(23, 59, 59, 999);
+
+    try {
+
+        // ==================================================
+        // LOAD ITEM CODES
+        // ==================================================
+
+        const itemSnapshot =
+            await db.collection("itemcodes")
+            .get();
+
+        const itemMap = {};
+
+        itemSnapshot.forEach(doc => {
+
+            const item = doc.data();
+
+            itemMap[item.itemCode] = {
+
+                description:
+                    item.description || "-",
+
+                cost:
+                    Number(item.itemCost) || 0
+
+            };
+
+        });
+
+
+        // ==================================================
+        // LOAD REPAIR ORDERS
+        // ==================================================
+
+        const roSnapshot =
+            await db.collection("repairorders")
+            .get();
+
+
+        // ==================================================
+        // STORE DATA
+        // ==================================================
+
+        const advisorData = {};
+
+
+        roSnapshot.forEach(doc => {
+
+            const ro = doc.data();
+
+            // ----------------------------------------------
+            // Check created date
+            // ----------------------------------------------
+
+            if (!ro.createdAt) {
+                return;
+            }
+
+            const createdDate =
+                ro.createdAt.toDate();
+
+            if (
+                createdDate < from ||
+                createdDate > to
+            ) {
+                return;
+            }
+
+
+            // ----------------------------------------------
+            // Advisor
+            // ----------------------------------------------
+
+            const advisor =
+                ro.advisorName || "Unknown Advisor";
+
+
+            // ----------------------------------------------
+            // Item codes
+            // ----------------------------------------------
+
+            let items = [];
+
+            if (Array.isArray(ro.itemCodes)) {
+
+                items = ro.itemCodes;
+
+            }
+
+            // Support old records also
+            else if (ro.itemCode) {
+
+                items = [ro.itemCode];
+
+            }
+
+
+            // ----------------------------------------------
+            // Create advisor
+            // ----------------------------------------------
+
+            if (!advisorData[advisor]) {
+
+                advisorData[advisor] = {};
+
+            }
+
+
+            // ----------------------------------------------
+            // Process each item
+            // ----------------------------------------------
+
+            items.forEach(itemCode => {
+
+                if (!advisorData[advisor][itemCode]) {
+
+                    advisorData[advisor][itemCode] = {
+
+                        quantity: 0
+
+                    };
+
+                }
+
+                advisorData[advisor][itemCode]
+                    .quantity++;
+
+            });
+
+        });
+
+
+        // ==================================================
+        // DISPLAY REPORT
+        // ==================================================
+
+        const tbody =
+            document.getElementById(
+                "advisorItemReportBody"
+            );
+
+        tbody.innerHTML = "";
+
+
+        const advisors =
+            Object.keys(advisorData)
+            .sort();
+
+
+        if (advisors.length === 0) {
+
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6"
+                        style="text-align:center;">
+                        No data found for selected dates.
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+
+        // ==================================================
+        // CREATE TABLE
+        // ==================================================
+
+        advisors.forEach(advisor => {
+
+            const items =
+                advisorData[advisor];
+
+            Object.keys(items)
+                .sort()
+                .forEach(itemCode => {
+
+                    const quantity =
+                        items[itemCode].quantity;
+
+
+                    const itemInfo =
+                        itemMap[itemCode] || {
+
+                            description: "-",
+
+                            cost: 0
+
+                        };
+
+
+                    const amount =
+                        itemInfo.cost;
+
+
+                    const total =
+                        quantity * amount;
+
+
+                    tbody.innerHTML += `
+
+                        <tr>
+
+                            <td>
+                                ${advisor}
+                            </td>
+
+                            <td>
+                                ${itemCode}
+                            </td>
+
+                            <td>
+                                ${itemInfo.description}
+                            </td>
+
+                            <td>
+                                ${quantity}
+                            </td>
+
+                            <td>
+                                ₹${amount.toLocaleString("en-IN")}
+                            </td>
+
+                            <td>
+                                ₹${total.toLocaleString("en-IN")}
+                            </td>
+
+                        </tr>
+
+                    `;
+
+                });
+
+        });
+
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Advisor report error:",
+            error
+        );
+
+        alert(
+            "Unable to generate Advisor Item Report."
+        );
+
+    }
+
+}
 async function exportPDF(){
 
     const { jsPDF } = window.jspdf;
