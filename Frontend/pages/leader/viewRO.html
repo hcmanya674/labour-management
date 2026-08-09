@@ -5,74 +5,234 @@
 
     <meta charset="UTF-8">
 
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    >
+
     <title>Repair Order Details</title>
 
-    <link rel="stylesheet" href="../../css/style.css">
+    <link
+        rel="stylesheet"
+        href="../../css/style.css"
+    >
 
 </head>
 
+
 <body>
-<div class="ro-card">
 
-    <h2> View Repair Order Details</h2>
 
-    <div class="row">
-        <label>RO Number</label>
-        <span id="roNumber"></span>
-    </div>
-     <div class="row">
-    <label>Date</label>
-    <span id="createdDate"></span>
-</div>
+<div class="container">
 
-</div>
-    <div class="row">
-    <label>Vehicle Number</label>
 
-    <input
-        type="text"
-        id="vehicleNumber"
-        disabled>
-    </div>
+    <!-- =====================================
+         SIDEBAR
+         ===================================== -->
 
-    <div class="row">
-        <label>Advisor Name</label>
-       <input type="text" id="advisorName" disabled>
-    </div>
+    <div class="sidebar">
 
-    <div class="row">
-        <label>Work Done</label>
-       <select id="itemCode" disabled> </select>
+        <h2>Leader Panel</h2>
+
+        <button onclick="showDashboard()">
+            Dashboard
+        </button>
+
+        <button onclick="showCreateRO()">
+            Create RO
+        </button>
+
+        <button onclick="showRepairOrders()">
+            Repair Orders
+        </button>
+
+        <button onclick="logout()">
+            Logout
+        </button>
+
     </div>
 
 
-    <div class="btn-group">
+    <!-- =====================================
+         MAIN
+         ===================================== -->
 
-    <button class="edit-btn" onclick="enableEdit()">
-        Edit
-    </button>
+    <div class="main">
 
-    <button class="save-btn"
-            id="updateBtn"
-            onclick="updateRO()"
-            style="display:none;">
-        Update
-    </button>
+        <h2>
+            View Repair Order Details
+        </h2>
 
-    <button class="back-btn"
-            onclick="history.back()">
-        Back
-    </button>
+
+        <div class="form-box">
+
+
+            <!-- RO NUMBER -->
+
+            <div class="row">
+
+                <label>
+                    RO Number
+                </label>
+
+                <span id="roNumber">
+                    -
+                </span>
+
+            </div>
+
+
+            <!-- DATE -->
+
+            <div class="row">
+
+                <label>
+                    Date
+                </label>
+
+                <span id="createdDate">
+                    -
+                </span>
+
+            </div>
+
+
+            <!-- VEHICLE -->
+
+            <div class="row">
+
+                <label>
+                    Vehicle Number
+                </label>
+
+                <input
+                    type="text"
+                    id="vehicleNumber"
+                    disabled
+                >
+
+            </div>
+
+
+            <!-- ADVISOR -->
+
+            <div class="row">
+
+                <label>
+                    Advisor Name
+                </label>
+
+                <input
+                    type="text"
+                    id="advisorName"
+                    disabled
+                >
+
+            </div>
+
+
+            <!-- ITEM CODES -->
+
+            <div class="row">
+
+                <label>
+                    Item Codes
+                </label>
+
+
+                <div
+                    id="itemCodeContainer"
+                    class="item-code-container"
+                >
+
+                    Loading items...
+
+                </div>
+
+
+                <small>
+
+                    Select one or more item codes.
+
+                </small>
+
+            </div>
+
+
+            <!-- BUTTONS -->
+
+            <div class="btn-group">
+
+
+                <button
+                    class="edit-btn"
+                    onclick="enableEdit()"
+                >
+
+                    Edit
+
+                </button>
+
+
+                <button
+                    class="save-btn"
+                    id="updateBtn"
+                    onclick="updateRO()"
+                    style="display:none;"
+                >
+
+                    Update
+
+                </button>
+
+
+                <button
+                    class="back-btn"
+                    onclick="history.back()"
+                >
+
+                    Back
+
+                </button>
+
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
 
 </div>
 
-</div>
+
+<!-- =====================================
+     FIREBASE
+     ===================================== -->
+
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+
+<!-- Firebase Configuration -->
+
 <script src="../../js/common/firebase.js"></script>
+
+
+<!-- Leader Common -->
+
+<script src="../../js/common/leader-common.js"></script>
+
+
+<!-- View RO -->
+
 <script src="../../js/leader/viewRO.js"></script>
+
 
 </body>
 

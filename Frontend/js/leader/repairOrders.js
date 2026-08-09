@@ -1,102 +1,273 @@
+// ==========================================
+// REPAIR ORDERS
+// ==========================================
+
 let leaderData = {};
 let itemMap = {};
+
+// ==========================================
+// CHECK LOGIN
+// ==========================================
 
 auth.onAuthStateChanged(async (user) => {
 
     if (!user) {
+
         location = "../../pages/auth/loginindex.html";
+
         return;
     }
 
-    const leaderDoc = await db.collection("users")
-        .doc(user.uid)
-        .get();
-leaderData = leaderDoc.data();
+    try {
 
-await loadItemCodes();
+        const leaderDoc = await db.collection("users")
+            .doc(user.uid)
+            .get();
 
-loadRepairOrders();
+        if (!leaderDoc.exists) {
+
+            alert("Leader record not found.");
+
+            return;
+        }
+
+        leaderData = leaderDoc.data();
+
+        console.log("Leader Data:", leaderData);
+
+        // Load item code descriptions first
+        await loadItemCodes();
+
+        // Then load repair orders
+        await loadRepairOrders();
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Error loading repair orders:",
+            error
+        );
+
+    }
 
 });
-async function loadItemCodes(){
 
-    const snapshot = await db.collection("itemcodes")
-    .where("active","==",true)
-    .get();
 
-    snapshot.forEach(doc=>{
+// ==========================================
+// LOAD ITEM CODES
+// ==========================================
 
-        const item = doc.data();
+async function loadItemCodes() {
 
-        itemMap[item.itemCode] = item.description;
+    try {
 
-    });
+        const snapshot = await db.collection("itemcodes")
+            .where("active", "==", true)
+            .get();
+
+        itemMap = {};
+
+        snapshot.forEach(doc => {
+
+            const item = doc.data();
+
+            itemMap[item.itemCode] =
+                item.description || "";
+
+        });
+
+        console.log(
+            "Item Map:",
+            itemMap
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Error loading item codes:",
+            error
+        );
+
+    }
 
 }
+
+
+// ==========================================
+// LOAD REPAIR ORDERS
+// ==========================================
+
 async function loadRepairOrders() {
 
     try {
 
-        const snapshot = await db.collection("repairorders")
-            .where("region", "==", leaderData.region)
-            .orderBy("createdAt", "desc")
+        const snapshot =
+            await db.collection("repairorders")
+            .where(
+                "region",
+                "==",
+                leaderData.region
+            )
+            .orderBy(
+                "createdAt",
+                "desc"
+            )
             .get();
 
+
         let html = "";
+
+
+        // ======================================
+        // LOOP THROUGH REPAIR ORDERS
+        // ======================================
 
         for (const doc of snapshot.docs) {
 
             const ro = doc.data();
 
-            //--------------------------------------------------
-            // Date
-            //--------------------------------------------------
+
+            // ==================================
+            // DATE
+            // ==================================
 
             let date = "-";
 
             if (ro.createdAt) {
 
-                date = ro.createdAt.toDate()
-                    .toLocaleDateString("en-GB");
+                try {
+
+                    date =
+                        ro.createdAt
+                        .toDate()
+                        .toLocaleDateString("en-GB");
+
+                }
+
+                catch (e) {
+
+                    console.log(
+                        "Date conversion error:",
+                        e
+                    );
+
+                }
 
             }
 
-            //--------------------------------------------------
-            // Work Description
-            //--------------------------------------------------
 
-            const workDone = itemMap[ro.itemCode] || "-";
+            // ==================================
+            // ITEM CODES
+            // ==================================
 
-            //--------------------------------------------------
-            // Table
-            //--------------------------------------------------
+            let itemCodes = [];
+
+
+            // New records
+            if (
+                Array.isArray(ro.itemCodes)
+            ) {
+
+                itemCodes = ro.itemCodes;
+
+            }
+
+            // Old records
+            else if (ro.itemCode) {
+
+                itemCodes = [
+                    ro.itemCode
+                ];
+
+            }
+
+
+            // ==================================
+            // ITEM CODE DISPLAY
+            // ==================================
+
+            const itemCodeDisplay =
+                itemCodes.length > 0
+                    ? itemCodes.join(", ")
+                    : "-";
+
+
+            // ==================================
+            // WORK DESCRIPTION
+            // ==================================
+
+            const workDescriptions =
+                itemCodes
+                .map(code => {
+
+                    return itemMap[code] || code;
+
+                })
+                .join(", ");
+
+
+            const workDone =
+                workDescriptions || "-";
+
+
+            // ==================================
+            // TABLE ROW
+            // ==================================
 
             html += `
 
             <tr>
 
-                <td>${ro.roNumber}</td>
-
-                <td>${date}</td>
-
-                <td>${ro.vehicleNumber}</td>
-
-                <td>${ro.advisorName}</td>
-
-                <td>${ro.itemCode}</td>
-
-                <td>${workDone}</td>
+                <td>
+                    ${ro.roNumber || "-"}
+                </td>
 
                 <td>
-                <button class="view-btn" onclick="viewRO('${doc.id}')">
-                View
-                </button>
+                    ${date}
                 </td>
+
+                <td>
+                    ${ro.vehicleNumber || "-"}
+                </td>
+
+                <td>
+                    ${ro.advisorName || "-"}
+                </td>
+
+                <td>
+                    ${itemCodeDisplay}
+                </td>
+
+                <td>
+                    ${workDone}
+                </td>
+
+                <td>
+
+                    <button
+                        class="view-btn"
+                        onclick="viewRO('${doc.id}')">
+
+                        View
+
+                    </button>
+
+                </td>
+
             </tr>
 
             `;
 
         }
+
+
+        // ======================================
+        // NO RECORDS
+        // ======================================
 
         if (html === "") {
 
@@ -104,10 +275,14 @@ async function loadRepairOrders() {
 
             <tr>
 
-                <td colspan="7"
-                style="text-align:center;color:red">
+                <td
+                    colspan="7"
+                    style="
+                        text-align:center;
+                        color:red;
+                    ">
 
-                No Repair Orders Found
+                    No Repair Orders Found
 
                 </td>
 
@@ -117,22 +292,40 @@ async function loadRepairOrders() {
 
         }
 
-        document.querySelector("#roTable tbody").innerHTML = html;
+
+        // ======================================
+        // DISPLAY TABLE
+        // ======================================
+
+        document
+            .querySelector("#roTable tbody")
+            .innerHTML = html;
 
     }
 
     catch (error) {
 
-        console.error(error);
+        console.error(
+            "Error loading repair orders:",
+            error
+        );
 
     }
 
 }
 
-function viewRO(id){
 
-    localStorage.setItem("currentRO",id);
+// ==========================================
+// VIEW REPAIR ORDER
+// ==========================================
 
-    location="viewRO.html";
+function viewRO(id) {
+
+    localStorage.setItem(
+        "currentRO",
+        id
+    );
+
+    location = "viewRO.html";
 
 }
