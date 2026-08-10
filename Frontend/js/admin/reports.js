@@ -48,7 +48,11 @@ async function generateReport() {
     const region = document.getElementById("reportRegion").value;
     const btn = document.getElementById("generateBtn");
     const exportBtn = document.getElementById("exportBtn");
+    const advisorExportBtn = document.getElementById("advisorExportBtn");
 
+if (advisorExportBtn) {
+    advisorExportBtn.disabled = true;
+}
 // Disable Export until the new report finishes generating
 exportBtn.disabled = true;
 
@@ -121,7 +125,7 @@ exportBtn.disabled = true;
            let workDone = ro.itemCode;
 
 const itemDoc =
-    await db.collection("itemcodes")
+    await db.collection("itemcode")
     .doc(ro.itemCode)
     .get();
 
@@ -327,7 +331,6 @@ btn.innerHTML = "Generate Report";
 });
 
 }
-
 // ======================================================
 // ADVISOR ITEM & AMOUNT REPORT
 // ======================================================
@@ -339,6 +342,9 @@ async function generateAdvisorItemReport() {
 
     const toDate =
         document.getElementById("toDate").value;
+
+    const selectedRegion =
+        document.getElementById("reportRegion").value;
 
     if (!fromDate || !toDate) {
 
@@ -375,7 +381,7 @@ async function generateAdvisorItemReport() {
                     item.description || "-",
 
                 cost:
-                    Number(item.itemCost) || 0
+                    Number(item.cost) || 0
 
             };
 
@@ -386,13 +392,28 @@ async function generateAdvisorItemReport() {
         // LOAD REPAIR ORDERS
         // ==================================================
 
+        let roQuery =
+            db.collection("repairorders");
+
+        // Region filter
+
+        if (selectedRegion !== "") {
+
+            roQuery =
+                roQuery.where(
+                    "region",
+                    "==",
+                    selectedRegion
+                );
+
+        }
+
         const roSnapshot =
-            await db.collection("repairorders")
-            .get();
+            await roQuery.get();
 
 
         // ==================================================
-        // STORE DATA
+        // STORE DATA BY ADVISOR
         // ==================================================
 
         const advisorData = {};
@@ -403,7 +424,7 @@ async function generateAdvisorItemReport() {
             const ro = doc.data();
 
             // ----------------------------------------------
-            // Check created date
+            // Date validation
             // ----------------------------------------------
 
             if (!ro.createdAt) {
@@ -426,11 +447,12 @@ async function generateAdvisorItemReport() {
             // ----------------------------------------------
 
             const advisor =
-                ro.advisorName || "Unknown Advisor";
+                ro.advisorName ||
+                "Unknown Advisor";
 
 
             // ----------------------------------------------
-            // Item codes
+            // Item Codes
             // ----------------------------------------------
 
             let items = [];
@@ -440,9 +462,14 @@ async function generateAdvisorItemReport() {
                 items = ro.itemCodes;
 
             }
+            else if (ro.itemCodes) {
 
-            // Support old records also
+                items = [ro.itemCodes];
+
+            }
             else if (ro.itemCode) {
+
+                // Support old records
 
                 items = [ro.itemCode];
 
@@ -450,7 +477,7 @@ async function generateAdvisorItemReport() {
 
 
             // ----------------------------------------------
-            // Create advisor
+            // Create Advisor
             // ----------------------------------------------
 
             if (!advisorData[advisor]) {
@@ -461,7 +488,7 @@ async function generateAdvisorItemReport() {
 
 
             // ----------------------------------------------
-            // Process each item
+            // Count Items
             // ----------------------------------------------
 
             items.forEach(itemCode => {
@@ -488,12 +515,12 @@ async function generateAdvisorItemReport() {
         // DISPLAY REPORT
         // ==================================================
 
-        const tbody =
+        const container =
             document.getElementById(
-                "advisorItemReportBody"
+                "advisorItemReportContainer"
             );
 
-        tbody.innerHTML = "";
+        container.innerHTML = "";
 
 
         const advisors =
@@ -503,27 +530,104 @@ async function generateAdvisorItemReport() {
 
         if (advisors.length === 0) {
 
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="6"
-                        style="text-align:center;">
-                        No data found for selected dates.
-                    </td>
-                </tr>
+            container.innerHTML = `
+
+                <div style="
+                    text-align:center;
+                    color:red;
+                    font-weight:bold;
+                    padding:20px;
+                ">
+
+                    No data found for selected dates.
+
+                </div>
+
             `;
+
+            document.getElementById(
+                "advisorExportBtn"
+            ).disabled = true;
 
             return;
         }
 
 
         // ==================================================
-        // CREATE TABLE
+        // CREATE ADVISOR SECTIONS
         // ==================================================
 
         advisors.forEach(advisor => {
 
             const items =
                 advisorData[advisor];
+
+
+            // ------------------------------------------
+            // Advisor Heading
+            // ------------------------------------------
+
+            const advisorTitle =
+                document.createElement("h3");
+
+            advisorTitle.textContent =
+                "Advisor: " + advisor;
+
+            advisorTitle.style.marginTop =
+                "25px";
+
+            advisorTitle.style.marginBottom =
+                "10px";
+
+            container.appendChild(
+                advisorTitle
+            );
+
+
+            // ------------------------------------------
+            // Table
+            // ------------------------------------------
+
+            const table =
+                document.createElement("table");
+
+            table.className =
+                "advisor-item-table";
+
+
+            table.innerHTML = `
+
+                <thead>
+
+                    <tr>
+
+                        <th>Item Code</th>
+
+                        <th>Description</th>
+
+                        <th>Items Done</th>
+
+                        <th>Total Amount</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody></tbody>
+
+            `;
+
+
+            const tbody =
+                table.querySelector("tbody");
+
+
+            let advisorTotal = 0;
+
+
+            // ------------------------------------------
+            // Items
+            // ------------------------------------------
 
             Object.keys(items)
                 .sort()
@@ -543,49 +647,81 @@ async function generateAdvisorItemReport() {
                         };
 
 
-                    const amount =
+                    const total =
+                        quantity *
                         itemInfo.cost;
 
 
-                    const total =
-                        quantity * amount;
+                    advisorTotal += total;
 
 
-                    tbody.innerHTML += `
+                    const row =
+                        document.createElement("tr");
 
-                        <tr>
 
-                            <td>
-                                ${advisor}
-                            </td>
+                    row.innerHTML = `
 
-                            <td>
-                                ${itemCode}
-                            </td>
+                        <td>
+                            ${itemCode}
+                        </td>
 
-                            <td>
-                                ${itemInfo.description}
-                            </td>
+                        <td>
+                            ${itemInfo.description}
+                        </td>
 
-                            <td>
-                                ${quantity}
-                            </td>
+                        <td class="quantity-cell">
+                            ${quantity}
+                        </td>
 
-                            <td>
-                                ₹${amount.toLocaleString("en-IN")}
-                            </td>
-
-                            <td>
-                                ₹${total.toLocaleString("en-IN")}
-                            </td>
-
-                        </tr>
+                        <td class="amount-cell">
+                            ₹${total.toLocaleString("en-IN")}
+                        </td>
 
                     `;
 
+
+                    tbody.appendChild(row);
+
                 });
 
+
+            container.appendChild(table);
+
+
+            // ------------------------------------------
+            // Advisor Total
+            // ------------------------------------------
+
+            const totalDiv =
+                document.createElement("div");
+
+
+            totalDiv.className =
+                "advisor-total";
+
+
+            totalDiv.innerHTML = `
+
+                Advisor Total:
+                <strong>
+                    ₹${advisorTotal.toLocaleString("en-IN")}
+                </strong>
+
+            `;
+
+
+            container.appendChild(
+                totalDiv
+            );
+
         });
+
+
+        // Enable PDF
+
+        document.getElementById(
+            "advisorExportBtn"
+        ).disabled = false;
 
 
     }
@@ -787,5 +923,646 @@ const fileName =
 `Repair_Report_${regionName}_${reportDate}.pdf`;
 
 doc.save(fileName);
+
+}// ======================================================
+// EXPORT ADVISOR ITEM & AMOUNT PDF
+// ======================================================
+
+async function exportAdvisorItemPDF() {
+
+    const { jsPDF } = window.jspdf;
+
+    const doc = new jsPDF("p", "mm", "a4");
+
+    // ==================================================
+    // PAGE SETTINGS
+    // ==================================================
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    const leftMargin = 14;
+    const rightMargin = 14;
+
+    let currentY = 15;
+
+
+    // ==================================================
+    // HELPER: FORMAT MONEY
+    // ==================================================
+
+    function formatMoney(value) {
+
+        if (value === null || value === undefined) {
+            return "Rs. 0";
+        }
+
+        // Convert to string
+        let text = String(value).trim();
+
+        // Remove Rs / ₹ / commas / spaces / other symbols
+        text = text
+            .replace(/₹/g, "")
+            .replace(/Rs\.?/gi, "")
+            .replace(/,/g, "")
+            .replace(/\s/g, "")
+            .replace(/[^\d.-]/g, "");
+
+        const number = Number(text);
+
+        if (isNaN(number)) {
+            return "Rs. 0";
+        }
+
+        return "Rs. " + number.toLocaleString("en-IN");
+    }
+
+
+    // ==================================================
+    // HEADING
+    // ==================================================
+
+    doc.setFont("helvetica", "normal");
+
+    doc.setFontSize(18);
+
+    doc.text(
+        "Labour Management System",
+        pageWidth / 2,
+        currentY,
+        {
+            align: "center"
+        }
+    );
+
+    currentY += 9;
+
+
+    doc.setFontSize(14);
+
+    doc.text(
+        "Advisor Item & Amount Report",
+        pageWidth / 2,
+        currentY,
+        {
+            align: "center"
+        }
+    );
+
+    currentY += 11;
+
+
+    // ==================================================
+    // DATE
+    // ==================================================
+
+    const fromDate =
+        document.getElementById("fromDate").value;
+
+    const toDate =
+        document.getElementById("toDate").value;
+
+
+    let from = "-";
+    let to = "-";
+
+
+    if (fromDate) {
+
+        from =
+            new Date(fromDate)
+            .toLocaleDateString("en-GB");
+
+    }
+
+
+    if (toDate) {
+
+        to =
+            new Date(toDate)
+            .toLocaleDateString("en-GB");
+
+    }
+
+
+    doc.setFontSize(10);
+
+    doc.setFont("helvetica", "normal");
+
+    doc.text(
+        `From : ${from}    To : ${to}`,
+        leftMargin,
+        currentY
+    );
+
+    currentY += 6;
+
+
+    // ==================================================
+    // REGION
+    // ==================================================
+
+    const regionSelect =
+        document.getElementById("reportRegion");
+
+
+    let regionText = "All Regions";
+
+
+    if (regionSelect) {
+
+        const selectedOption =
+            regionSelect.options[
+                regionSelect.selectedIndex
+            ];
+
+        if (selectedOption) {
+
+            regionText =
+                selectedOption.text;
+
+        }
+
+    }
+
+
+    doc.text(
+        `Region : ${regionText}`,
+        leftMargin,
+        currentY
+    );
+
+    currentY += 10;
+
+
+    // ==================================================
+    // REPORT CONTAINER
+    // ==================================================
+
+    const container =
+        document.getElementById(
+            "advisorItemReportContainer"
+        );
+
+
+    if (!container) {
+
+        alert(
+            "Advisor Item Report container not found."
+        );
+
+        return;
+
+    }
+
+
+    if (container.children.length === 0) {
+
+        alert(
+            "Please generate the Advisor Item Report first."
+        );
+
+        return;
+
+    }
+
+
+    // ==================================================
+    // FIND ADVISOR SECTIONS
+    // ==================================================
+
+    const advisorSections =
+        container.querySelectorAll("h3");
+
+
+    if (advisorSections.length === 0) {
+
+        alert(
+            "No advisor data available for PDF."
+        );
+
+        return;
+
+    }
+
+
+    // ==================================================
+    // PROCESS EACH ADVISOR
+    // ==================================================
+
+    advisorSections.forEach(
+        (advisorHeading, index) => {
+
+
+            // ------------------------------------------
+            // Advisor Name
+            // ------------------------------------------
+
+            const advisorName =
+                advisorHeading.textContent
+                .replace("Advisor:", "")
+                .trim();
+
+
+            // ------------------------------------------
+            // Find table
+            // ------------------------------------------
+
+            const table =
+                advisorHeading.nextElementSibling;
+
+
+            if (!table) {
+                return;
+            }
+
+
+            // ------------------------------------------
+            // Extract rows
+            // ------------------------------------------
+
+            const rows = [];
+
+
+            table
+                .querySelectorAll("tbody tr")
+                .forEach(tr => {
+
+
+                    const cells =
+                        tr.querySelectorAll("td");
+
+
+                    if (cells.length < 4) {
+                        return;
+                    }
+
+
+                    const itemCode =
+                        cells[0]
+                        .innerText
+                        .trim();
+
+
+                    const description =
+                        cells[1]
+                        .innerText
+                        .trim();
+
+
+                    const itemsDone =
+                        cells[2]
+                        .innerText
+                        .trim();
+
+
+                    const amount =
+                        cells[3]
+                        .innerText
+                        .trim();
+
+
+                    rows.push([
+
+                        itemCode,
+
+                        description,
+
+                        itemsDone,
+
+                        formatMoney(amount)
+
+                    ]);
+
+                });
+
+
+            // ------------------------------------------
+            // Skip empty advisor
+            // ------------------------------------------
+
+            if (rows.length === 0) {
+                return;
+            }
+
+
+            // ------------------------------------------
+            // Check page space
+            // ------------------------------------------
+
+            if (currentY > pageHeight - 65) {
+
+                doc.addPage();
+
+                currentY = 20;
+
+            }
+
+
+            // ------------------------------------------
+            // Advisor heading
+            // ------------------------------------------
+
+            doc.setFont("helvetica", "bold");
+
+            doc.setFontSize(13);
+
+            doc.text(
+                `Advisor: ${advisorName}`,
+                leftMargin,
+                currentY
+            );
+
+
+            currentY += 7;
+
+
+            // ------------------------------------------
+            // Advisor table
+            // ------------------------------------------
+
+            doc.autoTable({
+
+                startY: currentY,
+
+                margin: {
+                    left: leftMargin,
+                    right: rightMargin
+                },
+
+                tableWidth: "auto",
+
+                head: [[
+
+                    "Item Code",
+
+                    "Description",
+
+                    "Items Done",
+
+                    "Total Amount"
+
+                ]],
+
+                body: rows,
+
+                theme: "grid",
+
+
+                // --------------------------------------
+                // GENERAL STYLES
+                // --------------------------------------
+
+                styles: {
+
+                    font: "helvetica",
+
+                    fontSize: 9,
+
+                    cellPadding: 3,
+
+                    lineColor: [
+                        190,
+                        190,
+                        190
+                    ],
+
+                    lineWidth: 0.2,
+
+                    valign: "middle"
+
+                },
+
+
+                // --------------------------------------
+                // HEADER
+                // --------------------------------------
+
+                headStyles: {
+
+                    fillColor: [
+                        41,
+                        128,
+                        185
+                    ],
+
+                    textColor: 255,
+
+                    fontStyle: "bold",
+
+                    halign: "left",
+
+                    valign: "middle"
+
+                },
+
+
+                // --------------------------------------
+                // COLUMNS
+                // --------------------------------------
+
+                columnStyles: {
+
+                    0: {
+
+                        cellWidth: 35,
+
+                        halign: "left"
+
+                    },
+
+                    1: {
+
+                        cellWidth: 78,
+
+                        halign: "left"
+
+                    },
+
+                    2: {
+
+                        cellWidth: 30,
+
+                        halign: "center"
+
+                    },
+
+                    3: {
+
+                        cellWidth: 39,
+
+                        halign: "right"
+
+                    }
+
+                },
+
+
+                // --------------------------------------
+                // BODY ALIGNMENT
+                // --------------------------------------
+
+                bodyStyles: {
+
+                    valign: "middle"
+
+                },
+
+
+                // --------------------------------------
+                // AMOUNT COLUMN
+                // --------------------------------------
+
+                didParseCell: function (data) {
+
+                    if (
+                        data.section === "body" &&
+                        data.column.index === 3
+                    ) {
+
+                        data.cell.styles.halign =
+                            "right";
+
+                    }
+
+                    if (
+                        data.section === "body" &&
+                        data.column.index === 2
+                    ) {
+
+                        data.cell.styles.halign =
+                            "center";
+
+                    }
+
+                }
+
+            });
+
+
+            // ------------------------------------------
+            // Get table bottom position
+            // ------------------------------------------
+
+            currentY =
+                doc.lastAutoTable.finalY + 5;
+
+
+            // ------------------------------------------
+            // Advisor Total
+            // ------------------------------------------
+
+            const totalElement =
+                table.nextElementSibling;
+
+
+            if (totalElement) {
+
+
+                let totalText =
+                    totalElement.innerText
+                    .replace(
+                        "Advisor Total:",
+                        ""
+                    )
+                    .trim();
+
+
+                totalText =
+                    formatMoney(totalText);
+
+
+                doc.setFont(
+                    "helvetica",
+                    "bold"
+                );
+
+                doc.setFontSize(10);
+
+
+                // Right aligned
+                doc.text(
+
+                    `Advisor Total: ${totalText}`,
+
+                    pageWidth - rightMargin,
+
+                    currentY,
+
+                    {
+                        align: "right"
+                    }
+
+                );
+
+
+                currentY += 12;
+
+            }
+
+        }
+    );
+
+
+    // ==================================================
+    // FOOTER
+    // ==================================================
+
+    if (currentY > pageHeight - 20) {
+
+        doc.addPage();
+
+        currentY = 20;
+
+    }
+
+
+    doc.setFont(
+        "helvetica",
+        "normal"
+    );
+
+    doc.setFontSize(9);
+
+
+    const generatedOn =
+        new Date().toLocaleString(
+            "en-GB",
+            {
+
+                day: "2-digit",
+
+                month: "2-digit",
+
+                year: "numeric",
+
+                hour: "2-digit",
+
+                minute: "2-digit",
+
+                hour12: true
+
+            }
+        );
+
+
+    doc.text(
+
+        `Generated on: ${generatedOn}`,
+
+        leftMargin,
+
+        currentY + 5
+
+    );
+
+
+    // ==================================================
+    // SAVE PDF
+    // ==================================================
+
+    doc.save(
+        "Advisor_Item_Amount_Report.pdf"
+    );
 
 }

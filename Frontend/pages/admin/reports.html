@@ -65,9 +65,7 @@ Generate Report
 </button>
 <br><br>
 <button id="exportBtn" onclick="exportPDF()" disabled>
-
 Export PDF
-
 </button>
 
 </div>
@@ -143,20 +141,14 @@ Export PDF
 
 <table id="advisorItemReportTable">
 
-    <thead>
-        <tr>
-            <th>Advisor</th>
-            <th>Item Code</th>
-            <th>Description</th>
-            <th>Quantity</th>
-            <th>Amount</th>
-            <th>Total</th>
-        </tr>
-    </thead>
-
-    <tbody id="advisorItemReportBody">
-    </tbody>
-
+   <div id="advisorItemReportContainer"></div>
+<br><br>
+<button
+    id="advisorExportBtn"
+    onclick="exportAdvisorItemPDF()"
+    disabled>
+    Export Advisor Item PDF
+</button>
 </table>
 </div>
 
