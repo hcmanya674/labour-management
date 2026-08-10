@@ -213,7 +213,12 @@ async function loadRepairOrders() {
             const workDone =
                 workDescriptions || "-";
 
+            // ==================================
+            // INCENTIVE AMOUNT
+            // ==================================
 
+            const incentiveAmount =
+                Number(ro.incentiveAmount || 0);
             // ==================================
             // TABLE ROW
             // ==================================
@@ -245,7 +250,9 @@ async function loadRepairOrders() {
                 <td>
                     ${workDone}
                 </td>
-
+                <td>
+                        ₹${incentiveAmount.toFixed(2)}
+                </td>
                 <td>
 
                     <button
@@ -276,7 +283,7 @@ async function loadRepairOrders() {
             <tr>
 
                 <td
-                    colspan="7"
+                    colspan="8"
                     style="
                         text-align:center;
                         color:red;

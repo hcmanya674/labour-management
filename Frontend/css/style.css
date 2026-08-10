@@ -921,3 +921,85 @@ button{
     }
 
 }
+/* =====================================================
+   VIEW RO - SELECTED ITEMS
+===================================================== */
+
+.selected-items {
+
+    width: 100%;
+
+    background: #F5F9FF;
+
+    border: 1px solid #90CAF9;
+
+    border-radius: 8px;
+
+    padding: 10px;
+
+}
+
+
+.selected-item-row {
+
+    display: grid;
+
+    grid-template-columns:
+        35px
+        90px
+        1fr
+        100px;
+
+    gap: 10px;
+
+    align-items: center;
+
+    padding: 10px;
+
+    border-bottom:
+        1px solid #E3F2FD;
+
+}
+
+
+.selected-item-row:last-child {
+
+    border-bottom: none;
+
+}
+
+
+.item-number {
+
+    font-weight: bold;
+
+    color: #0D47A1;
+
+}
+
+
+.item-code {
+
+    font-weight: bold;
+
+    color: #0D47A1;
+
+}
+
+
+.item-description {
+
+    color: #333;
+
+}
+
+
+.item-cost {
+
+    text-align: right;
+
+    font-weight: bold;
+
+    color: #0D47A1;
+
+}

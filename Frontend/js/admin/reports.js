@@ -125,7 +125,7 @@ exportBtn.disabled = true;
            let workDone = ro.itemCode;
 
 const itemDoc =
-    await db.collection("itemcode")
+    await db.collection("itemcodes")
     .doc(ro.itemCode)
     .get();
 
@@ -172,27 +172,32 @@ if(itemDoc.exists){
 
             const date =
                 createdDate.toLocaleDateString("en-GB");
+const incentiveAmount =
+    Number(ro.incentiveAmount) || 0;
 
-            html += `
+html += `
 
-            <tr>
+<tr>
 
-                <td>${ro.roNumber}</td>
+    <td>${ro.roNumber || "-"}</td>
 
-                <td>${date}</td>
+    <td>${date}</td>
 
-                <td>${regionName}</td>
-                 
-                <td>${ro.advisorName}</td>
+    <td>${regionName || "-"}</td>
 
-                <td>${ro.vehicleNumber}</td>
+    <td>${ro.advisorName || "-"}</td>
 
-                <td>${workDone}</td>
+    <td>${ro.vehicleNumber || "-"}</td>
 
-            </tr>
+    <td>${workDone || "-"}</td>
 
-            `;
+    <td>
+        ₹${incentiveAmount.toLocaleString("en-IN")}
+    </td>
 
+</tr>
+
+`;
         }
     //--------------------------------------------------
 // Generate Work Summary
@@ -295,7 +300,7 @@ if (html === "") {
     document.getElementById("reportBody").innerHTML = `
 
     <tr>
-        <td colspan="6"
+        <td colspan="7"
             style="
                 text-align:center;
                 color:red;
@@ -479,34 +484,44 @@ async function generateAdvisorItemReport() {
             // ----------------------------------------------
             // Create Advisor
             // ----------------------------------------------
+                if (!advisorData[advisor]) {
 
-            if (!advisorData[advisor]) {
+                    advisorData[advisor] = {
+                        items: {},
+                        incentive: 0
+                    };
 
-                advisorData[advisor] = {};
-
-            }
+                }
 
 
             // ----------------------------------------------
             // Count Items
             // ----------------------------------------------
 
-            items.forEach(itemCode => {
+                items.forEach(itemCode => {
 
-                if (!advisorData[advisor][itemCode]) {
+            if (!advisorData[advisor].items[itemCode]) {
 
-                    advisorData[advisor][itemCode] = {
+                advisorData[advisor].items[itemCode] = {
 
-                        quantity: 0
+                    quantity: 0
 
-                    };
+                };
 
                 }
 
-                advisorData[advisor][itemCode]
+                advisorData[advisor].items[itemCode]
                     .quantity++;
 
             });
+            // ----------------------------------------------
+            // INCENTIVE AMOUNT
+            // ----------------------------------------------
+
+            const incentive =
+                Number(ro.incentiveAmount) || 0;
+
+            advisorData[advisor].incentive += incentive;
 
         });
 
@@ -559,8 +574,11 @@ async function generateAdvisorItemReport() {
 
         advisors.forEach(advisor => {
 
-            const items =
-                advisorData[advisor];
+                const items =
+            advisorData[advisor].items;
+
+        const incentiveAmount =
+            advisorData[advisor].incentive || 0;
 
 
             // ------------------------------------------
@@ -687,32 +705,51 @@ async function generateAdvisorItemReport() {
 
             container.appendChild(table);
 
+// ------------------------------------------
+// BILLING + INCENTIVE SUMMARY
+// ------------------------------------------
 
-            // ------------------------------------------
-            // Advisor Total
-            // ------------------------------------------
+const totalDiv =
+    document.createElement("div");
 
-            const totalDiv =
-                document.createElement("div");
-
-
-            totalDiv.className =
-                "advisor-total";
+totalDiv.className =
+    "advisor-total";
 
 
-            totalDiv.innerHTML = `
+// Net amount after incentive
 
-                Advisor Total:
-                <strong>
-                    ₹${advisorTotal.toLocaleString("en-IN")}
-                </strong>
-
-            `;
+const netAmount =
+    advisorTotal - incentiveAmount;
 
 
-            container.appendChild(
-                totalDiv
-            );
+totalDiv.innerHTML = `
+
+    <div>
+        Total Billing:
+        <strong>
+            ₹${advisorTotal.toLocaleString("en-IN")}
+        </strong>
+    </div>
+
+    <div>
+        Incentive Amount:
+        <strong>
+            ₹${incentiveAmount.toLocaleString("en-IN")}
+        </strong>
+    </div>
+
+    <div>
+        Net Billing:
+        <strong>
+            ₹${netAmount.toLocaleString("en-IN")}
+        </strong>
+    </div>
+
+`;
+
+container.appendChild(
+    totalDiv
+);
 
         });
 
@@ -722,6 +759,7 @@ async function generateAdvisorItemReport() {
         document.getElementById(
             "advisorExportBtn"
         ).disabled = false;
+
 
 
     }
@@ -1449,56 +1487,170 @@ async function exportAdvisorItemPDF() {
 
 
             // ------------------------------------------
-            // Advisor Total
-            // ------------------------------------------
+// BILLING / INCENTIVE / NET BILLING
+// ------------------------------------------
 
-            const totalElement =
-                table.nextElementSibling;
+const totalElement =
+    table.nextElementSibling;
 
+if (totalElement) {
 
-            if (totalElement) {
+    // Get all text from the dashboard summary
+    const summaryText =
+        totalElement.innerText;
 
+    console.log(
+        "PDF Summary:",
+        summaryText
+    );
 
-                let totalText =
-                    totalElement.innerText
-                    .replace(
-                        "Advisor Total:",
-                        ""
-                    )
-                    .trim();
+    // --------------------------------------
+    // Extract Total Billing
+    // --------------------------------------
 
+    const billingMatch =
+        summaryText.match(
+            /Total Billing:\s*₹?\s*([\d,.-]+)/i
+        );
 
-                totalText =
-                    formatMoney(totalText);
-
-
-                doc.setFont(
-                    "helvetica",
-                    "bold"
-                );
-
-                doc.setFontSize(10);
-
-
-                // Right aligned
-                doc.text(
-
-                    `Advisor Total: ${totalText}`,
-
-                    pageWidth - rightMargin,
-
-                    currentY,
-
-                    {
-                        align: "right"
-                    }
-
-                );
+    const billing =
+        billingMatch
+            ? Number(
+                billingMatch[1]
+                .replace(/,/g, "")
+              )
+            : 0;
 
 
-                currentY += 12;
+    // --------------------------------------
+    // Extract Incentive Amount
+    // --------------------------------------
 
-            }
+    const incentiveMatch =
+        summaryText.match(
+            /Incentive Amount:\s*₹?\s*([\d,.-]+)/i
+        );
+
+    const incentive =
+        incentiveMatch
+            ? Number(
+                incentiveMatch[1]
+                .replace(/,/g, "")
+              )
+            : 0;
+
+
+    // --------------------------------------
+    // Extract Net Billing
+    // --------------------------------------
+
+    const netBillingMatch =
+        summaryText.match(
+            /Net Billing:\s*₹?\s*([\d,.-]+)/i
+        );
+
+    const netBilling =
+        netBillingMatch
+            ? Number(
+                netBillingMatch[1]
+                .replace(/,/g, "")
+              )
+            : 0;
+
+
+    console.log(
+        "Billing:",
+        billing
+    );
+
+    console.log(
+        "Incentive:",
+        incentive
+    );
+
+    console.log(
+        "Net Billing:",
+        netBilling
+    );
+
+
+    // --------------------------------------
+    // Format values
+    // --------------------------------------
+
+    const billingText =
+        "Rs. " +
+        billing.toLocaleString("en-IN");
+
+    const incentiveText =
+        "Rs. " +
+        incentive.toLocaleString("en-IN");
+
+    const netBillingText =
+        "Rs. " +
+        netBilling.toLocaleString("en-IN");
+
+
+    // --------------------------------------
+    // PDF Styling
+    // --------------------------------------
+
+    doc.setFont(
+        "helvetica",
+        "bold"
+    );
+
+    doc.setFontSize(10);
+
+
+    // --------------------------------------
+    // Total Billing
+    // --------------------------------------
+
+    doc.text(
+        `Total Billing: ${billingText}`,
+        pageWidth - rightMargin,
+        currentY,
+        {
+            align: "right"
+        }
+    );
+
+    currentY += 5;
+
+
+    // --------------------------------------
+    // Incentive Amount
+    // --------------------------------------
+
+    doc.text(
+        `Incentive Amount: ${incentiveText}`,
+        pageWidth - rightMargin,
+        currentY,
+        {
+            align: "right"
+        }
+    );
+
+    currentY += 5;
+
+
+    // --------------------------------------
+    // Net Billing
+    // --------------------------------------
+
+    doc.text(
+        `Net Billing: ${netBillingText}`,
+        pageWidth - rightMargin,
+        currentY,
+        {
+            align: "right"
+        }
+    );
+
+    currentY += 12;
+
+}
 
         }
     );

@@ -202,7 +202,10 @@ async function saveRO() {
         .value
         .trim()
         .toUpperCase();
-
+   const incentiveAmount =
+    document.getElementById("incentiveAmount")
+    .value
+    .trim();
     // ------------------------------------------
     // Get selected item codes
     // ------------------------------------------
@@ -275,6 +278,25 @@ const selectedItems =
 
     }
 
+
+    if (incentiveAmount === "") {
+
+    alert("Please enter Incentive Amount.");
+
+    return;
+
+    }
+
+    const incentive =
+        Number(incentiveAmount);
+
+    if (isNaN(incentive) || incentive < 0) {
+
+        alert("Please enter a valid Incentive Amount.");
+
+        return;
+
+    }
     // ------------------------------------------
     // Item validation
     // ------------------------------------------
@@ -370,6 +392,8 @@ const selectedItems =
 
             // MULTIPLE ITEM CODES
             itemCodes: selectedItems,
+   
+            incentiveAmount: incentive,
 
             status: "Pending",
 
@@ -394,7 +418,8 @@ const selectedItems =
         document.getElementById("vehicleNumber").value = "";
 
         document.getElementById("advisorName").value = "";
-
+  
+        document.getElementById("incentiveAmount").value = "";
         // Uncheck all items
 
         document

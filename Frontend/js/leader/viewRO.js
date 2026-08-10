@@ -122,6 +122,22 @@ db.collection("repairorders")
         ).value =
             repairData.advisorName || "";
 
+            // =================================================
+            // INCENTIVE AMOUNT
+            // =================================================
+
+            const incentiveAmount =
+                Number(repairData.incentiveAmount || 0);
+
+            const incentiveField =
+                document.getElementById("incentiveAmount");
+
+            if (incentiveField) {
+
+                incentiveField.value =
+                    incentiveAmount.toFixed(2);
+
+            }
 
         // ======================================
         // GET ITEM CODES
