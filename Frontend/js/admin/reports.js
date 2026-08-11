@@ -87,7 +87,6 @@ exportBtn.disabled = true;
     query.get().then(async(snapshot)=>{
 
         let html="";
-        let workSummary = {};
         let advisorSummary = {};
         let allWorkTypes = new Set();
         for(const doc of snapshot.docs){
@@ -117,36 +116,90 @@ exportBtn.disabled = true;
                 regionName =regionDoc.data().regionName;
 
             }
-     
+                
             //--------------------------------------------------
-            // Get Work Description
+            // GET ITEM CODES + BILLING AMOUNT
             //--------------------------------------------------
 
-           let workDone = ro.itemCode;
+            let itemCodes = [];
 
-const itemDoc =
-    await db.collection("itemcodes")
-    .doc(ro.itemCode)
-    .get();
+            // New records
+            if (Array.isArray(ro.itemCodes)) {
 
-if(itemDoc.exists){
+                itemCodes = ro.itemCodes;
 
-    const item = itemDoc.data();
+            }
 
-    workDone = `${item.itemCode} - ${item.description}`;
+            // Old records
+            else if (ro.itemCodes) {
 
-}
-             // Count each work type
+                itemCodes = [ro.itemCodes];
 
-            if(workSummary[workDone]){
+            }
 
-             workSummary[workDone]++;
+            // Very old records
+            else if (ro.itemCode) {
 
-           }else{
+                itemCodes = [ro.itemCode];
 
-              workSummary[workDone] = 1;
+            }
 
-         }
+
+            // ------------------------------------------
+            // Calculate Billing Amount
+            // ------------------------------------------
+
+            let billingAmount = 0;
+
+            let workDescriptions = [];
+
+
+            // Loop through every selected item
+            for (const itemCode of itemCodes) {
+
+                const itemDoc =
+                    await db.collection("itemcodes")
+                    .doc(itemCode)
+                    .get();
+
+
+                if (itemDoc.exists) {
+
+                    const item = itemDoc.data();
+
+
+                    // Add item cost
+                    billingAmount +=
+                        Number(item.cost) || 0;
+
+
+                    // Add description
+                    workDescriptions.push(
+                        `${item.itemCode} - ${item.description || "-"}`
+                    );
+
+                }
+
+                else {
+
+                    // If item code no longer exists
+                    workDescriptions.push(itemCode);
+
+                }
+
+            }
+
+
+            // ------------------------------------------
+            // Work Done Display
+            // ------------------------------------------
+
+            const workDone =
+            workDescriptions.length > 0
+                ? workDescriptions
+                    .map(item => `<div class="work-item">${item}</div>`)
+                    .join("")
+                : "-";
          //--------------------------------------
         // Advisor Wise Summary
         //--------------------------------------
@@ -172,8 +225,7 @@ if(itemDoc.exists){
 
             const date =
                 createdDate.toLocaleDateString("en-GB");
-const incentiveAmount =
-    Number(ro.incentiveAmount) || 0;
+
 
 html += `
 
@@ -192,32 +244,13 @@ html += `
     <td>${workDone || "-"}</td>
 
     <td>
-        ₹${incentiveAmount.toLocaleString("en-IN")}
+        ₹${billingAmount.toLocaleString("en-IN")}
     </td>
 
 </tr>
 
 `;
-        }
-    //--------------------------------------------------
-// Generate Work Summary
-//--------------------------------------------------
-
-let summaryHTML = "";
-
-for (const work in workSummary) {
-
-    summaryHTML += `
-    <tr>
-        <td>${work}</td>
-        <td>${workSummary[work]}</td>
-    </tr>
-    `;
-
-}
-
-document.getElementById("workSummary").innerHTML = summaryHTML;
-
+  }
 //------------------------------------------------
 // Advisor Wise Summary Table
 //------------------------------------------------
@@ -293,8 +326,6 @@ document.getElementById("advisorSummaryBody").innerHTML=body;
 if (html === "") {
    exportBtn.disabled = true;
 
-    // Clear previous work summary
-    document.getElementById("workSummary").innerHTML = "";
 
     // Show "No Repair Orders Found"
     document.getElementById("reportBody").innerHTML = `
@@ -341,7 +372,9 @@ btn.innerHTML = "Generate Report";
 // ======================================================
 
 async function generateAdvisorItemReport() {
-
+   const advisorExportBtn =
+    document.getElementById("advisorExportBtn");
+    advisorExportBtn.disabled = true;
     const fromDate =
         document.getElementById("fromDate").value;
 
@@ -350,7 +383,7 @@ async function generateAdvisorItemReport() {
 
     const selectedRegion =
         document.getElementById("reportRegion").value;
-
+   
     if (!fromDate || !toDate) {
 
         alert("Please select From Date and To Date.");
@@ -870,50 +903,6 @@ async function exportPDF(){
 
     });
 
-    //---------------------------------------------------
-    // Work Summary
-    //---------------------------------------------------
-
-    let summary=[];
-
-    document.querySelectorAll("#workSummary tr")
-    .forEach(tr=>{
-
-        let row=[];
-
-        tr.querySelectorAll("td")
-        .forEach(td=>{
-
-            row.push(td.innerText);
-
-        });
-
-        if(row.length>0){
-
-            summary.push(row);
-
-        }
-
-    });
-
-    doc.autoTable({
-
-        startY:doc.lastAutoTable.finalY+12,
-
-        head:[[
-            "Work Type",
-            "Count"
-        ]],
-
-        body:summary,
-
-        theme:"striped",
-
-        headStyles:{
-            fillColor:[39,174,96]
-        }
-
-    });
 
     //---------------------------------------------------
     // Footer

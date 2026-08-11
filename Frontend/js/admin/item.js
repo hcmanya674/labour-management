@@ -35,7 +35,7 @@ loadAdminLayout("Item Code Management", `
     <th>Description</th>
     <th>Status</th>
     <th>Edit</th>
-      <th>Edit Cost</th>
+    <th>Edit Cost</th>
     <th>Deactivate</th>
     <th>Activate</th>
 </tr>
@@ -60,19 +60,62 @@ async function saveItem() {
         .trim()
         .toUpperCase();
     
-    const cost = document.getElementById("itemCost")//cost
-    .value
-    .trim();
+    const billingAmount =
+        Number(
+            document.getElementById("itemBillingAmount")
+                .value
+        );
+
+    const incentiveAmount =
+        Number(
+            document.getElementById("itemIncentiveAmount")
+                .value
+        );
     
 
-  if(code === "" || description === "" || cost === ""){//cost
+    // ==========================================
+    // VALIDATION
+    // ==========================================
+
+    if (
+        code === "" ||
+        description === "" ||
+        document.getElementById("itemBillingAmount").value === "" ||
+        document.getElementById("itemIncentiveAmount").value === ""
+    ) {
 
         alert("Please fill all fields.");
 
         return;
 
     }
+        if (billingAmount < 0) {
 
+        alert("Billing amount cannot be negative.");
+
+        return;
+
+    }
+
+
+    if (incentiveAmount < 0) {
+
+        alert("Incentive amount cannot be negative.");
+
+        return;
+
+    }
+
+
+    if (incentiveAmount > billingAmount) {
+
+        alert(
+            "Incentive amount cannot be greater than billing amount."
+        );
+
+        return;
+
+    }
     //--------------------------------------------------
     // Check Duplicate Item Code
     //--------------------------------------------------
@@ -115,37 +158,69 @@ async function saveItem() {
 
     }
 
-    //--------------------------------------------------
-    // Save
-    //--------------------------------------------------
+    
+    // ==========================================
+    // SAVE ITEM CODE
+    // ==========================================
 
-    db.collection("itemcodes")
-    .doc(code)
-    .set({
+    try {
 
-        itemCode: code,
+        await db.collection("itemcodes")
+            .doc(code)
+            .set({
 
-        description: description,
-        
-         cost: Number(cost),//cost
+                itemCode: code,
 
-        active: true,
+                description: description,
 
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                billingAmount: billingAmount,
 
-    })
+                incentiveAmount: incentiveAmount,
 
-    .then(()=>{
+                active: true,
 
-        alert("Item Code Added Successfully.");
+                createdAt:
+                    firebase.firestore.FieldValue
+                        .serverTimestamp()
 
-        document.getElementById("itemCode").value="";
-        document.getElementById("itemDescription").value="";
-        document.getElementById("itemCost").value="";//cost
+            });
+
+
+        alert(
+            "Item Code Added Successfully."
+        );
+
+
+        // ======================================
+        // CLEAR FORM
+        // ======================================
+
+        document.getElementById("itemCode").value = "";
+
+        document.getElementById("itemDescription").value = "";
+
+        document.getElementById("itemBillingAmount").value = "";
+
+        document.getElementById("itemIncentiveAmount").value = "";
+
 
         loadItems();
 
-    });
+    }
+
+    catch (error) {
+
+        console.error(
+            "Error saving item:",
+            error
+        );
+
+        alert(
+            "Unable to save Item Code: " +
+            error.message
+        );
+
+    }
 
 }
 
@@ -159,10 +234,12 @@ function loadItems() {
         <tr>
             <th>Item Code</th>
             <th>Description</th>
-            <th>Cost</th>
+            <th>Billing Amount</th>
+            <th>Incentive Amount</th>
             <th>Status</th>
             <th>Edit</th>
-            <th>Edit Cost</th>
+            <th>Edit Billing</th>
+            <th>Edit Incentive</th>
             <th>Action</th>
         </tr>
         `;
@@ -172,16 +249,67 @@ function loadItems() {
             const data = doc.data();
 
             const row = table.insertRow();
+            
+                // ==================================
+                // ITEM CODE
+                // ==================================
 
-            row.insertCell(0).textContent = data.itemCode;
-            row.insertCell(1).textContent = data.description;
-            row.insertCell(2).textContent = data.cost;//cost
-            row.insertCell(3).textContent =
-                data.active ? "Active" : "Inactive";
+                row.insertCell(0)
+                    .textContent =
+                    data.itemCode;
 
-            const editCell = row.insertCell(4);
+
+                // ==================================
+                // DESCRIPTION
+                // ==================================
+
+                row.insertCell(1)
+                    .textContent =
+                    data.description;
+
+
+                // ==================================
+                // BILLING AMOUNT
+                // ==================================
+
+                row.insertCell(2)
+                    .textContent =
+                    "₹" +
+                    Number(
+                        data.billingAmount || 0
+                    ).toLocaleString("en-IN");
+
+
+                // ==================================
+                // INCENTIVE AMOUNT
+                // ==================================
+
+                row.insertCell(3)
+                    .textContent =
+                    "₹" +
+                    Number(
+                        data.incentiveAmount || 0
+                    ).toLocaleString("en-IN");
+
+
+                // ==================================
+                // STATUS
+                // ==================================
+
+                row.insertCell(4)
+                    .textContent =
+                    data.active
+                        ? "Active"
+                        : "Inactive";
+
+                // ==================================
+                // EDIT DESCRIPTION
+                // ==================================
+
+            const editCell = row.insertCell(5);
 
             const editBtn = document.createElement("button");
+
             editBtn.textContent = "Edit";
 
             // Trigger the edit prompt with item ID and existing description
@@ -190,46 +318,62 @@ function loadItems() {
             };
 
             editCell.appendChild(editBtn);
-//EDIT COST BUTTON 
-            const costCell = row.insertCell(5);
+            // ==================================
+            // EDIT BILLING
+            // ==================================
+            const billingCell = row.insertCell(6);
 
-            const costBtn = document.createElement("button");
-           costBtn.textContent = "Edit Cost";
+            const billingBtn = document.createElement("button");
+            billingBtn.textContent = "Edit Billing";
 
-           costBtn.onclick = function () {
-            editCost(doc.id, data.cost);
-        };
+            billingBtn.onclick = function () {
+            editBilling(doc.id, data.billingAmount|| 0);
+            };
 
-       costCell.appendChild(costBtn);
+            billingCell.appendChild(billingBtn);
+            // ==================================
+            // EDIT INCENTIVE
+            // ==================================
+            const incentiveCell = row.insertCell(7);
 
-            // Action Button
-        const actionCell = row.insertCell(6);
+            const incentiveBtn = document.createElement("button");
+            incentiveBtn.textContent = "Edit Incentive";
+            incentiveBtn.onclick = function () {
+                editIncentive(doc.id, data.incentiveAmount || 0, data.billingAmount || 0);
+            };
+            incentiveCell.appendChild(incentiveBtn);
 
-        const actionBtn = document.createElement("button");
+            // ==================================
+            // ACTION
+            // ==================================
+            const actionCell = row.insertCell(8);
 
-if (data.active) {
+            const actionBtn = document.createElement("button");
 
-    actionBtn.textContent = "Deactivate";
-    actionBtn.style.background = "#43a047";
-    actionBtn.style.color = "white";
+            if (data.active) {
 
-    actionBtn.onclick = function () {
-        deleteItem(doc.id);
-    };
+                actionBtn.textContent = "Deactivate";
+                actionBtn.style.background = "#43a047";
+                actionBtn.style.color = "white";
 
-} else {
+                actionBtn.onclick = function () {
+                    deleteItem(doc.id);
+                };
 
-    actionBtn.textContent = "Activate";
-    actionBtn.style.background =  "#e53935";
-    actionBtn.style.color = "white";
+            } 
+            else {
 
-    actionBtn.onclick = function () {
-        activateItem(doc.id);
-    };
+                actionBtn.textContent = "Activate";
+                actionBtn.style.background =  "#e53935";
+                actionBtn.style.color = "white";
 
-}
+                actionBtn.onclick = function () {
+                    activateItem(doc.id);
+                };
 
-actionCell.appendChild(actionBtn);
+            }
+
+            actionCell.appendChild(actionBtn);
 
         });
 
@@ -327,44 +471,95 @@ db.collection("itemcodes")
 
 
 }
-//edit cost
-async function editCost(id, currentCost) {
+//edit billing
+async function editBilling( id,currentBilling)
+ {
 
-    const newCost = prompt("Edit Cost", currentCost);
-
-    if (newCost == null)
+    const newBilling = prompt( "Enter Billing Amount",currentBilling);
+    if (newBilling === null)
         return;
-
-    const cost = Number(newCost);
-
-    if (isNaN(cost) || cost < 0) {
-
-        alert("Please enter a valid cost.");
-
+    const billing = Number(newBilling);
+    if (isNaN(billing) || billing < 0 ) 
+    {
+        alert("Please enter a valid billing amount.");
         return;
+    }
+    try {
+
+        await db.collection("itemcodes")
+            .doc(id)
+            .update({
+
+                billingAmount:
+                    billing
+
+            });
+        alert(
+            "Billing Amount Updated Successfully."
+        );
 
     }
 
-    db.collection("itemcodes")
-        .doc(id)
-        .update({
+    catch (error) {
 
-            cost: cost
+        console.error(error);
 
-        })
-        .then(() => {
+        alert(
+            error.message
+        );
 
-            alert("Cost Updated Successfully.");
-
-        })
-        .catch((error) => {
-
-            alert(error.message);
-
-        });
+    }
 
 }
 
+async function editIncentive( id, currentIncentive, currentBilling) 
+{
+    const newIncentive = prompt( "Enter Incentive Amount", currentIncentive);
+    if (newIncentive === null)
+        return;
+
+    const incentive = Number(newIncentive);
+
+    if ( isNaN(incentive) || incentive < 0 ) 
+    {
+        alert( "Please enter a valid incentive amount." );
+        return;
+    }
+
+
+    if ( incentive > Number(currentBilling) )
+   {
+        alert( "Incentive cannot be greater than Billing Amount." );
+        return;
+
+    }
+    try {
+
+        await db.collection("itemcodes")
+            .doc(id)
+            .update({
+
+                incentiveAmount:
+                    incentive
+
+            });
+        alert(
+            "Incentive Amount Updated Successfully."
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        alert(
+            error.message
+        );
+
+    }
+
+}
 // ==========================================
 // SEARCH ITEM CODE + DESCRIPTION ONLY
 // ==========================================

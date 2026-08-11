@@ -121,24 +121,34 @@ db.collection("repairorders")
             "advisorName"
         ).value =
             repairData.advisorName || "";
+        // =================================================
+        // BILLING AMOUNT
+        // =================================================
 
-            // =================================================
-            // INCENTIVE AMOUNT
-            // =================================================
+        const billingAmount =
+            Number(
+                repairData.billingAmount || 0
+            );
 
-            const incentiveAmount =
-                Number(repairData.incentiveAmount || 0);
+        const billingElement =
+            document.getElementById(
+                "billingAmount"
+            );
 
-            const incentiveField =
-                document.getElementById("incentiveAmount");
+        if (billingElement) {
 
-            if (incentiveField) {
+            billingElement.value =
+                "₹" +
+                billingAmount.toLocaleString(
+                    "en-IN",
+                    {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    }
+                );
 
-                incentiveField.value =
-                    incentiveAmount.toFixed(2);
-
-            }
-
+        }
+           
         // ======================================
         // GET ITEM CODES
         // ======================================
@@ -470,12 +480,53 @@ async function updateRO() {
 
     }
 
+    // ======================================
+    // CALCULATE BILLING AMOUNT
+    // ======================================
+
+    let billingAmount = 0;
+
+
+    try {
+
+        for (const itemCode of selectedItems) {
+
+            const itemDoc =
+                await db.collection("itemcodes")
+                .doc(itemCode)
+                .get();
+
+
+            if (itemDoc.exists) {
+
+                const itemData =
+                    itemDoc.data();
+
+                const itemCost =
+                    Number(itemData.cost) || 0;
+
+                billingAmount += itemCost;
+
+            }
+
+        }
+
+
+        console.log(
+            "Selected Items:",
+            selectedItems
+        );
+
+        console.log(
+            "New Billing Amount:",
+            billingAmount
+        );
 
     // ======================================
     // UPDATE FIRESTORE
     // ======================================
 
-    try {
+    
 
         await db.collection(
             "repairorders"
@@ -490,8 +541,11 @@ async function updateRO() {
                 advisorName,
 
             itemCodes:
-                selectedItems
+                selectedItems,
 
+
+            billingAmount:
+                billingAmount
         });
 
 

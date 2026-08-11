@@ -217,8 +217,8 @@ async function loadRepairOrders() {
             // INCENTIVE AMOUNT
             // ==================================
 
-            const incentiveAmount =
-                Number(ro.incentiveAmount || 0);
+            const billingAmount =
+                Number(ro.billingAmount || 0);
             // ==================================
             // TABLE ROW
             // ==================================
@@ -251,7 +251,7 @@ async function loadRepairOrders() {
                     ${workDone}
                 </td>
                 <td>
-                        ₹${incentiveAmount.toFixed(2)}
+                        ₹${ro.billingAmount?.toFixed(2) || "0.00"}
                 </td>
                 <td>
 

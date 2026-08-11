@@ -79,7 +79,7 @@ function loadRegion() {
 
 }
 // ==========================================
-// LOAD ITEM CODES
+// LOAD ITEM CODES + BILLING AMOUNT
 // ==========================================
 
 async function loadItems() {
@@ -112,7 +112,6 @@ async function loadItems() {
 
         container.innerHTML = "";
 
-        // No active items
         if (snapshot.empty) {
 
             container.innerHTML =
@@ -125,10 +124,14 @@ async function loadItems() {
 
             const data = doc.data();
 
-            console.log(
-                "Loading item:",
-                data
-            );
+            const itemCode =
+                data.itemCode || doc.id;
+
+            const description =
+                data.description || "";
+
+            const cost =
+                Number(data.cost) || 0;
 
             const itemDiv =
                 document.createElement("div");
@@ -143,12 +146,20 @@ async function loadItems() {
                     <input
                         type="checkbox"
                         name="itemCode"
-                        value="${data.itemCode}">
+                        value="${itemCode}"
+                        data-cost="${cost}"
+                        onchange="calculateBillingAmount()">
 
                     <span>
-                        ${data.itemCode}
+
+                        ${itemCode}
                         -
-                        ${data.description}
+                        ${description}
+
+                        <strong>
+                            ₹${cost.toLocaleString("en-IN")}
+                        </strong>
+
                     </span>
 
                 </label>
@@ -158,6 +169,8 @@ async function loadItems() {
             container.appendChild(itemDiv);
 
         });
+
+        calculateBillingAmount();
 
     }
 
@@ -172,6 +185,52 @@ async function loadItems() {
             "<p>Unable to load item codes.</p>";
 
     }
+
+}
+
+// ==========================================
+// CALCULATE TOTAL BILLING AMOUNT
+// ==========================================
+
+function calculateBillingAmount() {
+
+    const selectedItems =
+        document.querySelectorAll(
+            'input[name="itemCode"]:checked'
+        );
+
+    let total = 0;
+
+    selectedItems.forEach(checkbox => {
+
+        const cost =
+            Number(
+                checkbox.dataset.cost
+            ) || 0;
+
+        total += cost;
+
+    });
+
+    const totalElement =
+        document.getElementById(
+            "totalBillingAmount"
+        );
+
+    if (totalElement) {
+
+        totalElement.textContent =
+            "₹" +
+            total.toLocaleString(
+                "en-IN",
+                {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }
+            );
+
+    }
+
 }
 // ==========================================
 // SAVE REPAIR ORDER
@@ -202,10 +261,7 @@ async function saveRO() {
         .value
         .trim()
         .toUpperCase();
-   const incentiveAmount =
-    document.getElementById("incentiveAmount")
-    .value
-    .trim();
+
     // ------------------------------------------
     // Get selected item codes
     // ------------------------------------------
@@ -218,6 +274,29 @@ const selectedItems =
     ).map(
         checkbox => checkbox.value
     );
+    // ==========================================
+// CALCULATE BILLING AMOUNT
+// ==========================================
+
+let billingAmount = 0;
+
+document
+    .querySelectorAll(
+        'input[name="itemCode"]:checked'
+    )
+    .forEach(checkbox => {
+
+        billingAmount +=
+            Number(
+                checkbox.dataset.cost
+            ) || 0;
+
+    });
+
+console.log(
+    "Billing Amount:",
+    billingAmount
+);
     // ------------------------------------------
     // Validation
     // ------------------------------------------
@@ -279,24 +358,7 @@ const selectedItems =
     }
 
 
-    if (incentiveAmount === "") {
-
-    alert("Please enter Incentive Amount.");
-
-    return;
-
-    }
-
-    const incentive =
-        Number(incentiveAmount);
-
-    if (isNaN(incentive) || incentive < 0) {
-
-        alert("Please enter a valid Incentive Amount.");
-
-        return;
-
-    }
+    
     // ------------------------------------------
     // Item validation
     // ------------------------------------------
@@ -392,8 +454,9 @@ const selectedItems =
 
             // MULTIPLE ITEM CODES
             itemCodes: selectedItems,
-   
-            incentiveAmount: incentive,
+ 
+            // Automatically calculated billing
+            billingAmount: billingAmount,
 
             status: "Pending",
 
@@ -419,7 +482,6 @@ const selectedItems =
 
         document.getElementById("advisorName").value = "";
   
-        document.getElementById("incentiveAmount").value = "";
         // Uncheck all items
 
         document
@@ -431,6 +493,12 @@ const selectedItems =
             checkbox.checked = false;
 
         });
+
+        // Reset billing display
+
+        document.getElementById(
+            "totalBillingAmount"
+        ).textContent = "₹0.00";
 
     }
 

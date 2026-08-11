@@ -55,18 +55,74 @@
 <br><br>
 
 <br><br>
+<div class="report-options">
 
-<button id="generateBtn" onclick="generateReport()">
-Generate Report
-</button>
-<br><br>
-<button onclick="generateAdvisorItemReport()">
-    Generate Advisor Item Report
-</button>
-<br><br>
-<button id="exportBtn" onclick="exportPDF()" disabled>
-Export PDF
-</button>
+    <!-- ================================= -->
+    <!-- REPAIR ORDER REPORT -->
+    <!-- ================================= -->
+
+    <div class="report-card">
+
+        <h2>Repair Order Report</h2>
+
+        <p>
+            Generate a detailed repair order report
+            based on the selected date and region.
+        </p>
+
+        <button
+            id="generateBtn"
+            onclick="generateReport()">
+
+            Generate Report
+
+        </button>
+
+        <button
+            id="exportBtn"
+            onclick="exportPDF()"
+            disabled>
+
+            Export PDF
+
+        </button>
+
+    </div>
+
+
+    <!-- ================================= -->
+    <!-- ADVISOR-WISE REPORT -->
+    <!-- ================================= -->
+
+    <div class="report-card">
+
+        <h2>Advisor-wise Billing Report</h2>
+
+        <p>
+            Generate billing details grouped
+            advisor-wise with item codes.
+        </p>
+
+        <button
+            id="advisorGenerateBtn"
+            onclick="generateAdvisorItemReport()">
+
+            Generate Advisor Report
+
+        </button>
+
+        <button
+            id="advisorExportBtn"
+            onclick="exportAdvisorItemPDF()"
+            disabled>
+
+            Export Advisor PDF
+
+        </button>
+
+    </div>
+
+</div>
 
 </div>
 
@@ -90,34 +146,11 @@ Export PDF
 
 <th>Work Done</th>
 
-<th>Incentive</th>
+<th>Billing Amount</th>
 </tr>
 
 </thead>
 <tbody id="reportBody">
-
-</tbody>
-
-</table>
-<br><br>
-
-<h3>Work Type Summary</h3>
-
-<table>
-
-<thead>
-
-<tr>
-
-<th>Work Type</th>
-
-<th>Count</th>
-
-</tr>
-
-</thead>
-
-<tbody id="workSummary">
 
 </tbody>
 
