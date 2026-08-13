@@ -503,7 +503,7 @@ async function updateRO() {
                     itemDoc.data();
 
                 const itemCost =
-                    Number(itemData.cost) || 0;
+                    Number(itemData.billingAmount) || 0;
 
                 billingAmount += itemCost;
 

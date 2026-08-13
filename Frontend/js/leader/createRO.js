@@ -131,7 +131,7 @@ async function loadItems() {
                 data.description || "";
 
             const cost =
-                Number(data.cost) || 0;
+            Number(data.billingAmount) || 0;
 
             const itemDiv =
                 document.createElement("div");

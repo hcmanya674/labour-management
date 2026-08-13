@@ -170,7 +170,7 @@ exportBtn.disabled = true;
 
                     // Add item cost
                     billingAmount +=
-                        Number(item.cost) || 0;
+                      Number(item.billingAmount) || 0;
 
 
                     // Add description
@@ -372,6 +372,7 @@ btn.innerHTML = "Generate Report";
 // ======================================================
 
 async function generateAdvisorItemReport() {
+
    const advisorExportBtn =
     document.getElementById("advisorExportBtn");
     advisorExportBtn.disabled = true;
@@ -405,6 +406,7 @@ async function generateAdvisorItemReport() {
 
         const itemSnapshot =
             await db.collection("itemcodes")
+            .where("active", "==", true)
             .get();
 
         const itemMap = {};
@@ -413,15 +415,15 @@ async function generateAdvisorItemReport() {
 
             const item = doc.data();
 
-            itemMap[item.itemCode] = {
+          itemMap[item.itemCode] = {
 
-                description:
-                    item.description || "-",
+    description:
+        item.description || "-",
 
-                cost:
-                    Number(item.cost) || 0
+    billingAmount:
+        Number(item.billingAmount) || 0
 
-            };
+};
 
         });
 
@@ -689,18 +691,18 @@ async function generateAdvisorItemReport() {
 
 
                     const itemInfo =
-                        itemMap[itemCode] || {
+                    itemMap[itemCode] || {
 
-                            description: "-",
+                        description: "-",
 
-                            cost: 0
+                        billingAmount: 0
 
-                        };
+                    };
 
 
                     const total =
-                        quantity *
-                        itemInfo.cost;
+                            quantity *
+                            itemInfo.billingAmount;
 
 
                     advisorTotal += total;

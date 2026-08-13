@@ -353,7 +353,7 @@ function loadItems() {
             if (data.active) {
 
                 actionBtn.textContent = "Deactivate";
-                actionBtn.style.background = "#43a047";
+                actionBtn.style.background = "#12a10d";
                 actionBtn.style.color = "white";
 
                 actionBtn.onclick = function () {

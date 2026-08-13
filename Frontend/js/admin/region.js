@@ -219,7 +219,7 @@ const actionBtn = document.createElement("button");
 if (data.active) {
 
     actionBtn.textContent = "Deactivate";
-    actionBtn.style.background = "#e53935";
+    actionBtn.style.background = "#12a10d";
     actionBtn.style.color = "white";
 
     actionBtn.onclick = function () {
@@ -229,7 +229,7 @@ if (data.active) {
 } else {
 
     actionBtn.textContent = "Activate";
-    actionBtn.style.background = "#43a047";
+    actionBtn.style.background = "#ec1919";
     actionBtn.style.color = "white";
 
     actionBtn.onclick = function () {

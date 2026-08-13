@@ -73,9 +73,10 @@ async function loadItemCodes() {
 
             const item = doc.data();
 
-            itemMap[item.itemCode] =
-                item.description || "";
-
+            itemMap[item.itemCode] ={
+                description: item.description || "",
+                billingAmount: Number(item.billingAmount) || 0
+            };
         });
 
         console.log(
@@ -95,7 +96,6 @@ async function loadItemCodes() {
     }
 
 }
-
 
 // ==========================================
 // LOAD REPAIR ORDERS
@@ -187,87 +187,251 @@ async function loadRepairOrders() {
 
 
             // ==================================
-            // ITEM CODE DISPLAY
+            // NO ITEM CODE
             // ==================================
 
-            const itemCodeDisplay =
-                itemCodes.length > 0
-                    ? itemCodes.join(", ")
-                    : "-";
+            if (itemCodes.length === 0) {
+
+                html += `
+
+                <tr>
+
+                    <td>
+                        ${ro.roNumber || "-"}
+                    </td>
+
+                    <td>
+                        ${date}
+                    </td>
+
+                    <td>
+                        ${ro.vehicleNumber || "-"}
+                    </td>
+
+                    <td>
+                        ${ro.advisorName || "-"}
+                    </td>
+
+                    <td>
+                        -
+                    </td>
+
+                    <td>
+                        -
+                    </td>
+
+                    <td>
+                        ₹0.00
+                    </td>
+
+                    <td>
+
+                        <button
+                            class="view-btn"
+                            onclick="viewRO('${doc.id}')">
+
+                            View
+
+                        </button>
+
+                    </td>
+
+                </tr>
+
+                `;
+
+                continue;
+
+            }
 
 
             // ==================================
-            // WORK DESCRIPTION
+            // ROWSPAN
             // ==================================
 
-            const workDescriptions =
-                itemCodes
-                .map(code => {
+            const rowCount =
+                itemCodes.length;
 
-                    return itemMap[code] || code;
-
-                })
-                .join(", ");
-
-
-            const workDone =
-                workDescriptions || "-";
 
             // ==================================
-            // INCENTIVE AMOUNT
+            // CREATE ONE ROW FOR EACH ITEM
             // ==================================
 
-            const billingAmount =
-                Number(ro.billingAmount || 0);
-            // ==================================
-            // TABLE ROW
-            // ==================================
+            itemCodes.forEach(
+                (itemCode, index) => {
 
-            html += `
 
-            <tr>
+                    // ----------------------------------
+                    // ITEM INFORMATION
+                    // ----------------------------------
 
-                <td>
-                    ${ro.roNumber || "-"}
-                </td>
+                    const itemInfo =
+                        itemMap[itemCode] || {
 
-                <td>
-                    ${date}
-                </td>
+                            description:
+                                itemCode,
 
-                <td>
-                    ${ro.vehicleNumber || "-"}
-                </td>
+                            billingAmount: 0
 
-                <td>
-                    ${ro.advisorName || "-"}
-                </td>
+                        };
 
-                <td>
-                    ${itemCodeDisplay}
-                </td>
 
-                <td>
-                    ${workDone}
-                </td>
-                <td>
-                        ₹${ro.billingAmount?.toFixed(2) || "0.00"}
-                </td>
-                <td>
+                    const description =
+                        itemInfo.description ||
+                        itemCode;
 
-                    <button
-                        class="view-btn"
-                        onclick="viewRO('${doc.id}')">
 
-                        View
+                    const billingAmount =
+                        Number(itemInfo.billingAmount) || 0;
 
-                    </button>
 
-                </td>
+                    // ----------------------------------
+                    // FIRST ROW
+                    // ----------------------------------
 
-            </tr>
+                    html += `<tr>`;
 
-            `;
+
+                    // ----------------------------------
+                    // RO NUMBER
+                    // ----------------------------------
+
+                    if (index === 0) {
+
+                        html += `
+
+                        <td rowspan="${rowCount}">
+                            ${ro.roNumber || "-"}
+                        </td>
+
+                        `;
+
+                    }
+
+
+                    // ----------------------------------
+                    // DATE
+                    // ----------------------------------
+
+                    if (index === 0) {
+
+                        html += `
+
+                        <td rowspan="${rowCount}">
+                            ${date}
+                        </td>
+
+                        `;
+
+                    }
+
+
+                    // ----------------------------------
+                    // VEHICLE
+                    // ----------------------------------
+
+                    if (index === 0) {
+
+                        html += `
+
+                        <td rowspan="${rowCount}">
+                            ${ro.vehicleNumber || "-"}
+                        </td>
+
+                        `;
+
+                    }
+
+
+                    // ----------------------------------
+                    // ADVISOR
+                    // ----------------------------------
+
+                    if (index === 0) {
+
+                        html += `
+
+                        <td rowspan="${rowCount}">
+                            ${ro.advisorName || "-"}
+                        </td>
+
+                        `;
+
+                    }
+
+
+                    // ----------------------------------
+                    // ITEM CODE
+                    // ----------------------------------
+
+                    html += `
+
+                    <td>
+                        ${itemCode}
+                    </td>
+
+                    `;
+
+
+                    // ----------------------------------
+                    // WORK DONE
+                    // ----------------------------------
+
+                    html += `
+
+                    <td>
+                        ${description}
+                    </td>
+
+                    `;
+
+
+                    // ----------------------------------
+                    // BILLING AMOUNT
+                    // ----------------------------------
+
+                    html += `
+
+                    <td>
+                        ₹${billingAmount.toLocaleString("en-IN", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        })}
+                    </td>
+
+                    `;
+
+
+                    // ----------------------------------
+                    // VIEW BUTTON
+                    // ----------------------------------
+
+                    if (index === 0) {
+
+                        html += `
+
+                        <td rowspan="${rowCount}">
+
+                            <button
+                                class="view-btn"
+                                onclick="viewRO('${doc.id}')">
+
+                                View
+
+                            </button>
+
+                        </td>
+
+                        `;
+
+                    }
+
+
+                    html += `</tr>`;
+
+                }
+
+            );
 
         }
 
@@ -308,6 +472,7 @@ async function loadRepairOrders() {
             .querySelector("#roTable tbody")
             .innerHTML = html;
 
+
     }
 
     catch (error) {
@@ -334,5 +499,11 @@ function viewRO(id) {
     );
 
     location = "viewRO.html";
+
+}
+
+function goToLeaderDashboard() {
+
+    window.location.href = "leaders.html";
 
 }
