@@ -1,1137 +1,195 @@
-const BACKEND_URL = "https://labour-management-backend-y6g2.onrender.com";
+<!DOCTYPE html>
+<html>
 
-let editLeaderId = null;
+<head>
 
+<meta charset="UTF-8">
 
-// ======================================================
-// LOAD LEADER MANAGEMENT PAGE
-// ======================================================
+<title>Reports</title>
 
-document.addEventListener("DOMContentLoaded", function () {
+<link rel="stylesheet" href="../../css/style.css">
 
-    loadLeaderPage();
+</head>
 
-});
+<body>
+<button onclick="window.location.href='admin.html'" class="home-btn">🏠 Go to Home Page</button>
 
+<div class="container">
 
-// ======================================================
-// CREATE LEADER MANAGEMENT CONTENT
-// ======================================================
 
-function loadLeaderPage() {
 
-    const app = document.getElementById("app");
+<div class="main">
 
-    if (!app) {
-        console.error("App container not found.");
-        return;
-    }
+<h2>Repair Order Reports</h2>
 
+<div class="form-box">
 
-    app.innerHTML = `
+<label>From Date</label>
 
-        <div class="form-box">
+<input type="date" id="fromDate">
 
-            <h2>Create Leader</h2>
+<label>To Date</label>
 
-            <br>
+<input type="date" id="toDate">
+<label>Region</label>
 
-            <label>Leader Name</label>
+<select id="reportRegion">
+    <option value="">All Regions</option>
+</select>
 
-            <input
-                type="text"
-                id="leaderName"
-                placeholder="Enter Leader Name"
-                style="text-transform:uppercase"
-            >
+<br><br>
 
+<br><br>
+<div class="report-options">
 
-            <label>Email</label>
+    <!-- ================================= -->
+    <!-- REPAIR ORDER REPORT -->
+    <!-- ================================= -->
 
-            <input
-                type="email"
-                id="leaderEmail"
-                placeholder="Enter Email"
-            >
+    <div class="report-card">
 
+        <h2>Repair Order Report</h2>
 
-            <label>Initial Password</label>
+        <p>
+            Generate a detailed repair order report
+            based on the selected date and region.
+        </p>
 
-            <input
-                type="password"
-                id="leaderPassword"
-                placeholder="Enter Initial Password"
-            >
+        <button
+            id="generateBtn"
+            onclick="generateReport()">
 
+            Generate Report
 
-            <label>Phone Number</label>
+        </button>
 
-            <input
-                type="text"
-                id="leaderPhone"
-                placeholder="Enter Phone Number"
-            >
+        <button
+            id="exportBtn"
+            onclick="exportPDF()"
+            disabled>
 
+            Export PDF
 
-            <label>Region</label>
+        </button>
 
-            <select id="leaderRegion">
+    </div>
 
-                <option value="">
-                    Select Region
-                </option>
 
-            </select>
+    <!-- ================================= -->
+    <!-- ADVISOR-WISE REPORT -->
+    <!-- ================================= -->
 
+    <div class="report-card">
 
-            <br>
+        <h2>Advisor-wise Billing Report</h2>
 
-            <button
-                id="saveLeaderBtn"
-                onclick="saveLeader()"
-            >
-                Create Leader
-            </button>
+        <p>
+            Generate billing details grouped
+            advisor-wise with item codes.
+        </p>
 
+        <button
+            id="advisorGenerateBtn"
+            onclick="generateAdvisorItemReport()">
 
-            <div
-                id="leaderMessage"
-                style="color:red;font-weight:bold;margin-top:5px;"
-            ></div>
+            Generate Advisor Report
 
-        </div>
+        </button>
 
+        <button
+            id="advisorExportBtn"
+            onclick="exportAdvisorItemPDF()"
+            disabled>
 
-        <br>
+            Export Advisor PDF
 
+        </button>
 
-        <!-- ============================= -->
-        <!-- SEARCH -->
-        <!-- ============================= -->
+    </div>
 
-        <input
-            type="text"
-            id="searchLeader"
-            placeholder="Search Name, Email, Phone or Region"
-        >
+</div>
 
+</div>
 
-        <br>
-        <br>
+<br>
 
+<table id="reportTable">
 
-        <!-- ============================= -->
-        <!-- LEADER TABLE -->
-        <!-- ============================= -->
+<thead>
 
-        <table id="leaderTable">
+<tr>
 
-            <thead>
+<th>RO Number</th>
 
-                <tr>
+<th>Date</th>
 
-                    <th>Name</th>
+<th>Region</th>
 
-                    <th>Email</th>
+<th>Advisor</th>
 
-                    <th>Phone</th>
+<th>Vehicle</th>
 
-                    <th>Region</th>
+<th>Work Done</th>
 
-                    <th>Status</th>
+<th>Billing Amount</th>
+</tr>
 
-                    <th>Edit</th>
+</thead>
+<tbody id="reportBody">
 
-                    <th>Deactivate</th>
+</tbody>
 
-                </tr>
+</table>
+<br><br>
 
-            </thead>
+<h3>Advisor Wise Work Summary</h3>
+<table id="advisorSummaryTable">
 
+    <thead id="advisorSummaryHead">
 
-            <tbody>
+    </thead>
 
-            </tbody>
+    <tbody id="advisorSummaryBody">
 
-        </table>
+    </tbody>
 
-    `;
+</table>
+<hr>
 
+<h2>Advisor Item & Amount Report</h2>
 
-    // Load regions and leaders after HTML exists
+<table id="advisorItemReportTable">
 
-    loadRegions();
+   <div id="advisorItemReportContainer"></div>
+<br><br>
+<button
+    id="advisorExportBtn"
+    onclick="exportAdvisorItemPDF()"
+    disabled>
+    Export Advisor Item PDF
+</button>
+</table>
+</div>
 
-    loadLeaders();
+</div>
 
-}
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-// ======================================================
-// CREATE LEADER
-// ======================================================
+<script src="../../js/common/firebase.js"></script>
 
-async function saveLeader() {
+<script src="../../js/common/admin-common.js"></script>
 
-    const name =
-        document.getElementById("leaderName").value.trim();
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-    const email =
-        document.getElementById("leaderEmail").value.trim();
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
-    const password =
-        document.getElementById("leaderPassword").value.trim();
+<script src="../../js/admin/reports.js"></script>
 
-    const phone =
-        document.getElementById("leaderPhone").value.trim();
 
-    const region =
-        document.getElementById("leaderRegion").value;
+</body>
 
-
-    // ==============================================
-    // IF EDIT MODE
-    // ==============================================
-
-    if (editLeaderId) {
-
-        await updateLeader();
-
-        return;
-
-    }
-
-
-    // ==============================================
-    // VALIDATION
-    // ==============================================
-
-    if (
-        !name ||
-        !email ||
-        !password ||
-        !phone ||
-        !region
-    ) {
-
-        alert("Please fill all fields.");
-
-        return;
-
-    }
-
-
-    try {
-
-        const response =
-            await fetch(
-                BACKEND_URL + "/createLeader",
-                {
-
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-
-                    body: JSON.stringify({
-
-                        name: name,
-
-                        email: email,
-
-                        password: password,
-
-                        phone: phone,
-
-                        region: region
-
-                    })
-
-                }
-            );
-
-
-        const result =
-            await response.json();
-
-
-        if (result.success) {
-
-            alert("Leader Created Successfully!");
-
-
-            // Clear form
-
-            document.getElementById("leaderName").value = "";
-
-            document.getElementById("leaderEmail").value = "";
-
-            document.getElementById("leaderPassword").value = "";
-
-            document.getElementById("leaderPhone").value = "";
-
-            document.getElementById("leaderRegion").value = "";
-
-
-            // Reload table
-
-            loadLeaders();
-
-        }
-        else {
-
-            alert(
-                result.message ||
-                "Unable to create leader."
-            );
-
-        }
-
-    }
-    catch (error) {
-
-        console.error(
-            "Create Leader Error:",
-            error
-        );
-
-        alert("Server Error");
-
-    }
-
-}
-
-
-
-// ======================================================
-// UPDATE LEADER
-// ======================================================
-
-async function updateLeader() {
-
-    try {
-
-        const name =
-            document.getElementById("leaderName")
-                .value
-                .trim();
-
-
-        const phone =
-            document.getElementById("leaderPhone")
-                .value
-                .trim();
-
-
-        const region =
-            document.getElementById("leaderRegion")
-                .value;
-
-
-        await db
-            .collection("users")
-            .doc(editLeaderId)
-            .update({
-
-                name: name,
-
-                phone: phone,
-
-                region: region
-
-            });
-
-
-        alert("Leader Updated Successfully");
-
-
-        // Reset edit mode
-
-        editLeaderId = null;
-
-
-        // Clear fields
-
-        document.getElementById("leaderName").value = "";
-
-        document.getElementById("leaderEmail").value = "";
-
-        document.getElementById("leaderPhone").value = "";
-
-        document.getElementById("leaderPassword").value = "";
-
-        document.getElementById("leaderPassword").style.display = "";
-
-        document.getElementById("leaderRegion").value = "";
-
-
-        // Change button back
-
-        document.getElementById(
-            "saveLeaderBtn"
-        ).innerHTML = "Create Leader";
-
-
-        // Reload leaders
-
-        loadLeaders();
-
-    }
-    catch (error) {
-
-        console.error(
-            "Update Leader Error:",
-            error
-        );
-
-        alert(error.message);
-
-    }
-
-}
-
-
-
-// ======================================================
-// LOAD ACTIVE REGIONS
-// ======================================================
-
-async function loadRegions() {
-
-    const regionSelect =
-        document.getElementById("leaderRegion");
-
-
-    if (!regionSelect) {
-
-        console.error(
-            "Leader region select not found."
-        );
-
-        return;
-
-    }
-
-
-    regionSelect.innerHTML =
-        `<option value="">Select Region</option>`;
-
-
-    try {
-
-        const snapshot =
-            await db
-                .collection("regions")
-                .where("active", "==", true)
-                .get();
-
-
-        snapshot.forEach(function (doc) {
-
-            const region =
-                doc.data();
-
-
-            regionSelect.innerHTML += `
-
-                <option value="${region.regionId}">
-
-                    ${region.regionName}
-
-                </option>
-
-            `;
-
-        });
-
-    }
-    catch (error) {
-
-        console.error(
-            "Error loading regions:",
-            error
-        );
-
-    }
-
-}
-
-
-
-// ======================================================
-// LOAD LEADERS
-// ======================================================
-
-async function loadLeaders() {
-
-    const tbody =
-        document.querySelector(
-            "#leaderTable tbody"
-        );
-
-
-    if (!tbody) {
-
-        console.error(
-            "Leader table body not found."
-        );
-
-        return;
-
-    }
-
-
-    tbody.innerHTML = "";
-
-
-    try {
-
-        const snapshot =
-            await db
-                .collection("users")
-                .where("role", "==", "leader")
-                .get();
-
-
-        for (
-            const doc of snapshot.docs
-        ) {
-
-            const leader =
-                doc.data();
-
-
-            // ==========================================
-            // GET REGION NAME
-            // ==========================================
-
-            let regionName =
-                leader.region;
-
-
-            try {
-
-                if (leader.region) {
-
-                    const regionDoc =
-                        await db
-                            .collection("regions")
-                            .doc(leader.region)
-                            .get();
-
-
-                    if (regionDoc.exists) {
-
-                        regionName =
-                            regionDoc.data().regionName;
-
-                    }
-
-                }
-
-            }
-            catch (error) {
-
-                console.log(
-                    "Region lookup error:",
-                    error
-                );
-
-            }
-
-
-            // ==========================================
-            // LEADER ROW
-            // ==========================================
-
-            tbody.innerHTML += `
-
-                <tr>
-
-                    <td>
-                        ${leader.name || ""}
-                    </td>
-
-
-                    <td>
-                        ${leader.email || ""}
-                    </td>
-
-
-                    <td>
-                        ${leader.phone || ""}
-                    </td>
-
-
-                    <td>
-                        ${regionName || ""}
-                    </td>
-
-
-                    <td>
-                        ${leader.active
-                            ? "Active"
-                            : "Inactive"}
-                    </td>
-
-
-                    <td>
-
-                        <button
-                            onclick="editLeader('${doc.id}')"
-                        >
-                            Edit
-                        </button>
-
-                    </td>
-
-
-                    <td>
-
-                        <button
-                            class="${
-                                leader.active
-                                    ? "deactivate-btn"
-                                    : "activate-btn"
-                            }"
-
-                            onclick="toggleLeader(
-                                '${doc.id}',
-                                ${leader.active ? true : false}
-                            )"
-                        >
-
-                            ${
-                                leader.active
-                                    ? "Deactivate"
-                                    : "Activate"
-                            }
-
-                        </button>
-
-                    </td>
-
-                </tr>
-
-            `;
-
-        }
-
-
-        attachSearch();
-
-
-    }
-    catch (error) {
-
-        console.error(
-            "Error loading leaders:",
-            error
-        );
-
-    }
-
-}
-
-
-
-// ======================================================
-// EDIT LEADER
-// ======================================================
-
-async function editLeader(uid) {
-
-    try {
-
-        const doc =
-            await db
-                .collection("users")
-                .doc(uid)
-                .get();
-
-
-        if (!doc.exists) {
-
-            alert(
-                "Document not found"
-            );
-
-            return;
-
-        }
-
-
-        const leader =
-            doc.data();
-
-
-        // ==========================================
-        // FILL FORM
-        // ==========================================
-
-        document.getElementById(
-            "leaderName"
-        ).value =
-            leader.name || "";
-
-
-        document.getElementById(
-            "leaderEmail"
-        ).value =
-            leader.email || "";
-
-
-        document.getElementById(
-            "leaderPhone"
-        ).value =
-            leader.phone || "";
-
-
-        document.getElementById(
-            "leaderRegion"
-        ).value =
-            leader.region || "";
-
-
-        // ==========================================
-        // HIDE PASSWORD DURING EDIT
-        // ==========================================
-
-        document.getElementById(
-            "leaderPassword"
-        ).style.display =
-            "none";
-
-
-        // ==========================================
-        // SET EDIT MODE
-        // ==========================================
-
-        editLeaderId =
-            uid;
-
-
-        document.getElementById(
-            "saveLeaderBtn"
-        ).innerHTML =
-            "Update Leader";
-
-
-        // Scroll to form
-
-        document
-            .getElementById("leaderName")
-            .scrollIntoView({
-                behavior: "smooth",
-                block: "center"
-            });
-
-    }
-    catch (error) {
-
-        console.error(
-            "Edit Leader Error:",
-            error
-        );
-
-        alert(
-            error.message
-        );
-
-    }
-
-}
-
-
-
-// ======================================================
-// ACTIVATE / DEACTIVATE LEADER
-// ======================================================
-
-async function toggleLeader(
-    uid,
-    currentStatus
-) {
-
-    try {
-
-        await db
-            .collection("users")
-            .doc(uid)
-            .update({
-
-                active:
-                    !currentStatus
-
-            });
-
-
-        // Reload table
-
-        loadLeaders();
-
-    }
-    catch (error) {
-
-        console.error(
-            "Status Update Error:",
-            error
-        );
-
-        alert(
-            "Unable to update status."
-        );
-
-    }
-
-}
-
-
-
-// ======================================================
-// SEARCH LEADER
-// ======================================================
-
-function attachSearch() {
-
-    const searchBox =
-        document.getElementById(
-            "searchLeader"
-        );
-
-
-    if (
-        !searchBox ||
-        searchBox.dataset.listenerAdded
-    ) {
-
-        return;
-
-    }
-
-
-    searchBox.dataset.listenerAdded =
-        "true";
-
-
-    searchBox.addEventListener(
-        "keyup",
-        function () {
-
-            const filter =
-                this.value
-                    .toLowerCase()
-                    .trim();
-
-
-            const rows =
-                document.querySelectorAll(
-                    "#leaderTable tbody tr"
-                );
-
-
-            let matchFound =
-                false;
-
-
-            rows.forEach(function (row) {
-
-                const nameCell =
-                    row.cells[0];
-
-
-                const emailCell =
-                    row.cells[1];
-
-
-                const phoneCell =
-                    row.cells[2];
-
-
-                const regionCell =
-                    row.cells[3];
-
-
-                if (
-                    !nameCell ||
-                    !emailCell ||
-                    !phoneCell ||
-                    !regionCell
-                ) {
-
-                    return;
-
-                }
-
-
-                // ======================================
-                // ORIGINAL TEXT
-                // ======================================
-
-                const name =
-                    nameCell.textContent;
-
-
-                const email =
-                    emailCell.textContent;
-
-
-                const phone =
-                    phoneCell.textContent;
-
-
-                const region =
-                    regionCell.textContent;
-
-
-                // ======================================
-                // REMOVE PREVIOUS HIGHLIGHT
-                // ======================================
-
-                nameCell.textContent =
-                    name;
-
-
-                emailCell.textContent =
-                    email;
-
-
-                phoneCell.textContent =
-                    phone;
-
-
-                regionCell.textContent =
-                    region;
-
-
-                // ======================================
-                // MATCH
-                // ======================================
-
-                const nameMatch =
-                    name
-                        .toLowerCase()
-                        .includes(filter);
-
-
-                const emailMatch =
-                    email
-                        .toLowerCase()
-                        .includes(filter);
-
-
-                const phoneMatch =
-                    phone
-                        .toLowerCase()
-                        .includes(filter);
-
-
-                const regionMatch =
-                    region
-                        .toLowerCase()
-                        .includes(filter);
-
-
-                // ======================================
-                // EMPTY SEARCH
-                // ======================================
-
-                if (filter === "") {
-
-                    row.style.display =
-                        "";
-
-                    return;
-
-                }
-
-
-                // ======================================
-                // MATCH FOUND
-                // ======================================
-
-                if (
-                    nameMatch ||
-                    emailMatch ||
-                    phoneMatch ||
-                    regionMatch
-                ) {
-
-                    row.style.display =
-                        "";
-
-
-                    matchFound =
-                        true;
-
-
-                    // Escape special regex characters
-
-                    const escapedFilter =
-                        filter.replace(
-                            /[.*+?^${}()|[\]\\]/g,
-                            "\\$&"
-                        );
-
-
-                    const regex =
-                        new RegExp(
-                            escapedFilter,
-                            "gi"
-                        );
-
-
-                    // Highlight name
-
-                    if (nameMatch) {
-
-                        nameCell.innerHTML =
-                            name.replace(
-                                regex,
-                                function (match) {
-
-                                    return `
-                                        <span
-                                            style="background:yellow;"
-                                        >
-                                            ${match}
-                                        </span>
-                                    `;
-
-                                }
-                            );
-
-                    }
-
-
-                    // Highlight email
-
-                    if (emailMatch) {
-
-                        emailCell.innerHTML =
-                            email.replace(
-                                regex,
-                                function (match) {
-
-                                    return `
-                                        <span
-                                            style="background:yellow;"
-                                        >
-                                            ${match}
-                                        </span>
-                                    `;
-
-                                }
-                            );
-
-                    }
-
-
-                    // Highlight phone
-
-                    if (phoneMatch) {
-
-                        phoneCell.innerHTML =
-                            phone.replace(
-                                regex,
-                                function (match) {
-
-                                    return `
-                                        <span
-                                            style="background:yellow;"
-                                        >
-                                            ${match}
-                                        </span>
-                                    `;
-
-                                }
-                            );
-
-                    }
-
-
-                    // Highlight region
-
-                    if (regionMatch) {
-
-                        regionCell.innerHTML =
-                            region.replace(
-                                regex,
-                                function (match) {
-
-                                    return `
-                                        <span
-                                            style="background:yellow;"
-                                        >
-                                            ${match}
-                                        </span>
-                                    `;
-
-                                }
-                            );
-
-                    }
-
-                }
-
-
-                // ======================================
-                // NO MATCH
-                // ======================================
-
-                else {
-
-                    row.style.display =
-                        "none";
-
-                }
-
-            });
-
-
-            // ==========================================
-            // NO LEADER MESSAGE
-            // ==========================================
-
-            const message =
-                document.getElementById(
-                    "leaderMessage"
-                );
-
-
-            if (message) {
-
-                message.textContent =
-                    (
-                        filter !== "" &&
-                        !matchFound
-                    )
-                        ? "No Leader Found"
-                        : "";
-
-            }
-
-        }
-    );
-
-}
-
-
-
-// ======================================================
-// OPTIONAL GLOBAL INITIALIZER
-// ======================================================
-//
-// This keeps compatibility with any existing code that
-// may call initializePage().
-// ======================================================
-
-function initializePage() {
-
-    loadRegions();
-
-    loadLeaders();
-
-}
+</html>
