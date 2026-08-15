@@ -1,502 +1,1137 @@
-
-
 const BACKEND_URL = "https://labour-management-backend-y6g2.onrender.com";
+
 let editLeaderId = null;
 
-loadAdminLayout("Leader Management",`
 
-<div class="form-box">
+// ======================================================
+// LOAD LEADER MANAGEMENT PAGE
+// ======================================================
 
-<h2>Create Leader</h2>
-<br>
+document.addEventListener("DOMContentLoaded", function () {
 
-<label>Leader Name</label>
-<input type="text" id="leaderName" placeholder="Enter Leader Name" style="text-transform:uppercase">
+    loadLeaderPage();
 
-<label>Email</label>
-<input type="email" id="leaderEmail" placeholder="Enter Email">
+});
 
-<label>Initial Password</label>
-<input type="password" id="leaderPassword"
- placeholder="Enter Initial Password">
 
-<label>Phone Number</label>
-<input type="text" id="leaderPhone" placeholder="Enter Phone Number">
+// ======================================================
+// CREATE LEADER MANAGEMENT CONTENT
+// ======================================================
 
-<label>Region</label>
-<select id="leaderRegion">
-<option value="">Select Region</option>
-</select>
+function loadLeaderPage() {
 
-<br>
-<button id="saveLeaderBtn" onclick="saveLeader()">
-Create Leader
-</button>
-<div
-id="leaderMessage"
-style="color:red;font-weight:bold;margin-top:5px;">
-</div>
+    const app = document.getElementById("app");
 
-</div>
+    if (!app) {
+        console.error("App container not found.");
+        return;
+    }
 
-<br>
 
-<input
-type="text"
-id="searchLeader"
-placeholder="Search Name, Email, Phone or Region">
+    app.innerHTML = `
 
-<br><br>
+        <div class="form-box">
 
-<table id="leaderTable">
+            <h2>Create Leader</h2>
 
-<thead>
+            <br>
 
-<tr>
+            <label>Leader Name</label>
 
-<th>Name</th>
-<th>Email</th>
-<th>Phone</th>
-<th>Region</th>
-<th>Status</th>
-<th>Edit</th>
-<th>Deactivate</th>
+            <input
+                type="text"
+                id="leaderName"
+                placeholder="Enter Leader Name"
+                style="text-transform:uppercase"
+            >
 
-</tr>
 
-</thead>
+            <label>Email</label>
 
-<tbody>
+            <input
+                type="email"
+                id="leaderEmail"
+                placeholder="Enter Email"
+            >
 
-</tbody>
 
-</table>
+            <label>Initial Password</label>
 
-`);
+            <input
+                type="password"
+                id="leaderPassword"
+                placeholder="Enter Initial Password"
+            >
 
-// ===========================================
-// CREATE LEADER
-// ===========================================
 
-async function saveLeader() {
+            <label>Phone Number</label>
 
-    const name = document.getElementById("leaderName").value.trim();
-    const email = document.getElementById("leaderEmail").value.trim();
-    // Temporary password
-    const password = document.getElementById("leaderPassword").value.trim();
+            <input
+                type="text"
+                id="leaderPhone"
+                placeholder="Enter Phone Number"
+            >
 
-    const phone = document.getElementById("leaderPhone").value.trim();
-    const region = document.getElementById("leaderRegion").value;
-    if(editLeaderId){
 
-     updateLeader();
- 
-     return;
+            <label>Region</label>
 
-   }
-  if (!name || !email || !password || !phone || !region) {
+            <select id="leaderRegion">
 
-    alert("Please fill all fields.");
+                <option value="">
+                    Select Region
+                </option>
 
-    return;
+            </select>
+
+
+            <br>
+
+            <button
+                id="saveLeaderBtn"
+                onclick="saveLeader()"
+            >
+                Create Leader
+            </button>
+
+
+            <div
+                id="leaderMessage"
+                style="color:red;font-weight:bold;margin-top:5px;"
+            ></div>
+
+        </div>
+
+
+        <br>
+
+
+        <!-- ============================= -->
+        <!-- SEARCH -->
+        <!-- ============================= -->
+
+        <input
+            type="text"
+            id="searchLeader"
+            placeholder="Search Name, Email, Phone or Region"
+        >
+
+
+        <br>
+        <br>
+
+
+        <!-- ============================= -->
+        <!-- LEADER TABLE -->
+        <!-- ============================= -->
+
+        <table id="leaderTable">
+
+            <thead>
+
+                <tr>
+
+                    <th>Name</th>
+
+                    <th>Email</th>
+
+                    <th>Phone</th>
+
+                    <th>Region</th>
+
+                    <th>Status</th>
+
+                    <th>Edit</th>
+
+                    <th>Deactivate</th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+            </tbody>
+
+        </table>
+
+    `;
+
+
+    // Load regions and leaders after HTML exists
+
+    loadRegions();
+
+    loadLeaders();
 
 }
 
-    
+
+
+// ======================================================
+// CREATE LEADER
+// ======================================================
+
+async function saveLeader() {
+
+    const name =
+        document.getElementById("leaderName").value.trim();
+
+    const email =
+        document.getElementById("leaderEmail").value.trim();
+
+    const password =
+        document.getElementById("leaderPassword").value.trim();
+
+    const phone =
+        document.getElementById("leaderPhone").value.trim();
+
+    const region =
+        document.getElementById("leaderRegion").value;
+
+
+    // ==============================================
+    // IF EDIT MODE
+    // ==============================================
+
+    if (editLeaderId) {
+
+        await updateLeader();
+
+        return;
+
+    }
+
+
+    // ==============================================
+    // VALIDATION
+    // ==============================================
+
+    if (
+        !name ||
+        !email ||
+        !password ||
+        !phone ||
+        !region
+    ) {
+
+        alert("Please fill all fields.");
+
+        return;
+
+    }
+
+
     try {
 
-        const response = await fetch(BACKEND_URL + "/createLeader", {
+        const response =
+            await fetch(
+                BACKEND_URL + "/createLeader",
+                {
 
-            method: "POST",
+                    method: "POST",
 
-            headers: {
-                "Content-Type": "application/json"
-            },
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
 
-            body: JSON.stringify({
-                name,
-                email,
-                password,
-                phone,
-                region
-            })
+                    body: JSON.stringify({
 
-        });
+                        name: name,
 
-        const result = await response.json();
+                        email: email,
+
+                        password: password,
+
+                        phone: phone,
+
+                        region: region
+
+                    })
+
+                }
+            );
+
+
+        const result =
+            await response.json();
+
 
         if (result.success) {
 
             alert("Leader Created Successfully!");
 
+
+            // Clear form
+
             document.getElementById("leaderName").value = "";
+
             document.getElementById("leaderEmail").value = "";
+
             document.getElementById("leaderPassword").value = "";
+
             document.getElementById("leaderPhone").value = "";
+
             document.getElementById("leaderRegion").value = "";
+
+
+            // Reload table
 
             loadLeaders();
 
-        } else {
+        }
+        else {
 
-            alert(result.message);
+            alert(
+                result.message ||
+                "Unable to create leader."
+            );
 
         }
 
-    } catch (error) {
+    }
+    catch (error) {
 
-        console.error(error);
+        console.error(
+            "Create Leader Error:",
+            error
+        );
+
         alert("Server Error");
 
     }
 
 }
 
-// ===========================================
+
+
+// ======================================================
 // UPDATE LEADER
-// ===========================================
+// ======================================================
 
-async function updateLeader(){
+async function updateLeader() {
 
-    try{
+    try {
 
-        await db.collection("users")
-        .doc(editLeaderId)
-        .update({
+        const name =
+            document.getElementById("leaderName")
+                .value
+                .trim();
 
-            name:document.getElementById("leaderName").value.trim(),
 
-            phone:document.getElementById("leaderPhone").value.trim(),
+        const phone =
+            document.getElementById("leaderPhone")
+                .value
+                .trim();
 
-            region:document.getElementById("leaderRegion").value
 
-        });
+        const region =
+            document.getElementById("leaderRegion")
+                .value;
+
+
+        await db
+            .collection("users")
+            .doc(editLeaderId)
+            .update({
+
+                name: name,
+
+                phone: phone,
+
+                region: region
+
+            });
+
 
         alert("Leader Updated Successfully");
 
-        editLeaderId=null;
 
-        document.getElementById("leaderName").value="";
-        document.getElementById("leaderEmail").value="";
-        document.getElementById("leaderPhone").value="";
-        document.getElementById("leaderPassword").value="";
-        document.getElementById("leaderPassword").style.display="";
+        // Reset edit mode
 
-        document.getElementById("leaderRegion").value="";
+        editLeaderId = null;
 
-        document.getElementById("saveLeaderBtn").innerHTML=
-        "Create Leader";
+
+        // Clear fields
+
+        document.getElementById("leaderName").value = "";
+
+        document.getElementById("leaderEmail").value = "";
+
+        document.getElementById("leaderPhone").value = "";
+
+        document.getElementById("leaderPassword").value = "";
+
+        document.getElementById("leaderPassword").style.display = "";
+
+        document.getElementById("leaderRegion").value = "";
+
+
+        // Change button back
+
+        document.getElementById(
+            "saveLeaderBtn"
+        ).innerHTML = "Create Leader";
+
+
+        // Reload leaders
 
         loadLeaders();
 
     }
+    catch (error) {
 
-    catch(error){
-
-        console.log(error);
+        console.error(
+            "Update Leader Error:",
+            error
+        );
 
         alert(error.message);
 
     }
 
 }
-// ===========================================
-// LOAD REGIONS
-// ===========================================
+
+
+
+// ======================================================
+// LOAD ACTIVE REGIONS
+// ======================================================
 
 async function loadRegions() {
 
-    const regionSelect = document.getElementById("leaderRegion");
+    const regionSelect =
+        document.getElementById("leaderRegion");
+
+
+    if (!regionSelect) {
+
+        console.error(
+            "Leader region select not found."
+        );
+
+        return;
+
+    }
+
 
     regionSelect.innerHTML =
         `<option value="">Select Region</option>`;
 
+
     try {
 
-        const snapshot = await db.collection("regions")
-                                 .where("active", "==", true)
-                                 .get();
+        const snapshot =
+            await db
+                .collection("regions")
+                .where("active", "==", true)
+                .get();
 
-        snapshot.forEach(doc => {
 
-            const region = doc.data();
+        snapshot.forEach(function (doc) {
+
+            const region =
+                doc.data();
+
 
             regionSelect.innerHTML += `
+
                 <option value="${region.regionId}">
+
                     ${region.regionName}
+
                 </option>
+
             `;
 
         });
 
-    } catch (error) {
+    }
+    catch (error) {
 
-        console.error("Error loading regions:", error);
+        console.error(
+            "Error loading regions:",
+            error
+        );
 
     }
 
 }
 
-// ===========================================
+
+
+// ======================================================
 // LOAD LEADERS
-// ===========================================
+// ======================================================
 
 async function loadLeaders() {
 
-    const tbody = document.querySelector("#leaderTable tbody");
+    const tbody =
+        document.querySelector(
+            "#leaderTable tbody"
+        );
+
+
+    if (!tbody) {
+
+        console.error(
+            "Leader table body not found."
+        );
+
+        return;
+
+    }
+
 
     tbody.innerHTML = "";
 
+
     try {
 
-        const snapshot = await db.collection("users")
-            .where("role", "==", "leader")
-            .get();
+        const snapshot =
+            await db
+                .collection("users")
+                .where("role", "==", "leader")
+                .get();
 
-        for (const doc of snapshot.docs) {
 
-            const leader = doc.data();
+        for (
+            const doc of snapshot.docs
+        ) {
 
-            // Get Region Name
-            let regionName = leader.region;
+            const leader =
+                doc.data();
+
+
+            // ==========================================
+            // GET REGION NAME
+            // ==========================================
+
+            let regionName =
+                leader.region;
+
 
             try {
 
-                const regionDoc = await db.collection("regions")
-                    .doc(leader.region)
-                    .get();
+                if (leader.region) {
 
-                if (regionDoc.exists) {
+                    const regionDoc =
+                        await db
+                            .collection("regions")
+                            .doc(leader.region)
+                            .get();
 
-                    regionName = regionDoc.data().regionName;
+
+                    if (regionDoc.exists) {
+
+                        regionName =
+                            regionDoc.data().regionName;
+
+                    }
 
                 }
 
-            } catch (e) {
+            }
+            catch (error) {
 
-                console.log(e);
+                console.log(
+                    "Region lookup error:",
+                    error
+                );
 
             }
 
+
+            // ==========================================
+            // LEADER ROW
+            // ==========================================
+
             tbody.innerHTML += `
 
-            <tr>
+                <tr>
 
-                <td>${leader.name}</td>
+                    <td>
+                        ${leader.name || ""}
+                    </td>
 
-                <td>${leader.email}</td>
 
-                <td>${leader.phone}</td>
+                    <td>
+                        ${leader.email || ""}
+                    </td>
 
-                <td>${regionName}</td>
 
-                <td>${leader.active ? "Active" : "Inactive"}</td>
+                    <td>
+                        ${leader.phone || ""}
+                    </td>
 
-              <td>
 
-              <button onclick="editLeader('${doc.id}')">
+                    <td>
+                        ${regionName || ""}
+                    </td>
 
-               Edit
 
-               </button>
+                    <td>
+                        ${leader.active
+                            ? "Active"
+                            : "Inactive"}
+                    </td>
 
-               </td>
-                <td>
 
-    <button
-        class="${leader.active ? 'deactivate-btn' : 'activate-btn'}"
-        onclick="toggleLeader('${doc.id}', ${leader.active})">
+                    <td>
 
-        ${leader.active ? "Deactivate" : "Activate"}
+                        <button
+                            onclick="editLeader('${doc.id}')"
+                        >
+                            Edit
+                        </button>
 
-    </button>
+                    </td>
 
-</td>
 
-            </tr>
+                    <td>
+
+                        <button
+                            class="${
+                                leader.active
+                                    ? "deactivate-btn"
+                                    : "activate-btn"
+                            }"
+
+                            onclick="toggleLeader(
+                                '${doc.id}',
+                                ${leader.active ? true : false}
+                            )"
+                        >
+
+                            ${
+                                leader.active
+                                    ? "Deactivate"
+                                    : "Activate"
+                            }
+
+                        </button>
+
+                    </td>
+
+                </tr>
 
             `;
 
         }
 
+
         attachSearch();
 
+
     }
+    catch (error) {
 
-    catch(error){
-
-        console.log(error);
+        console.error(
+            "Error loading leaders:",
+            error
+        );
 
     }
 
 }
-// ===========================================
+
+
+
+// ======================================================
 // EDIT LEADER
-// ===========================================
+// ======================================================
+
 async function editLeader(uid) {
-
-    console.log("Step 1");
-
-    const doc = await db.collection("users").doc(uid).get();
-
-    console.log("Step 2");
-
-    if (!doc.exists) {
-        alert("Document not found");
-        return;
-    }
-
-    const leader = doc.data();
-
-    console.log("Step 3", leader);
-
-    document.getElementById("leaderName").value = leader.name;
-    console.log("Step 4");
-
-    document.getElementById("leaderEmail").value = leader.email;
-    console.log("Step 5");
-
-    document.getElementById("leaderPhone").value = leader.phone;
-    console.log("Step 6");
-
-    document.getElementById("leaderRegion").value = leader.region;
-    console.log("Step 7");
-
-    document.getElementById("leaderPassword").style.display = "none";
-    console.log("Step 8");
-
-    editLeaderId = uid;
-
-    document.getElementById("saveLeaderBtn").innerHTML = "Update Leader";
-
-    console.log("Finished");
-
-}
-// ===========================================
-// ACTIVATE / DEACTIVATE
-// ===========================================
-
-async function toggleLeader(uid, currentStatus) {
 
     try {
 
-        await db.collection("users")
-            .doc(uid)
-            .update({
+        const doc =
+            await db
+                .collection("users")
+                .doc(uid)
+                .get();
 
-                active: !currentStatus
 
+        if (!doc.exists) {
+
+            alert(
+                "Document not found"
+            );
+
+            return;
+
+        }
+
+
+        const leader =
+            doc.data();
+
+
+        // ==========================================
+        // FILL FORM
+        // ==========================================
+
+        document.getElementById(
+            "leaderName"
+        ).value =
+            leader.name || "";
+
+
+        document.getElementById(
+            "leaderEmail"
+        ).value =
+            leader.email || "";
+
+
+        document.getElementById(
+            "leaderPhone"
+        ).value =
+            leader.phone || "";
+
+
+        document.getElementById(
+            "leaderRegion"
+        ).value =
+            leader.region || "";
+
+
+        // ==========================================
+        // HIDE PASSWORD DURING EDIT
+        // ==========================================
+
+        document.getElementById(
+            "leaderPassword"
+        ).style.display =
+            "none";
+
+
+        // ==========================================
+        // SET EDIT MODE
+        // ==========================================
+
+        editLeaderId =
+            uid;
+
+
+        document.getElementById(
+            "saveLeaderBtn"
+        ).innerHTML =
+            "Update Leader";
+
+
+        // Scroll to form
+
+        document
+            .getElementById("leaderName")
+            .scrollIntoView({
+                behavior: "smooth",
+                block: "center"
             });
 
-        loadLeaders();
+    }
+    catch (error) {
 
-    } catch (error) {
+        console.error(
+            "Edit Leader Error:",
+            error
+        );
 
-        console.error(error);
-
-        alert("Unable to update status.");
+        alert(
+            error.message
+        );
 
     }
 
 }
-// ==========================================
-// SEARCH LEADER
-// ==========================================
-function attachSearch() {
 
-    const searchBox = document.getElementById("searchLeader");
 
-    if (!searchBox || searchBox.dataset.listenerAdded)
-        return;
 
-    searchBox.dataset.listenerAdded = "true";
+// ======================================================
+// ACTIVATE / DEACTIVATE LEADER
+// ======================================================
 
-    searchBox.addEventListener("keyup", function () {
+async function toggleLeader(
+    uid,
+    currentStatus
+) {
 
-        const filter = this.value.toLowerCase().trim();
+    try {
 
-        const rows = document.querySelectorAll("#leaderTable tbody tr");
+        await db
+            .collection("users")
+            .doc(uid)
+            .update({
 
-        let matchFound = false;
+                active:
+                    !currentStatus
 
-        rows.forEach(row => {
+            });
 
-            const nameCell = row.cells[0];
-            const emailCell = row.cells[1];
-            const phoneCell = row.cells[2];
-            const regionCell = row.cells[3];
 
-            // Original text
-            const name = nameCell.textContent;
-            const email = emailCell.textContent;
-            const phone = phoneCell.textContent;
-            const region = regionCell.textContent;
+        // Reload table
 
-            // Remove previous highlights
-            nameCell.textContent = name;
-            emailCell.textContent = email;
-            phoneCell.textContent = phone;
-            regionCell.textContent = region;
+        loadLeaders();
 
-            const nameMatch = name.toLowerCase().includes(filter);
-            const emailMatch = email.toLowerCase().includes(filter);
-            const phoneMatch = phone.toLowerCase().includes(filter);
-            const regionMatch = region.toLowerCase().includes(filter);
+    }
+    catch (error) {
 
-            if (filter === "") {
+        console.error(
+            "Status Update Error:",
+            error
+        );
 
-                row.style.display = "";
+        alert(
+            "Unable to update status."
+        );
 
-            }
-            else if (nameMatch || emailMatch || phoneMatch || regionMatch) {
-
-                row.style.display = "";
-                matchFound = true;
-
-                const regex = new RegExp(filter, "gi");
-
-                if (nameMatch) {
-                    nameCell.innerHTML =
-                        name.replace(regex,
-                        m => `<span style="background:yellow;">${m}</span>`);
-                }
-
-                if (emailMatch) {
-                    emailCell.innerHTML =
-                        email.replace(regex,
-                        m => `<span style="background:yellow;">${m}</span>`);
-                }
-
-                if (phoneMatch) {
-                    phoneCell.innerHTML =
-                        phone.replace(regex,
-                        m => `<span style="background:yellow;">${m}</span>`);
-                }
-
-                if (regionMatch) {
-                    regionCell.innerHTML =
-                        region.replace(regex,
-                        m => `<span style="background:yellow;">${m}</span>`);
-                }
-
-            }
-            else {
-
-                row.style.display = "none";
-
-            }
-
-        });
-
-        document.getElementById("leaderMessage").textContent =
-            (filter !== "" && !matchFound)
-            ? "No Leader Found"
-            : "";
-
-    });
+    }
 
 }
+
+
+
+// ======================================================
+// SEARCH LEADER
+// ======================================================
+
+function attachSearch() {
+
+    const searchBox =
+        document.getElementById(
+            "searchLeader"
+        );
+
+
+    if (
+        !searchBox ||
+        searchBox.dataset.listenerAdded
+    ) {
+
+        return;
+
+    }
+
+
+    searchBox.dataset.listenerAdded =
+        "true";
+
+
+    searchBox.addEventListener(
+        "keyup",
+        function () {
+
+            const filter =
+                this.value
+                    .toLowerCase()
+                    .trim();
+
+
+            const rows =
+                document.querySelectorAll(
+                    "#leaderTable tbody tr"
+                );
+
+
+            let matchFound =
+                false;
+
+
+            rows.forEach(function (row) {
+
+                const nameCell =
+                    row.cells[0];
+
+
+                const emailCell =
+                    row.cells[1];
+
+
+                const phoneCell =
+                    row.cells[2];
+
+
+                const regionCell =
+                    row.cells[3];
+
+
+                if (
+                    !nameCell ||
+                    !emailCell ||
+                    !phoneCell ||
+                    !regionCell
+                ) {
+
+                    return;
+
+                }
+
+
+                // ======================================
+                // ORIGINAL TEXT
+                // ======================================
+
+                const name =
+                    nameCell.textContent;
+
+
+                const email =
+                    emailCell.textContent;
+
+
+                const phone =
+                    phoneCell.textContent;
+
+
+                const region =
+                    regionCell.textContent;
+
+
+                // ======================================
+                // REMOVE PREVIOUS HIGHLIGHT
+                // ======================================
+
+                nameCell.textContent =
+                    name;
+
+
+                emailCell.textContent =
+                    email;
+
+
+                phoneCell.textContent =
+                    phone;
+
+
+                regionCell.textContent =
+                    region;
+
+
+                // ======================================
+                // MATCH
+                // ======================================
+
+                const nameMatch =
+                    name
+                        .toLowerCase()
+                        .includes(filter);
+
+
+                const emailMatch =
+                    email
+                        .toLowerCase()
+                        .includes(filter);
+
+
+                const phoneMatch =
+                    phone
+                        .toLowerCase()
+                        .includes(filter);
+
+
+                const regionMatch =
+                    region
+                        .toLowerCase()
+                        .includes(filter);
+
+
+                // ======================================
+                // EMPTY SEARCH
+                // ======================================
+
+                if (filter === "") {
+
+                    row.style.display =
+                        "";
+
+                    return;
+
+                }
+
+
+                // ======================================
+                // MATCH FOUND
+                // ======================================
+
+                if (
+                    nameMatch ||
+                    emailMatch ||
+                    phoneMatch ||
+                    regionMatch
+                ) {
+
+                    row.style.display =
+                        "";
+
+
+                    matchFound =
+                        true;
+
+
+                    // Escape special regex characters
+
+                    const escapedFilter =
+                        filter.replace(
+                            /[.*+?^${}()|[\]\\]/g,
+                            "\\$&"
+                        );
+
+
+                    const regex =
+                        new RegExp(
+                            escapedFilter,
+                            "gi"
+                        );
+
+
+                    // Highlight name
+
+                    if (nameMatch) {
+
+                        nameCell.innerHTML =
+                            name.replace(
+                                regex,
+                                function (match) {
+
+                                    return `
+                                        <span
+                                            style="background:yellow;"
+                                        >
+                                            ${match}
+                                        </span>
+                                    `;
+
+                                }
+                            );
+
+                    }
+
+
+                    // Highlight email
+
+                    if (emailMatch) {
+
+                        emailCell.innerHTML =
+                            email.replace(
+                                regex,
+                                function (match) {
+
+                                    return `
+                                        <span
+                                            style="background:yellow;"
+                                        >
+                                            ${match}
+                                        </span>
+                                    `;
+
+                                }
+                            );
+
+                    }
+
+
+                    // Highlight phone
+
+                    if (phoneMatch) {
+
+                        phoneCell.innerHTML =
+                            phone.replace(
+                                regex,
+                                function (match) {
+
+                                    return `
+                                        <span
+                                            style="background:yellow;"
+                                        >
+                                            ${match}
+                                        </span>
+                                    `;
+
+                                }
+                            );
+
+                    }
+
+
+                    // Highlight region
+
+                    if (regionMatch) {
+
+                        regionCell.innerHTML =
+                            region.replace(
+                                regex,
+                                function (match) {
+
+                                    return `
+                                        <span
+                                            style="background:yellow;"
+                                        >
+                                            ${match}
+                                        </span>
+                                    `;
+
+                                }
+                            );
+
+                    }
+
+                }
+
+
+                // ======================================
+                // NO MATCH
+                // ======================================
+
+                else {
+
+                    row.style.display =
+                        "none";
+
+                }
+
+            });
+
+
+            // ==========================================
+            // NO LEADER MESSAGE
+            // ==========================================
+
+            const message =
+                document.getElementById(
+                    "leaderMessage"
+                );
+
+
+            if (message) {
+
+                message.textContent =
+                    (
+                        filter !== "" &&
+                        !matchFound
+                    )
+                        ? "No Leader Found"
+                        : "";
+
+            }
+
+        }
+    );
+
+}
+
+
+
+// ======================================================
+// OPTIONAL GLOBAL INITIALIZER
+// ======================================================
+//
+// This keeps compatibility with any existing code that
+// may call initializePage().
+// ======================================================
+
 function initializePage() {
+
     loadRegions();
+
     loadLeaders();
+
 }

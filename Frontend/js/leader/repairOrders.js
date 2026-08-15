@@ -261,28 +261,70 @@ async function loadRepairOrders() {
                 (itemCode, index) => {
 
 
-                    // ----------------------------------
+
+                    // ==========================================
                     // ITEM INFORMATION
-                    // ----------------------------------
+                    // ==========================================
 
-                    const itemInfo =
-                        itemMap[itemCode] || {
+                    // New ROs:
+                    // Use the saved itemDetails snapshot.
 
-                            description:
-                                itemCode,
+                    // Old ROs:
+                    // Fall back to itemcodes collection.
 
-                            billingAmount: 0
+                    let itemInfo = null;
 
-                        };
 
+                    // ------------------------------------------
+                    // NEW RECORD
+                    // ------------------------------------------
+
+                    if (Array.isArray(ro.itemDetails)) {
+
+                        itemInfo =
+                            ro.itemDetails.find(
+                                item =>
+                                    item.itemCode === itemCode
+                            );
+
+                    }
+
+
+                    // ------------------------------------------
+                    // FALLBACK FOR OLD RECORDS
+                    // ------------------------------------------
+
+                    if (!itemInfo) {
+
+                        itemInfo =
+                            itemMap[itemCode] || {
+
+                                description: itemCode,
+
+                                billingAmount: 0
+
+                            };
+
+                    }
+
+
+                    // ------------------------------------------
+                    // DESCRIPTION
+                    // ------------------------------------------
 
                     const description =
                         itemInfo.description ||
                         itemCode;
 
 
+                    // ------------------------------------------
+                    // BILLING AMOUNT
+                    // ------------------------------------------
+
                     const billingAmount =
-                        Number(itemInfo.billingAmount) || 0;
+                        Number(
+                            itemInfo.billingAmount
+                        ) || 0;
 
 
                     // ----------------------------------

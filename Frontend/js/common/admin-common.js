@@ -77,7 +77,12 @@ function showLeaders(){
     window.location.href= "../../pages/admin/leader-management.html";
 
 }
+function showAssignItems() {
 
+    window.location.href =
+        "../../pages/admin/assignItems.html";
+
+}
 function showReports(){
 
     window.location.href="../../pages/admin/reports.html";

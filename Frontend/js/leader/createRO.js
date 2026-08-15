@@ -78,9 +78,9 @@ function loadRegion() {
     });
 
 }
-// ==========================================
-// LOAD ITEM CODES + BILLING AMOUNT
-// ==========================================
+// ========================================================
+// LOAD ONLY ITEMS ASSIGNED TO THIS LEADER
+// ========================================================
 
 async function loadItems() {
 
@@ -96,29 +96,55 @@ async function loadItems() {
         return;
     }
 
-    container.innerHTML = "Loading items...";
+    container.innerHTML =
+        "Loading assigned items...";
 
     try {
+
+        // ==========================================
+        // CHECK ASSIGNED ITEMS
+        // ==========================================
+
+        const assignedItemCodes =
+            leaderData.assignedItemCodes || [];
+
+        console.log(
+            "Assigned Item Codes:",
+            assignedItemCodes
+        );
+
+        // ==========================================
+        // NO ASSIGNED ITEMS
+        // ==========================================
+
+        if (assignedItemCodes.length === 0) {
+
+            container.innerHTML = `
+                <p style="color:red;">
+                    No items have been assigned to you.
+                    Please contact Admin.
+                </p>
+            `;
+
+            return;
+        }
+
+        // ==========================================
+        // LOAD ITEM DETAILS
+        // ==========================================
 
         const snapshot =
             await db.collection("itemcodes")
                 .where("active", "==", true)
                 .get();
 
-        console.log(
-            "Active item count:",
-            snapshot.size
-        );
-
         container.innerHTML = "";
 
-        if (snapshot.empty) {
+        let assignedCount = 0;
 
-            container.innerHTML =
-                "<p>No active item codes available.</p>";
-
-            return;
-        }
+        // ==========================================
+        // LOOP THROUGH ITEMS
+        // ==========================================
 
         snapshot.forEach((doc) => {
 
@@ -127,11 +153,20 @@ async function loadItems() {
             const itemCode =
                 data.itemCode || doc.id;
 
+            // Only show assigned items
+            if (!assignedItemCodes.includes(itemCode)) {
+
+                return;
+
+            }
+
+            assignedCount++;
+
             const description =
                 data.description || "";
 
             const cost =
-            Number(data.billingAmount) || 0;
+                Number(data.billingAmount) || 0;
 
             const itemDiv =
                 document.createElement("div");
@@ -148,7 +183,9 @@ async function loadItems() {
                         name="itemCode"
                         value="${itemCode}"
                         data-cost="${cost}"
-                        onchange="calculateBillingAmount()">
+                        data-description="${description.replace(/"/g, '&quot;')}"
+                        onchange="calculateBillingAmount()"
+                    >
 
                     <span>
 
@@ -170,19 +207,46 @@ async function loadItems() {
 
         });
 
+        // ==========================================
+        // NONE FOUND
+        // ==========================================
+
+        if (assignedCount === 0) {
+
+            container.innerHTML = `
+                <p style="color:red;">
+                    Assigned items could not be found.
+                </p>
+            `;
+
+            return;
+        }
+
+        // ==========================================
+        // INITIAL BILLING
+        // ==========================================
+
         calculateBillingAmount();
+
+        console.log(
+            "Assigned items displayed:",
+            assignedCount
+        );
 
     }
 
     catch (error) {
 
         console.error(
-            "Error loading items:",
+            "Error loading assigned items:",
             error
         );
 
-        container.innerHTML =
-            "<p>Unable to load item codes.</p>";
+        container.innerHTML = `
+            <p style="color:red;">
+                Unable to load assigned items.
+            </p>
+        `;
 
     }
 
@@ -266,17 +330,50 @@ async function saveRO() {
     // Get selected item codes
     // ------------------------------------------
 
-const selectedItems =
+const selectedCheckboxes =
     Array.from(
         document.querySelectorAll(
             'input[name="itemCode"]:checked'
         )
-    ).map(
+    );
+
+const selectedItems =
+    selectedCheckboxes.map(
         checkbox => checkbox.value
     );
-    // ==========================================
-// CALCULATE BILLING AMOUNT
+
+
 // ==========================================
+// ITEM DETAILS SNAPSHOT
+// ==========================================
+
+const itemDetails =
+    selectedCheckboxes.map(checkbox => {
+
+        return {
+
+            itemCode:
+                checkbox.value,
+
+            description:
+                checkbox.dataset.description || "",
+
+            billingAmount:
+                Number(
+                    checkbox.dataset.cost
+                ) || 0
+
+        };
+
+    });
+
+console.log(
+    "Selected Item Details:",
+    itemDetails
+);
+   // ==========================================
+   // CALCULATE BILLING AMOUNT
+   // ==========================================
 
 let billingAmount = 0;
 
@@ -452,10 +549,11 @@ console.log(
 
             vehicleNumber: vehicleNumber,
 
-            // MULTIPLE ITEM CODES
             itemCodes: selectedItems,
- 
-            // Automatically calculated billing
+
+            itemDetails: itemDetails,
+
+            // Total billing calculated at RO creation
             billingAmount: billingAmount,
 
             status: "Pending",

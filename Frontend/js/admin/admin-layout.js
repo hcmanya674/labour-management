@@ -22,6 +22,8 @@ document.body.innerHTML = `
 
         <button onclick="showLeaders()">Leader Management</button>
 
+        <button onclick="showAssignItems()">Assign Items</button>
+        
         <button onclick="showReports()">Reports</button>
 
         <button onclick="logout()">Logout</button>
