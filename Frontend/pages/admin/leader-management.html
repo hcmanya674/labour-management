@@ -3,13 +3,13 @@
 
 <head>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Leader Management</title>
+    <title>Leader Management</title>
 
-<link rel="stylesheet" href="../../css/style.css">
- 
+    <link rel="stylesheet" href="../../css/style.css">
+
 </head>
 
 <body>
@@ -19,16 +19,65 @@
         🏠 Go to Home Page
     </button>
 
-<div id="app"></div>
+    <!-- ============================= -->
+    <!-- GO TO HOME / ADMIN PANEL -->
+    <!-- ============================= -->
 
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <button
+        onclick="window.location.href='admin.html'"
+        class="home-btn">
+        🏠 Go to Home Page
+    </button>
 
-<script src="../../js/common/firebase.js"></script>
 
+<<<<<<< HEAD
 <script src="../../js/common/admin-common.js"></script>
 <script src="../../js/admin/leader-management.js"></script>
+=======
+    <!-- ============================= -->
+    <!-- LEADER MANAGEMENT CONTENT -->
+    <!-- ============================= -->
+
+    <div id="app"></div>
+
+
+    <!-- ============================= -->
+    <!-- FIREBASE -->
+    <!-- ============================= -->
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+
+    <!-- ============================= -->
+    <!-- COMMON FIREBASE -->
+    <!-- ============================= -->
+
+    <script src="../../js/common/firebase.js"></script>
+
+
+    <!-- ============================= -->
+    <!-- COMMON ADMIN FUNCTIONS -->
+    <!-- Keep this if your admin-common.js
+         contains authentication/security logic -->
+    <!-- ============================= -->
+
+    <script src="../../js/common/admin-common.js"></script>
+
+
+    <!-- ============================= -->
+    <!-- LEADER MANAGEMENT ONLY -->
+    <!-- IMPORTANT:
+         DO NOT LOAD admin-layout.js HERE
+    -->
+    <!-- ============================= -->
+
+    <script src="../../js/admin/leader-management.js"></script>
+
+>>>>>>> 72a2272d0c63899898aba01af584a62f6aeedd35
 
 </body>
 

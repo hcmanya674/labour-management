@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Assign Items to Leader</title>
+
+    <link rel="stylesheet" href="../../css/style.css">
+
+    <style>
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="assignment-page">
+
+    <!-- ================= TOP BAR ================= -->
+
+    <div class="top-bar">
+
+        <h2 class="page-title">
+            Assign Items to Leader
+        </h2>
+
+        <button
+            class="home-btn"
+            onclick="goToAdminDashboard()">
+
+            🏠 Home
+
+        </button>
+
+    </div>
+
+
+    <!-- ================= LEADER SELECTION ================= -->
+
+    <div class="assignment-card">
+
+        <h3>Select Leader</h3>
+
+        <select
+            id="leaderSelect"
+            class="leader-select"
+            onchange="loadLeaderAssignments()">
+
+            <option value="">
+                Select Leader
+            </option>
+
+        </select>
+
+    </div>
+
+
+    <!-- ================= ITEMS ================= -->
+
+    <div class="assignment-card">
+
+        <div class="items-header">
+
+            <h3>
+                Available Items
+            </h3>
+
+            <span
+                id="itemCount"
+                class="item-count">
+
+                0 Items
+
+            </span>
+
+        </div>
+
+
+        <div id="itemContainer">
+
+            <div class="empty-message">
+
+                Select a leader to view available items.
+
+            </div>
+
+        </div>
+
+
+        <!-- ================= SAVE ================= -->
+
+        <button
+            id="saveAssignmentBtn"
+            class="save-btn"
+            onclick="saveAssignments()"
+            disabled>
+
+            Save Assignment
+
+        </button>
+
+
+        <p id="assignmentStatus"></p>
+
+    </div>
+
+</div>
+
+
+<!-- Firebase -->
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+
+<!-- Your Firebase -->
+
+<script src="../../js/common/firebase.js"></script>
+
+
+<!-- Assignment JS -->
+
+<script src="../../js/admin/assignItems.js"></script>
+
+</body>
+
+</html>
