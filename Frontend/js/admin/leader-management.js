@@ -7,12 +7,15 @@ let editLeaderId = null;
 // LOAD LEADER MANAGEMENT PAGE
 // ======================================================
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async function () {
 
     loadLeaderPage();
 
-});
+    await loadRegions();
 
+    await loadLeaders();
+
+});
 
 // ======================================================
 // CREATE LEADER MANAGEMENT CONTENT
@@ -144,6 +147,8 @@ function loadLeaderPage() {
 
                     <th>Deactivate</th>
 
+                    <th>Delete</th>
+
                 </tr>
 
             </thead>
@@ -157,12 +162,6 @@ function loadLeaderPage() {
 
     `;
 
-
-    // Load regions and leaders after HTML exists
-
-    loadRegions();
-
-    loadLeaders();
 
 }
 
@@ -588,7 +587,7 @@ async function loadLeaders() {
                     </td>
 
 
-                    <td>
+                   <td>
 
                         <button
                             class="${
@@ -609,6 +608,28 @@ async function loadLeaders() {
                                     : "Activate"
                             }
 
+                        </button>
+
+                    </td>
+
+                    <td>
+
+                        <button
+                            style="
+                                background:#d32f2f;
+                                color:white;
+                                border:none;
+                                padding:6px 12px;
+                                border-radius:4px;
+                                cursor:pointer;
+                            "
+
+                            onclick="deleteLeader(
+                                '${doc.id}',
+                                '${(leader.name || "").replace(/'/g, "\\'")}'
+                            )"
+                        >
+                            Delete
                         </button>
 
                     </td>
@@ -1119,19 +1140,89 @@ function attachSearch() {
 }
 
 
+// =====================================================
+// DELETE LEADER
+// =====================================================
 
-// ======================================================
-// OPTIONAL GLOBAL INITIALIZER
-// ======================================================
-//
-// This keeps compatibility with any existing code that
-// may call initializePage().
-// ======================================================
+async function deleteLeader(leaderUid, leaderName) {
 
-function initializePage() {
+    const confirmation = confirm(
+    `⚠️ DELETE LEADER\n\n` +
+    `Leader: ${leaderName}\n\n` +
+    `The following will be permanently deleted:\n` +
+    `• Leader profile\n` +
+    `• All item assignments\n\n` +
+    `Existing Repair Orders will NOT be deleted.\n\n` +
+    `This action cannot be undone.\n\n` +
+    `Do you want to continue?`
+);
 
-    loadRegions();
+    if (!confirmation) {
+        return;
+    }
 
-    loadLeaders();
+    try {
 
+        // -------------------------------------------------
+        // Find leader's item assignments
+        // -------------------------------------------------
+
+        const assignments =
+            await db.collection("leaderItemAssignments")
+                .where("leaderUid","==",  leaderUid)
+                .get();
+
+
+        // -------------------------------------------------
+        // Batch delete assignments + user profile
+        // -------------------------------------------------
+
+        const batch = db.batch();
+
+
+        assignments.forEach(doc => {
+
+            batch.delete(doc.ref);
+
+        });
+
+
+        // -------------------------------------------------
+        // Delete leader Firestore profile
+        // -------------------------------------------------
+
+        const userRef =
+            db.collection("users")
+                .doc(leaderUid);
+
+
+        batch.delete(userRef);
+
+
+        // -------------------------------------------------
+        // Commit
+        // -------------------------------------------------
+
+        await batch.commit();
+
+
+        alert(
+            `Leader "${leaderName}" deleted successfully.`
+        );
+
+
+        loadLeaders();
+
+    } catch (error) {
+
+        console.error(
+            "Error deleting leader:",
+            error
+        );
+
+        alert(
+            "Unable to delete leader.\n\n" +
+            error.message
+        );
+    }
 }

@@ -6,10 +6,22 @@ loadAdminLayout("Item Code Management", `
     <input type="text" id="itemCode" placeholder="Enter Item Code">
 
     <label>Description</label>
-    <input type="text" id="description" placeholder="Enter Description">
-    
-    <label>Cost / Amount</label>
-   <input type="number" id="itemCost" placeholder="Enter Cost">  
+    <input type="text" id="itemDescription" placeholder="Enter Description">
+    <label>Billing Amount</label>
+    <input
+        type="number"
+        id="itemBillingAmount"
+        placeholder="Enter Billing Amount"
+        min="0"
+        step="0.01">
+
+    <label>Incentive Amount</label>
+    <input
+        type="number"
+        id="itemIncentiveAmount"
+        placeholder="Enter Incentive Amount"
+        min="0"
+        step="0.01">
     <button onclick="saveItem()">Save Item Code</button>
 
 </div>
@@ -38,6 +50,7 @@ loadAdminLayout("Item Code Management", `
     <th>Edit Cost</th>
     <th>Deactivate</th>
     <th>Activate</th>
+    <th>Delete</th>
 </tr>
 
 </table>
@@ -240,7 +253,7 @@ function loadItems() {
             <th>Edit</th>
             <th>Edit Billing</th>
             <th>Edit Incentive</th>
-            <th>Action</th>
+            <th>Delete</th>
         </tr>
         `;
 
@@ -373,9 +386,34 @@ function loadItems() {
 
             }
 
-            actionCell.appendChild(actionBtn);
+           actionCell.appendChild(actionBtn);
 
-        });
+
+            // ==========================================
+            // DELETE ITEM
+            // ==========================================
+
+            const deleteCell = row.insertCell(9);
+
+            const deleteBtn = document.createElement("button");
+
+            deleteBtn.textContent = "Delete";
+
+            deleteBtn.style.background = "#d32f2f";
+            deleteBtn.style.color = "white";
+
+            deleteBtn.onclick = function () {
+
+                deleteItemCode(
+                    doc.id,
+                    data.itemCode
+                );
+
+            };
+
+            deleteCell.appendChild(deleteBtn);
+
+            });
 
         attachSearch();
 
@@ -646,4 +684,79 @@ function attachSearch() {
 
     });
 
+}
+
+
+
+// =====================================================
+// DELETE ITEM CODE
+// =====================================================
+
+async function deleteItemCode(itemId, itemCode) {
+
+    const confirmation = confirm(
+        `Are you sure you want to delete item "${itemCode}"?\n\n` +
+        `Any active assignments for this item will also be removed.\n\n` +
+        `This action cannot be undone.`
+    );
+
+    if (!confirmation) {
+        return;
+    }
+
+    try {
+
+        // -------------------------------------------------
+        // Delete item assignments first
+        // -------------------------------------------------
+
+        const assignments =
+            await db.collection("leaderItemAssignments")
+                .where("itemCode", "==", itemCode)
+                .get();
+
+        const batch = db.batch();
+
+        assignments.forEach(doc => {
+
+            batch.delete(doc.ref);
+
+        });
+
+        // -------------------------------------------------
+        // Delete item code
+        // -------------------------------------------------
+
+        const itemRef =
+            db.collection("itemcodes")
+                .doc(itemId);
+
+        batch.delete(itemRef);
+
+        // -------------------------------------------------
+        // Commit everything
+        // -------------------------------------------------
+
+        await batch.commit();
+
+        alert(
+            `Item Code "${itemCode}" deleted successfully.`
+        );
+
+        if (typeof showItemCodes === "function") {
+            showItemCodes();
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Error deleting item code:",
+            error
+        );
+
+        alert(
+            "Unable to delete item code.\n\n" +
+            error.message
+        );
+    }
 }

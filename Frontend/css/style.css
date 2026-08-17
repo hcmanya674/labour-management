@@ -184,14 +184,6 @@ button:hover {
     background: #1565C0;
 }
 
-.delete-btn {
-    background: #D32F2F;
-}
-
-.delete-btn:hover {
-    background: #B71C1C;
-}
-
 .logout-btn {
     background: #455A64;
 }
@@ -1807,4 +1799,75 @@ pre,
 code {
     max-width: 100%;
     overflow-x: auto;
+}
+/* ==========================================
+   REPAIR ORDER FILTER
+   ========================================== */
+
+.ro-filter-box {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f5f9ff;
+    border-radius: 10px;
+    flex-wrap: wrap;
+}
+
+.ro-filter-box label {
+    font-weight: 600;
+}
+
+#monthFilter {
+    padding: 10px 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 15px;
+}
+
+
+/* ==========================================
+   DELETE BUTTON
+   ========================================== */
+
+.delete-selected-btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    background: #d32f2f;
+    color: white;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.delete-selected-btn:hover {
+    background: #b71c1c;
+}
+
+.delete-selected-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+
+/* ==========================================
+   STATUS
+   ========================================== */
+
+.ro-status {
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+
+/* ==========================================
+   CHECKBOX
+   ========================================== */
+
+.ro-checkbox,
+#selectAllRO {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
 }

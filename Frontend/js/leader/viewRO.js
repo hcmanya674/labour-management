@@ -1,10 +1,16 @@
 // ==========================================
-// VIEW REPAIR ORDER
+// VIEW / EDIT REPAIR ORDER
 // ==========================================
 
 const roId = localStorage.getItem("currentRO");
 
 let currentItemCodes = [];
+
+let currentLeaderUid = null;
+
+let assignedItemMap = {};
+
+let isEditMode = false;
 
 
 // ==========================================
@@ -21,14 +27,47 @@ if (!roId) {
 
 
 // ==========================================
+// WAIT FOR LOGIN
+// ==========================================
+
+auth.onAuthStateChanged(async (user) => {
+
+    if (!user) {
+
+        alert("Please login first.");
+
+        window.location.href =
+            "../../pages/auth/loginindex.html";
+
+        return;
+
+    }
+
+    currentLeaderUid = user.uid;
+
+    console.log(
+        "Logged-in Leader UID:",
+        currentLeaderUid
+    );
+
+    await loadRepairOrder();
+
+});
+
+
+// ==========================================
 // LOAD REPAIR ORDER
 // ==========================================
 
-db.collection("repairorders")
-    .doc(roId)
-    .get()
+async function loadRepairOrder() {
 
-    .then((doc) => {
+    try {
+
+        const doc =
+            await db.collection("repairorders")
+                .doc(roId)
+                .get();
+
 
         if (!doc.exists) {
 
@@ -38,7 +77,10 @@ db.collection("repairorders")
 
         }
 
-        const repairData = doc.data();
+
+        const repairData =
+            doc.data();
+
 
         console.log(
             "Repair Order:",
@@ -50,19 +92,35 @@ db.collection("repairorders")
         // RO NUMBER
         // ======================================
 
-        document.getElementById("roNumber").innerHTML =
-            repairData.roNumber || "-";
+        const roNumber =
+            document.getElementById("roNumber");
+
+        if (roNumber) {
+
+            roNumber.textContent =
+                repairData.roNumber || "-";
+
+        }
 
 
         // ======================================
         // DATE & TIME
         // ======================================
 
-        if (repairData.createdAt) {
+        const createdDate =
+            document.getElementById(
+                "createdDate"
+            );
+
+
+        if (
+            createdDate &&
+            repairData.createdAt
+        ) {
 
             try {
 
-                document.getElementById("createdDate").innerHTML =
+                createdDate.textContent =
                     repairData.createdAt
                         .toDate()
                         .toLocaleString(
@@ -86,19 +144,17 @@ db.collection("repairorders")
                     error
                 );
 
-                document.getElementById(
-                    "createdDate"
-                ).innerHTML = "-";
+                createdDate.textContent =
+                    "-";
 
             }
 
         }
 
-        else {
+        else if (createdDate) {
 
-            document.getElementById(
-                "createdDate"
-            ).innerHTML = "-";
+            createdDate.textContent =
+                "-";
 
         }
 
@@ -121,36 +177,10 @@ db.collection("repairorders")
             "advisorName"
         ).value =
             repairData.advisorName || "";
-        // =================================================
-        // BILLING AMOUNT
-        // =================================================
 
-        const billingAmount =
-            Number(
-                repairData.billingAmount || 0
-            );
 
-        const billingElement =
-            document.getElementById(
-                "billingAmount"
-            );
-
-        if (billingElement) {
-
-            billingElement.value =
-                "₹" +
-                billingAmount.toLocaleString(
-                    "en-IN",
-                    {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
-                    }
-                );
-
-        }
-           
         // ======================================
-        // GET ITEM CODES
+        // GET CURRENT RO ITEMS
         // ======================================
 
         if (
@@ -159,9 +189,8 @@ db.collection("repairorders")
             )
         ) {
 
-            // New records
             currentItemCodes =
-                repairData.itemCodes;
+                [...repairData.itemCodes];
 
         }
 
@@ -169,7 +198,6 @@ db.collection("repairorders")
             repairData.itemCode
         ) {
 
-            // Old records
             currentItemCodes = [
                 repairData.itemCode
             ];
@@ -183,78 +211,132 @@ db.collection("repairorders")
         }
 
 
+        console.log(
+            "Current RO Items:",
+            currentItemCodes
+        );
+
+
         // ======================================
-        // LOAD ITEMS
+        // DISPLAY BILLING
         // ======================================
 
-        loadItems(currentItemCodes);
+        displayBillingAmount(
+            Number(
+                repairData.billingAmount || 0
+            )
+        );
 
-    })
 
-    .catch((error) => {
+        // ======================================
+        // VIEW MODE
+        // ======================================
 
-        console.error(error);
+        await loadViewItems(
+            currentItemCodes
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Load Repair Order error:",
+            error
+        );
 
         alert(
             "Unable to load Repair Order."
         );
 
-    });
+    }
+
+}
 
 
 // ==========================================
-// LOAD ITEM CODES
+// DISPLAY BILLING AMOUNT
 // ==========================================
 
-async function loadItems(selectedItems) {
+function displayBillingAmount(amount) {
 
-    try {
-
-        const snapshot =
-            await db.collection("itemcodes")
-                .where(
-                    "active",
-                    "==",
-                    true
-                )
-                .get();
+    const billingElement =
+        document.getElementById(
+            "billingAmount"
+        );
 
 
-        const container =
-            document.getElementById(
-                "itemCodeContainer"
+    if (!billingElement) {
+
+        return;
+
+    }
+
+
+    billingElement.value =
+        "₹" +
+        Number(amount || 0)
+            .toLocaleString(
+                "en-IN",
+                {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }
             );
 
-
-        container.innerHTML = "";
-
-
-        // ======================================
-        // NO ITEMS
-        // ======================================
-
-        if (snapshot.empty) {
-
-            container.innerHTML =
-                "<p>No item codes available.</p>";
-
-            return;
-
-        }
+}
 
 
-        // ======================================
-        // CREATE CHECKBOXES
-        // ======================================
+// ==========================================
+// LOAD ITEMS FOR VIEW MODE
+// ==========================================
 
-        snapshot.forEach((doc) => {
+async function loadViewItems(
+    selectedItems
+) {
 
-            const item = doc.data();
+    const container =
+        document.getElementById(
+            "itemCodeContainer"
+        );
 
-            const isSelected =
-                selectedItems.includes(
-                    item.itemCode
-                );
+
+    if (!container) {
+
+        return;
+
+    }
+
+
+    container.innerHTML = "";
+
+
+    if (
+        !Array.isArray(selectedItems) ||
+        selectedItems.length === 0
+    ) {
+
+        container.innerHTML = `
+            <p>
+                No item codes selected for this Repair Order.
+            </p>
+        `;
+
+        return;
+
+    }
+
+
+    for (
+        const itemCode of selectedItems
+    ) {
+
+        try {
+
+            const itemDoc =
+                await db.collection("itemcodes")
+                    .doc(itemCode)
+                    .get();
 
 
             const itemDiv =
@@ -262,8 +344,64 @@ async function loadItems(selectedItems) {
                     "div"
                 );
 
+
             itemDiv.className =
                 "item-option";
+
+
+            // ==================================
+            // ITEM DOCUMENT NOT FOUND
+            // ==================================
+
+            if (!itemDoc.exists) {
+
+                itemDiv.innerHTML = `
+
+                    <label class="item-checkbox">
+
+                        <input
+                            type="checkbox"
+                            name="itemCode"
+                            value="${itemCode}"
+                            checked
+                            disabled
+                        >
+
+                        <span>
+                            ${itemCode}
+                            - Item details unavailable
+                        </span>
+
+                    </label>
+
+                `;
+
+                container.appendChild(
+                    itemDiv
+                );
+
+                continue;
+
+            }
+
+
+            const item =
+                itemDoc.data();
+
+
+            const actualItemCode =
+                item.itemCode ||
+                itemCode;
+
+
+            const description =
+                item.description || "-";
+
+
+            const billingAmount =
+                Number(
+                    item.billingAmount
+                ) || 0;
 
 
             itemDiv.innerHTML = `
@@ -273,15 +411,23 @@ async function loadItems(selectedItems) {
                     <input
                         type="checkbox"
                         name="itemCode"
-                        value="${item.itemCode}"
-                        ${isSelected ? "checked" : ""}
-                        disabled>
+                        value="${actualItemCode}"
+                        checked
+                        disabled
+                    >
 
                     <span>
 
-                        ${item.itemCode}
+                        <strong>
+                            ${actualItemCode}
+                        </strong>
+
                         -
-                        ${item.description || ""}
+                        ${description}
+
+                        <span>
+                            ₹${billingAmount.toLocaleString("en-IN")}
+                        </span>
 
                     </span>
 
@@ -294,16 +440,17 @@ async function loadItems(selectedItems) {
                 itemDiv
             );
 
-        });
+        }
 
-    }
+        catch (error) {
 
-    catch (error) {
+            console.error(
+                "Error loading item:",
+                itemCode,
+                error
+            );
 
-        console.error(
-            "Error loading item codes:",
-            error
-        );
+        }
 
     }
 
@@ -314,47 +461,448 @@ async function loadItems(selectedItems) {
 // ENABLE EDIT
 // ==========================================
 
-function enableEdit() {
+async function enableEdit() {
 
-    document.getElementById(
-        "vehicleNumber"
-    ).disabled = false;
+    if (isEditMode) {
 
+        return;
 
-    document.getElementById(
-        "advisorName"
-    ).disabled = false;
+    }
 
 
-    // Enable all item checkboxes
+    try {
 
-    document
-        .querySelectorAll(
-            'input[name="itemCode"]'
-        )
-        .forEach(
-            checkbox => {
+        isEditMode = true;
 
-                checkbox.disabled = false;
+
+        // ======================================
+        // ENABLE VEHICLE
+        // ======================================
+
+        document.getElementById(
+            "vehicleNumber"
+        ).disabled = false;
+
+
+        // ======================================
+        // ENABLE ADVISOR
+        // ======================================
+
+        document.getElementById(
+            "advisorName"
+        ).disabled = false;
+
+
+        // ======================================
+        // LOAD ADMIN-ASSIGNED ITEMS
+        // ======================================
+
+        await loadAssignedItemsForEdit();
+
+
+        // ======================================
+        // SHOW UPDATE BUTTON
+        // ======================================
+
+        document.getElementById(
+            "updateBtn"
+        ).style.display =
+            "inline-block";
+
+
+        // ======================================
+        // HIDE EDIT BUTTON
+        // ======================================
+
+        const editBtn =
+            document.querySelector(
+                ".edit-btn"
+            );
+
+
+        if (editBtn) {
+
+            editBtn.style.display =
+                "none";
+
+        }
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Enable edit error:",
+            error
+        );
+
+        alert(
+            "Unable to enable edit mode."
+        );
+
+        isEditMode = false;
+
+    }
+
+}
+
+
+// ==========================================
+// LOAD LEADER ASSIGNED ITEMS
+// ==========================================
+
+async function loadAssignedItemsForEdit() {
+
+    const container =
+        document.getElementById(
+            "itemCodeContainer"
+        );
+
+
+    container.innerHTML =
+        "<p>Loading assigned items...</p>";
+
+
+    try {
+
+        // ======================================
+        // GET CURRENT LEADER
+        // ======================================
+
+        const user =
+            auth.currentUser;
+
+
+        if (!user) {
+
+            throw new Error(
+                "Leader is not logged in."
+            );
+
+        }
+
+
+        currentLeaderUid =
+            user.uid;
+
+
+        // ======================================
+        // GET ACTIVE ASSIGNMENTS
+        // ======================================
+
+        const assignmentSnapshot =
+            await db.collection(
+                "leaderItemAssignments"
+            )
+            .where(
+                "leaderUid",
+                "==",
+                currentLeaderUid
+            )
+            .where(
+                "active",
+                "==",
+                true
+            )
+            .get();
+
+
+        if (
+            assignmentSnapshot.empty
+        ) {
+
+            container.innerHTML = `
+                <p>
+                    No items have been assigned to you.
+                </p>
+            `;
+
+            return;
+
+        }
+
+
+        // ======================================
+        // CLEAR MAP
+        // ======================================
+
+        assignedItemMap = {};
+
+
+        // ======================================
+        // STORE ASSIGNED ITEM CODES
+        // ======================================
+
+        assignmentSnapshot.forEach(
+            (doc) => {
+
+                const data =
+                    doc.data();
+
+
+                if (
+                    data.itemCode
+                ) {
+
+                    assignedItemMap[
+                        data.itemCode
+                    ] = true;
+
+                }
 
             }
         );
 
 
-    // Show update button
+        console.log(
+            "Leader assigned items:",
+            Object.keys(
+                assignedItemMap
+            )
+        );
 
-    document.getElementById(
-        "updateBtn"
-    ).style.display =
-        "inline-block";
+
+        // ======================================
+        // LOAD ITEM DETAILS
+        // ======================================
+
+        container.innerHTML = "";
 
 
-    // Hide Edit button
+        const assignedCodes =
+            Object.keys(
+                assignedItemMap
+            ).sort();
 
-    document.querySelector(
-        ".edit-btn"
-    ).style.display =
-        "none";
+
+        for (
+            const itemCode of assignedCodes
+        ) {
+
+            const itemDoc =
+                await db.collection(
+                    "itemcodes"
+                )
+                .doc(itemCode)
+                .get();
+
+
+            if (!itemDoc.exists) {
+
+                console.warn(
+                    "Assigned item does not exist:",
+                    itemCode
+                );
+
+                continue;
+
+            }
+
+
+            const item =
+                itemDoc.data();
+
+
+            const actualItemCode =
+                item.itemCode ||
+                itemCode;
+
+
+            const description =
+                item.description || "-";
+
+
+            const billingAmount =
+                Number(
+                    item.billingAmount
+                ) || 0;
+
+
+            // ==================================
+            // CHECK IF ITEM IS ALREADY IN RO
+            // ==================================
+
+            const isSelected =
+                currentItemCodes.includes(
+                    actualItemCode
+                );
+
+
+            // ==================================
+            // CREATE ITEM
+            // ==================================
+
+            const itemDiv =
+                document.createElement(
+                    "div"
+                );
+
+
+            itemDiv.className =
+                "item-option";
+
+
+            itemDiv.innerHTML = `
+
+                <label class="item-checkbox">
+
+                    <input
+                        type="checkbox"
+                        name="itemCode"
+                        value="${actualItemCode}"
+                        ${isSelected ? "checked" : ""}
+                        onchange="recalculateBilling()"
+                    >
+
+                    <span>
+
+                        <strong>
+                            ${actualItemCode}
+                        </strong>
+
+                        -
+                        ${description}
+
+                        <span>
+                            ₹${billingAmount.toLocaleString("en-IN")}
+                        </span>
+
+                    </span>
+
+                </label>
+
+            `;
+
+
+            container.appendChild(
+                itemDiv
+            );
+
+        }
+
+
+        // ======================================
+        // INITIAL BILLING
+        // ======================================
+
+        recalculateBilling();
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Load assigned items error:",
+            error
+        );
+
+        container.innerHTML = `
+            <p>
+                Unable to load assigned items.
+            </p>
+        `;
+
+        throw error;
+
+    }
+
+}
+
+
+// ==========================================
+// RECALCULATE BILLING
+// ==========================================
+
+async function recalculateBilling() {
+
+    if (!isEditMode) {
+
+        return;
+
+    }
+
+
+    const selectedItems =
+        Array.from(
+            document.querySelectorAll(
+                'input[name="itemCode"]:checked'
+            )
+        )
+        .map(
+            checkbox =>
+                checkbox.value
+        );
+
+
+    let total =
+        0;
+
+
+    for (
+        const itemCode of selectedItems
+    ) {
+
+        // ======================================
+        // USE ASSIGNED ITEM MAP
+        // ======================================
+
+        if (
+            !assignedItemMap[itemCode]
+        ) {
+
+            console.warn(
+                "Unauthorized item:",
+                itemCode
+            );
+
+            continue;
+
+        }
+
+
+        try {
+
+            const itemDoc =
+                await db.collection(
+                    "itemcodes"
+                )
+                .doc(itemCode)
+                .get();
+
+
+            if (
+                itemDoc.exists
+            ) {
+
+                const item =
+                    itemDoc.data();
+
+
+                total +=
+                    Number(
+                        item.billingAmount
+                    ) || 0;
+
+            }
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "Billing calculation error:",
+                itemCode,
+                error
+            );
+
+        }
+
+    }
+
+
+    displayBillingAmount(
+        total
+    );
 
 }
 
@@ -365,6 +913,17 @@ function enableEdit() {
 
 async function updateRO() {
 
+    if (!isEditMode) {
+
+        return;
+
+    }
+
+
+    // ======================================
+    // VEHICLE NUMBER
+    // ======================================
+
     const vehicleNumber =
         document.getElementById(
             "vehicleNumber"
@@ -373,6 +932,10 @@ async function updateRO() {
         .trim()
         .toUpperCase();
 
+
+    // ======================================
+    // ADVISOR NAME
+    // ======================================
 
     const advisorName =
         document.getElementById(
@@ -384,7 +947,7 @@ async function updateRO() {
 
 
     // ======================================
-    // GET SELECTED ITEMS
+    // SELECTED ITEMS
     // ======================================
 
     const selectedItems =
@@ -425,7 +988,9 @@ async function updateRO() {
     }
 
 
-    if (selectedItems.length === 0) {
+    if (
+        selectedItems.length === 0
+    ) {
 
         alert(
             "Please select at least one item."
@@ -437,7 +1002,31 @@ async function updateRO() {
 
 
     // ======================================
-    // ADVISOR NAME VALIDATION
+    // VERIFY ALL ITEMS ARE ASSIGNED
+    // ======================================
+
+    for (
+        const itemCode of selectedItems
+    ) {
+
+        if (
+            !assignedItemMap[itemCode]
+        ) {
+
+            alert(
+                "You are not authorized to use item: " +
+                itemCode
+            );
+
+            return;
+
+        }
+
+    }
+
+
+    // ======================================
+    // ADVISOR VALIDATION
     // ======================================
 
     const namePattern =
@@ -459,7 +1048,9 @@ async function updateRO() {
     }
 
 
-    if (advisorName.length < 3) {
+    if (
+        advisorName.length < 3
+    ) {
 
         alert(
             "Advisor name must contain at least 3 characters."
@@ -470,7 +1061,9 @@ async function updateRO() {
     }
 
 
-    if (advisorName.length > 30) {
+    if (
+        advisorName.length > 30
+    ) {
 
         alert(
             "Advisor name cannot exceed 30 characters."
@@ -480,32 +1073,41 @@ async function updateRO() {
 
     }
 
+
     // ======================================
-    // CALCULATE BILLING AMOUNT
+    // CALCULATE BILLING
     // ======================================
 
-    let billingAmount = 0;
+    let billingAmount =
+        0;
 
 
     try {
 
-        for (const itemCode of selectedItems) {
+        for (
+            const itemCode of selectedItems
+        ) {
 
             const itemDoc =
-                await db.collection("itemcodes")
+                await db.collection(
+                    "itemcodes"
+                )
                 .doc(itemCode)
                 .get();
 
 
-            if (itemDoc.exists) {
+            if (
+                itemDoc.exists
+            ) {
 
                 const itemData =
                     itemDoc.data();
 
-                const itemCost =
-                    Number(itemData.billingAmount) || 0;
 
-                billingAmount += itemCost;
+                billingAmount +=
+                    Number(
+                        itemData.billingAmount
+                    ) || 0;
 
             }
 
@@ -517,16 +1119,16 @@ async function updateRO() {
             selectedItems
         );
 
+
         console.log(
             "New Billing Amount:",
             billingAmount
         );
 
-    // ======================================
-    // UPDATE FIRESTORE
-    // ======================================
 
-    
+        // ======================================
+        // UPDATE FIRESTORE
+        // ======================================
 
         await db.collection(
             "repairorders"
@@ -543,9 +1145,9 @@ async function updateRO() {
             itemCodes:
                 selectedItems,
 
-
             billingAmount:
                 billingAmount
+
         });
 
 
@@ -553,6 +1155,17 @@ async function updateRO() {
             "Repair Order Updated Successfully."
         );
 
+
+        // ======================================
+        // EXIT EDIT MODE
+        // ======================================
+
+        isEditMode = false;
+
+
+        // ======================================
+        // RELOAD
+        // ======================================
 
         location.reload();
 

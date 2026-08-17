@@ -101,23 +101,87 @@ async function loadItems() {
 
     try {
 
-        // ==========================================
-        // CHECK ASSIGNED ITEMS
-        // ==========================================
+        // =================================================
+        // CURRENT LEADER UID
+        // =================================================
 
-        const assignedItemCodes =
-            leaderData.assignedItemCodes || [];
+        const currentUser =
+            auth.currentUser;
+
+        if (!currentUser) {
+
+            container.innerHTML = `
+                <p style="color:red;">
+                    User is not logged in.
+                </p>
+            `;
+
+            return;
+        }
+
+        const leaderUid =
+            currentUser.uid;
+
+        console.log(
+            "Current Leader UID:",
+            leaderUid
+        );
+
+
+        // =================================================
+        // GET ACTIVE ASSIGNMENTS
+        // =================================================
+
+        const assignmentSnapshot =
+            await db.collection("leaderItemAssignments")
+                .where(
+                    "leaderUid",
+                    "==",
+                    leaderUid
+                )
+                .where(
+                    "active",
+                    "==",
+                    true
+                )
+                .get();
+
+
+        // =================================================
+        // GET ASSIGNED ITEM CODES
+        // =================================================
+
+        const assignedItemCodes = [];
+
+        assignmentSnapshot.forEach(doc => {
+
+            const data =
+                doc.data();
+
+            if (data.itemCode) {
+
+                assignedItemCodes.push(
+                    data.itemCode
+                );
+
+            }
+
+        });
+
 
         console.log(
             "Assigned Item Codes:",
             assignedItemCodes
         );
 
-        // ==========================================
-        // NO ASSIGNED ITEMS
-        // ==========================================
 
-        if (assignedItemCodes.length === 0) {
+        // =================================================
+        // NO ASSIGNED ITEMS
+        // =================================================
+
+        if (
+            assignedItemCodes.length === 0
+        ) {
 
             container.innerHTML = `
                 <p style="color:red;">
@@ -129,50 +193,73 @@ async function loadItems() {
             return;
         }
 
-        // ==========================================
-        // LOAD ITEM DETAILS
-        // ==========================================
 
-        const snapshot =
+        // =================================================
+        // LOAD ACTIVE ITEM DETAILS
+        // =================================================
+
+        const itemSnapshot =
             await db.collection("itemcodes")
-                .where("active", "==", true)
+                .where(
+                    "active",
+                    "==",
+                    true
+                )
                 .get();
+
 
         container.innerHTML = "";
 
         let assignedCount = 0;
 
-        // ==========================================
-        // LOOP THROUGH ITEMS
-        // ==========================================
 
-        snapshot.forEach((doc) => {
+        // =================================================
+        // DISPLAY ONLY ASSIGNED ITEMS
+        // =================================================
 
-            const data = doc.data();
+        itemSnapshot.forEach(doc => {
+
+            const data =
+                doc.data();
+
 
             const itemCode =
                 data.itemCode || doc.id;
 
-            // Only show assigned items
-            if (!assignedItemCodes.includes(itemCode)) {
+
+            // ---------------------------------------------
+            // Only show items assigned to this leader
+            // ---------------------------------------------
+
+            if (
+                !assignedItemCodes.includes(itemCode)
+            ) {
 
                 return;
 
             }
 
+
             assignedCount++;
+
 
             const description =
                 data.description || "";
 
+
             const cost =
-                Number(data.billingAmount) || 0;
+                Number(
+                    data.billingAmount
+                ) || 0;
+
 
             const itemDiv =
                 document.createElement("div");
 
+
             itemDiv.className =
                 "item-option";
+
 
             itemDiv.innerHTML = `
 
@@ -183,7 +270,8 @@ async function loadItems() {
                         name="itemCode"
                         value="${itemCode}"
                         data-cost="${cost}"
-                        data-description="${description.replace(/"/g, '&quot;')}"
+                        data-description="${description
+                            .replace(/"/g, "&quot;")}"
                         onchange="calculateBillingAmount()"
                     >
 
@@ -203,30 +291,44 @@ async function loadItems() {
 
             `;
 
-            container.appendChild(itemDiv);
+
+            container.appendChild(
+                itemDiv
+            );
 
         });
 
-        // ==========================================
-        // NONE FOUND
-        // ==========================================
 
-        if (assignedCount === 0) {
+        // =================================================
+        // ASSIGNED ITEMS NOT FOUND
+        // =================================================
+
+        if (
+            assignedCount === 0
+        ) {
 
             container.innerHTML = `
                 <p style="color:red;">
-                    Assigned items could not be found.
+                    Assigned items could not be found
+                    in the itemcodes collection.
                 </p>
             `;
+
+            console.error(
+                "Assignments exist, but matching itemcodes were not found.",
+                assignedItemCodes
+            );
 
             return;
         }
 
-        // ==========================================
+
+        // =================================================
         // INITIAL BILLING
-        // ==========================================
+        // =================================================
 
         calculateBillingAmount();
+
 
         console.log(
             "Assigned items displayed:",
@@ -251,6 +353,8 @@ async function loadItems() {
     }
 
 }
+
+      
 
 // ==========================================
 // CALCULATE TOTAL BILLING AMOUNT

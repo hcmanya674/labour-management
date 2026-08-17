@@ -1,71 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
     <title>Region Management</title>
-    <link rel="stylesheet" href="../../css/style.css">
+
+    <link
+        rel="stylesheet"
+        href="../../css/style.css"
+    >
+
 </head>
+
 <body>
-<button onclick="window.location.href='admin.html'" class="home-btn">🏠 Go to Home Page</button>
 
-<div class="container">
-    
+    <!-- Firebase -->
 
-    <!-- Main -->
-    <div class="main">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 
-        <h1>Region Management</h1>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
-        <div class="form-box">
-            <label>Region ID</label>
-            <input type="text" id="regionId" maxlength="5" placeholder="Enter Region ID" oninput="this.value=this.value.toUpperCase()"  style="text-transform:uppercase" >
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-            <label>Region Name</label>
-            <input type="text" id="regionName" maxlength="30" 
-                placeholder="Enter Region Name" 
-                oninput="this.value=this.value.toUpperCase()" 
-                style="text-transform:uppercase">
 
-            <button onclick="saveRegion()">Save Region</button>
-        </div>
+    <!-- Firebase Configuration -->
 
-        <br>
+    <script src="../../js/common/firebase.js"></script>
 
-        <!-- Search -->
-        <input
-            type="text"
-            id="searchRegion"
-            placeholder="Search Region Name">
 
-        <div
-            id="regionMessage"
-            style="color:red;font-weight:bold;margin-top:5px;">
-        </div>
+    <!-- Admin Common -->
 
-        <br><br>
+    <script src="../../js/common/admin-common.js"></script>
 
-        <table id="regionTable">
-            <tr>
-                <th>Region ID</th>
-                <th>Region Name</th>
-                <th>Status</th>
-                <th>Edit</th>
-                <th>Deactivate</th>
-                <th>Activate</th>
-            </tr>
-        </table>
 
-    </div>
-</div>
+    <!-- Admin Layout -->
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-<script src="../../js/common/firebase.js"></script>
-<script src="../../js/common/admin-common.js"></script>
-<script src="../../js/admin/region.js"></script>
+    <script src="../../js/admin/admin-layout.js"></script>
+
+
+    <!-- Region Management -->
+
+    <script src="../../js/admin/region.js"></script>
 
 </body>
+
 </html>

@@ -5,6 +5,7 @@
 let leaderData = {};
 let itemMap = {};
 
+
 // ==========================================
 // CHECK LOGIN
 // ==========================================
@@ -13,32 +14,58 @@ auth.onAuthStateChanged(async (user) => {
 
     if (!user) {
 
-        location = "../../pages/auth/loginindex.html";
+        location =
+            "../../pages/auth/loginindex.html";
 
         return;
     }
 
+
     try {
 
-        const leaderDoc = await db.collection("users")
-            .doc(user.uid)
-            .get();
+        const leaderDoc =
+            await db.collection("users")
+                .doc(user.uid)
+                .get();
+
 
         if (!leaderDoc.exists) {
 
             alert("Leader record not found.");
 
             return;
+
         }
 
-        leaderData = leaderDoc.data();
 
-        console.log("Leader Data:", leaderData);
+        leaderData =
+            leaderDoc.data();
 
-        // Load item code descriptions first
+
+        console.log(
+            "Leader Data:",
+            leaderData
+        );
+
+
+        // ------------------------------------------
+        // Create month filter
+        // ------------------------------------------
+
+        initializeMonthFilter();
+
+
+        // ------------------------------------------
+        // Load item codes
+        // ------------------------------------------
+
         await loadItemCodes();
 
-        // Then load repair orders
+
+        // ------------------------------------------
+        // Load repair orders
+        // ------------------------------------------
+
         await loadRepairOrders();
 
     }
@@ -50,9 +77,102 @@ auth.onAuthStateChanged(async (user) => {
             error
         );
 
+        alert(
+            "Unable to load Repair Orders."
+        );
+
     }
 
 });
+
+
+// ==========================================
+// INITIALIZE MONTH FILTER
+// ==========================================
+
+function initializeMonthFilter() {
+
+    const select =
+        document.getElementById(
+            "monthFilter"
+        );
+
+
+    if (!select) {
+
+        return;
+
+    }
+
+
+    select.innerHTML = "";
+
+
+    const now =
+        new Date();
+
+
+    // ------------------------------------------
+    // Show last 12 months
+    // ------------------------------------------
+
+    for (
+        let i = 0;
+        i < 12;
+        i++
+    ) {
+
+        const date =
+            new Date(
+                now.getFullYear(),
+                now.getMonth() - i,
+                1
+            );
+
+
+        const year =
+            date.getFullYear();
+
+
+        const month =
+            date.getMonth();
+
+
+        const value =
+            `${year}-${String(month + 1).padStart(2, "0")}`;
+
+
+        const label =
+            date.toLocaleDateString(
+                "en-IN",
+                {
+                    month: "long",
+                    year: "numeric"
+                }
+            );
+
+
+        const option =
+            document.createElement(
+                "option"
+            );
+
+
+        option.value =
+            value;
+
+
+        option.textContent =
+            label;
+
+
+        select.appendChild(
+            option
+        );
+
+    }
+
+}
 
 
 // ==========================================
@@ -63,21 +183,44 @@ async function loadItemCodes() {
 
     try {
 
-        const snapshot = await db.collection("itemcodes")
-            .where("active", "==", true)
-            .get();
+        const snapshot =
+            await db.collection("itemcodes")
+                .where(
+                    "active",
+                    "==",
+                    true
+                )
+                .get();
+
 
         itemMap = {};
 
+
         snapshot.forEach(doc => {
 
-            const item = doc.data();
+            const item =
+                doc.data();
 
-            itemMap[item.itemCode] ={
-                description: item.description || "",
-                billingAmount: Number(item.billingAmount) || 0
+
+            const itemCode =
+                item.itemCode ||
+                doc.id;
+
+
+            itemMap[itemCode] = {
+
+                description:
+                    item.description || "",
+
+                billingAmount:
+                    Number(
+                        item.billingAmount
+                    ) || 0
+
             };
+
         });
+
 
         console.log(
             "Item Map:",
@@ -97,6 +240,7 @@ async function loadItemCodes() {
 
 }
 
+
 // ==========================================
 // LOAD REPAIR ORDERS
 // ==========================================
@@ -105,12 +249,84 @@ async function loadRepairOrders() {
 
     try {
 
+        const selectedMonth =
+            document.getElementById(
+                "monthFilter"
+            ).value;
+
+
+        if (!selectedMonth) {
+
+            return;
+
+        }
+
+
+        const [
+            selectedYear,
+            selectedMonthNumber
+        ] =
+            selectedMonth
+                .split("-")
+                .map(Number);
+
+
+        // ------------------------------------------
+        // Start of selected month
+        // ------------------------------------------
+
+        const startDate =
+            new Date(
+                selectedYear,
+                selectedMonthNumber - 1,
+                1
+            );
+
+
+        // ------------------------------------------
+        // Start of next month
+        // ------------------------------------------
+
+        const endDate =
+            new Date(
+                selectedYear,
+                selectedMonthNumber,
+                1
+            );
+
+
+        console.log(
+            "Loading month:",
+            selectedMonth
+        );
+
+
+        // ------------------------------------------
+        // Firestore query
+        // ------------------------------------------
+
         const snapshot =
-            await db.collection("repairorders")
+            await db.collection(
+                "repairorders"
+            )
             .where(
-                "region",
+                "leaderUid",
                 "==",
-                leaderData.region
+                auth.currentUser.uid
+            )
+            .where(
+                "createdAt",
+                ">=",
+                firebase.firestore.Timestamp.fromDate(
+                    startDate
+                )
+            )
+            .where(
+                "createdAt",
+                "<",
+                firebase.firestore.Timestamp.fromDate(
+                    endDate
+                )
             )
             .orderBy(
                 "createdAt",
@@ -122,20 +338,24 @@ async function loadRepairOrders() {
         let html = "";
 
 
-        // ======================================
-        // LOOP THROUGH REPAIR ORDERS
-        // ======================================
+        // ------------------------------------------
+        // Create rows
+        // ------------------------------------------
 
-        for (const doc of snapshot.docs) {
+        for (
+            const doc of snapshot.docs
+        ) {
 
-            const ro = doc.data();
+            const ro =
+                doc.data();
 
 
-            // ==================================
+            // ======================================
             // DATE
-            // ==================================
+            // ======================================
 
             let date = "-";
+
 
             if (ro.createdAt) {
 
@@ -143,14 +363,16 @@ async function loadRepairOrders() {
 
                     date =
                         ro.createdAt
-                        .toDate()
-                        .toLocaleDateString("en-GB");
+                            .toDate()
+                            .toLocaleDateString(
+                                "en-GB"
+                            );
 
                 }
 
                 catch (e) {
 
-                    console.log(
+                    console.error(
                         "Date conversion error:",
                         e
                     );
@@ -160,24 +382,27 @@ async function loadRepairOrders() {
             }
 
 
-            // ==================================
+            // ======================================
             // ITEM CODES
-            // ==================================
+            // ======================================
 
             let itemCodes = [];
 
 
-            // New records
             if (
-                Array.isArray(ro.itemCodes)
+                Array.isArray(
+                    ro.itemCodes
+                )
             ) {
 
-                itemCodes = ro.itemCodes;
+                itemCodes =
+                    ro.itemCodes;
 
             }
 
-            // Old records
-            else if (ro.itemCode) {
+            else if (
+                ro.itemCode
+            ) {
 
                 itemCodes = [
                     ro.itemCode
@@ -186,15 +411,28 @@ async function loadRepairOrders() {
             }
 
 
-            // ==================================
+            // ======================================
             // NO ITEM CODE
-            // ==================================
+            // ======================================
 
-            if (itemCodes.length === 0) {
+            if (
+                itemCodes.length === 0
+            ) {
 
                 html += `
 
                 <tr>
+
+                    <td>
+
+                      <input
+                            type="checkbox"
+                            class="ro-checkbox"
+                            value="${doc.id}"
+                            onchange="updateDeleteButton()"
+                        >
+
+                    </td>
 
                     <td>
                         ${ro.roNumber || "-"}
@@ -228,10 +466,9 @@ async function loadRepairOrders() {
 
                         <button
                             class="view-btn"
-                            onclick="viewRO('${doc.id}')">
-
+                            onclick="viewRO('${doc.id}')"
+                        >
                             View
-
                         </button>
 
                     </td>
@@ -245,81 +482,72 @@ async function loadRepairOrders() {
             }
 
 
-            // ==================================
+            // ======================================
             // ROWSPAN
-            // ==================================
+            // ======================================
 
             const rowCount =
                 itemCodes.length;
 
 
-            // ==================================
-            // CREATE ONE ROW FOR EACH ITEM
-            // ==================================
+            // ======================================
+            // ITEM ROWS
+            // ======================================
 
             itemCodes.forEach(
-                (itemCode, index) => {
+                (
+                    itemCode,
+                    index
+                ) => {
+
+                    let itemInfo =
+                        null;
 
 
+                    // ----------------------------------
+                    // Saved item snapshot
+                    // ----------------------------------
 
-                    // ==========================================
-                    // ITEM INFORMATION
-                    // ==========================================
-
-                    // New ROs:
-                    // Use the saved itemDetails snapshot.
-
-                    // Old ROs:
-                    // Fall back to itemcodes collection.
-
-                    let itemInfo = null;
-
-
-                    // ------------------------------------------
-                    // NEW RECORD
-                    // ------------------------------------------
-
-                    if (Array.isArray(ro.itemDetails)) {
+                    if (
+                        Array.isArray(
+                            ro.itemDetails
+                        )
+                    ) {
 
                         itemInfo =
                             ro.itemDetails.find(
                                 item =>
-                                    item.itemCode === itemCode
+                                    item.itemCode ===
+                                    itemCode
                             );
 
                     }
 
 
-                    // ------------------------------------------
-                    // FALLBACK FOR OLD RECORDS
-                    // ------------------------------------------
+                    // ----------------------------------
+                    // Fallback
+                    // ----------------------------------
 
                     if (!itemInfo) {
 
                         itemInfo =
                             itemMap[itemCode] || {
 
-                                description: itemCode,
+                                description:
+                                    itemCode,
 
-                                billingAmount: 0
+                                billingAmount:
+                                    0
 
                             };
 
                     }
 
 
-                    // ------------------------------------------
-                    // DESCRIPTION
-                    // ------------------------------------------
-
                     const description =
                         itemInfo.description ||
                         itemCode;
 
-
-                    // ------------------------------------------
-                    // BILLING AMOUNT
-                    // ------------------------------------------
 
                     const billingAmount =
                         Number(
@@ -327,16 +555,36 @@ async function loadRepairOrders() {
                         ) || 0;
 
 
-                    // ----------------------------------
-                    // FIRST ROW
-                    // ----------------------------------
-
                     html += `<tr>`;
 
 
-                    // ----------------------------------
+                    // =================================
+                    // CHECKBOX
+                    // =================================
+
+                    if (index === 0) {
+
+                        html += `
+
+                        <td rowspan="${rowCount}">
+
+                            <input
+                                type="checkbox"
+                                class="ro-checkbox"
+                                value="${doc.id}"
+                                onchange="updateDeleteButton()"
+                            >
+
+                        </td>
+
+                        `;
+
+                    }
+
+
+                    // =================================
                     // RO NUMBER
-                    // ----------------------------------
+                    // =================================
 
                     if (index === 0) {
 
@@ -351,9 +599,9 @@ async function loadRepairOrders() {
                     }
 
 
-                    // ----------------------------------
+                    // =================================
                     // DATE
-                    // ----------------------------------
+                    // =================================
 
                     if (index === 0) {
 
@@ -368,9 +616,9 @@ async function loadRepairOrders() {
                     }
 
 
-                    // ----------------------------------
+                    // =================================
                     // VEHICLE
-                    // ----------------------------------
+                    // =================================
 
                     if (index === 0) {
 
@@ -385,9 +633,9 @@ async function loadRepairOrders() {
                     }
 
 
-                    // ----------------------------------
+                    // =================================
                     // ADVISOR
-                    // ----------------------------------
+                    // =================================
 
                     if (index === 0) {
 
@@ -402,9 +650,9 @@ async function loadRepairOrders() {
                     }
 
 
-                    // ----------------------------------
+                    // =================================
                     // ITEM CODE
-                    // ----------------------------------
+                    // =================================
 
                     html += `
 
@@ -415,9 +663,9 @@ async function loadRepairOrders() {
                     `;
 
 
-                    // ----------------------------------
+                    // =================================
                     // WORK DONE
-                    // ----------------------------------
+                    // =================================
 
                     html += `
 
@@ -428,25 +676,30 @@ async function loadRepairOrders() {
                     `;
 
 
-                    // ----------------------------------
-                    // BILLING AMOUNT
-                    // ----------------------------------
+                    // =================================
+                    // BILLING
+                    // =================================
 
                     html += `
 
                     <td>
-                        ₹${billingAmount.toLocaleString("en-IN", {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2
-                        })}
+
+                        ₹${billingAmount.toLocaleString(
+                            "en-IN",
+                            {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            }
+                        )}
+
                     </td>
 
                     `;
 
 
-                    // ----------------------------------
-                    // VIEW BUTTON
-                    // ----------------------------------
+                    // =================================
+                    // VIEW
+                    // =================================
 
                     if (index === 0) {
 
@@ -456,10 +709,9 @@ async function loadRepairOrders() {
 
                             <button
                                 class="view-btn"
-                                onclick="viewRO('${doc.id}')">
-
+                                onclick="viewRO('${doc.id}')"
+                            >
                                 View
-
                             </button>
 
                         </td>
@@ -472,15 +724,14 @@ async function loadRepairOrders() {
                     html += `</tr>`;
 
                 }
-
             );
 
         }
 
 
-        // ======================================
+        // ==========================================
         // NO RECORDS
-        // ======================================
+        // ==========================================
 
         if (html === "") {
 
@@ -489,13 +740,15 @@ async function loadRepairOrders() {
             <tr>
 
                 <td
-                    colspan="8"
+                    colspan="9"
                     style="
                         text-align:center;
                         color:red;
-                    ">
+                    "
+                >
 
                     No Repair Orders Found
+                    for the selected month.
 
                 </td>
 
@@ -506,13 +759,34 @@ async function loadRepairOrders() {
         }
 
 
-        // ======================================
-        // DISPLAY TABLE
-        // ======================================
+        // ==========================================
+        // DISPLAY
+        // ==========================================
 
         document
-            .querySelector("#roTable tbody")
-            .innerHTML = html;
+            .querySelector(
+                "#roTable tbody"
+            )
+            .innerHTML =
+                html;
+
+
+        updateDeleteButton();
+
+
+        document.getElementById(
+            "selectAllRO"
+        ).checked = false;
+
+
+        // ==========================================
+        // STATUS
+        // ==========================================
+
+        document.getElementById(
+            "roStatus"
+        ).textContent =
+            `${snapshot.size} Repair Order(s) found.`;
 
 
     }
@@ -522,6 +796,207 @@ async function loadRepairOrders() {
         console.error(
             "Error loading repair orders:",
             error
+        );
+
+
+        // ==========================================
+        // Firestore index error
+        // ==========================================
+
+        if (
+            error.message &&
+            error.message.includes(
+                "index"
+            )
+        ) {
+
+            alert(
+                "Firestore needs an index for this query. " +
+                "Open the index link shown in the browser console."
+            );
+
+        }
+
+
+        document.getElementById(
+            "roStatus"
+        ).textContent =
+            "Unable to load Repair Orders.";
+
+    }
+
+}
+
+
+// ==========================================
+// SELECT ALL
+// ==========================================
+
+function toggleSelectAll(
+    checkbox
+) {
+
+    const checkboxes =
+        document.querySelectorAll(
+            ".ro-checkbox"
+        );
+
+
+    checkboxes.forEach(
+        item => {
+
+            item.checked =
+                checkbox.checked;
+
+        }
+    );
+
+
+    updateDeleteButton();
+
+}
+
+
+// ==========================================
+// UPDATE DELETE BUTTON
+// ==========================================
+
+function updateDeleteButton() {
+
+    const selected =
+        document.querySelectorAll(
+            ".ro-checkbox:checked"
+        );
+
+
+    const button =
+        document.getElementById(
+            "deleteSelectedBtn"
+        );
+
+
+    if (!button) {
+
+        return;
+
+    }
+
+    const count =
+        selected.length;
+    button.disabled =
+        count === 0;
+
+
+    if (
+        count === 0
+    ) {
+
+        button.textContent =
+            "🗑 Delete Selected";
+
+    }
+
+    else {
+
+        button.textContent =
+            `🗑 Delete Selected (${count})`;
+
+    }
+
+}
+
+
+// ==========================================
+// DELETE SELECTED ROs
+// ==========================================
+
+async function deleteSelectedROs() {
+
+    const selected =
+        Array.from(
+            document.querySelectorAll(
+                ".ro-checkbox:checked"
+            )
+        )
+        .map(
+            checkbox =>
+                checkbox.value
+        );
+
+
+    if (
+        selected.length === 0
+    ) {
+
+        alert(
+            "Please select at least one Repair Order."
+        );
+
+        return;
+
+    }
+
+
+    const confirmation =
+        confirm(
+            `Are you sure you want to delete ${selected.length} Repair Order(s)?\n\nThis action cannot be undone.`
+        );
+
+
+    if (!confirmation) {
+
+        return;
+
+    }
+
+
+    try {
+
+        const batch =
+            db.batch();
+
+
+        selected.forEach(
+            id => {
+
+                const ref =
+                    db.collection(
+                        "repairorders"
+                    )
+                    .doc(id);
+
+
+                batch.delete(
+                    ref
+                );
+
+            }
+        );
+
+
+        await batch.commit();
+
+
+        alert(
+            `${selected.length} Repair Order(s) deleted successfully.`
+        );
+
+
+        await loadRepairOrders();
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Delete error:",
+            error
+        );
+
+
+        alert(
+            "Unable to delete Repair Orders: " +
+            error.message
         );
 
     }
@@ -540,12 +1015,20 @@ function viewRO(id) {
         id
     );
 
-    location = "viewRO.html";
+
+    location =
+        "viewRO.html";
 
 }
 
+
+// ==========================================
+// HOME
+// ==========================================
+
 function goToLeaderDashboard() {
 
-    window.location.href = "leaders.html";
+    window.location.href =
+        "leaders.html";
 
 }

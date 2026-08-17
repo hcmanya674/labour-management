@@ -1,89 +1,158 @@
 <!DOCTYPE html>
-
 <html>
 
 <head>
 
-<meta charset="UTF-8">
-<br>
-<button class="home-btn" onclick="goToLeaderDashboard()">
-    🏠 Home
-</button>
-<br>
-<title>Repair Orders</title>
+    <meta charset="UTF-8">
 
-<link rel="stylesheet" href="../../css/style.css">
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    >
+
+    <title>Repair Orders</title>
+
+    <link
+        rel="stylesheet"
+        href="../../css/style.css"
+    >
 
 </head>
 
 <body>
- <br>   
-<h2>Repair Orders</h2>
-<br>
-<div class="container">
+
+    <br>
+
+    <button
+        class="home-btn"
+        onclick="goToLeaderDashboard()"
+    >
+        🏠 Home
+    </button>
+
+    <br>
+
+    <h2>Repair Orders</h2>
+
+    <br>
+
+    <div class="container">
+
+        <!-- =====================================
+             FILTER SECTION
+             ===================================== -->
+
+        <div class="ro-filter-box">
+
+            <label for="monthFilter">
+                Select Month:
+            </label>
+
+            <select
+                id="monthFilter"
+                onchange="loadRepairOrders()"
+            >
+            </select>
+
+            <button
+                class="delete-selected-btn"
+                id="deleteSelectedBtn"
+                onclick="deleteSelectedROs()"
+                disabled
+            >
+                🗑 Delete Selected
+            </button>
+
+        </div>
 
 
+        <!-- =====================================
+             STATUS
+             ===================================== -->
 
-<div class="table-card">
+        <div
+            id="roStatus"
+            class="ro-status"
+        >
+            Loading Repair Orders...
+        </div>
 
-<table id="roTable">
 
-    <thead>
+        <!-- =====================================
+             TABLE
+             ===================================== -->
 
-        <tr>
+        <div class="table-card">
 
-            <th>RO No</th>
+            <table id="roTable">
 
-            <th>Date</th>
+                <thead>
 
-            <th>Vehicle</th>
+                    <tr>
 
-            <th>Advisor</th>
+                        <th>
+                            <input
+                                type="checkbox"
+                                id="selectAllRO"
+                                onchange="toggleSelectAll(this)"
+                            >
+                        </th>
 
-            <th>Item Code</th>
+                        <th>RO No</th>
 
-            <th>Work Done</th>
+                        <th>Date</th>
 
-            <th>Billing Amount</th>
+                        <th>Vehicle</th>
 
-            <th>Action</th>
+                        <th>Advisor</th>
 
-        </tr>
+                        <th>Item Code</th>
 
-    </thead>
+                        <th>Work Done</th>
 
-    <tbody>
+                        <th>Billing Amount</th>
 
-    </tbody>
+                        <th>Action</th>
 
-</table>
+                    </tr>
 
-</div>
+                </thead>
 
-<tbody>
+                <tbody>
 
-</tbody>
+                </tbody>
 
-</table>
+            </table>
 
-</div>
+        </div>
 
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    </div>
 
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <!-- =====================================
+         FIREBASE
+         ===================================== -->
 
-<!-- Firebase Config -->
-<script src="../../js/common/firebase.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 
-<!-- Common Leader Code -->
-<script src="../../js/common/leader-common.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
-<!-- Page Script -->
-<script src="../../js/leader/repairOrders.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
+
+    <!-- Firebase Config -->
+
+    <script src="../../js/common/firebase.js"></script>
+
+
+    <!-- Common Leader Code -->
+
+    <script src="../../js/common/leader-common.js"></script>
+
+
+    <!-- Repair Orders -->
+
+    <script src="../../js/leader/repairOrders.js"></script>
 
 </body>
 
