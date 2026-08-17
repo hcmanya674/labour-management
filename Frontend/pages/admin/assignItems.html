@@ -11,7 +11,598 @@
 
     <style>
 
-    </style>
+/* =====================================================
+   ASSIGN ITEMS PAGE
+===================================================== */
+
+* {
+    box-sizing: border-box;
+}
+
+
+body {
+
+    margin: 0;
+
+    padding: 0;
+
+    background: #F5F9FF;
+
+    font-family: Arial, sans-serif;
+
+    color: #222;
+
+}
+
+
+/* =====================================================
+   MAIN PAGE
+===================================================== */
+
+.assignment-page {
+
+    width: 100%;
+
+    max-width: 900px;
+
+    margin: 0 auto;
+
+    padding: 22px 20px 40px;
+
+}
+
+
+/* =====================================================
+   TOP BAR
+===================================================== */
+
+.top-bar {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin-bottom: 24px;
+
+}
+
+
+.page-title {
+
+    margin: 0;
+
+    color: #0D47A1;
+
+    font-size: 28px;
+
+    font-weight: 700;
+
+}
+
+
+.home-btn {
+
+    background: #0D47A1;
+
+    color: white;
+
+    border: none;
+
+    border-radius: 9px;
+
+    padding: 12px 18px;
+
+    font-size: 15px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    white-space: nowrap;
+
+}
+
+
+.home-btn:hover {
+
+    background: #1565C0;
+
+}
+
+
+/* =====================================================
+   CARDS
+===================================================== */
+
+.assignment-card {
+
+    background: white;
+
+    border-radius: 14px;
+
+    padding: 24px;
+
+    margin-bottom: 22px;
+
+    box-shadow:
+        0 4px 14px rgba(0, 0, 0, 0.08);
+
+}
+
+
+.assignment-card h3 {
+
+    margin-top: 0;
+
+    margin-bottom: 14px;
+
+    color: #0D47A1;
+
+    font-size: 20px;
+
+}
+
+
+/* =====================================================
+   LEADER SELECT
+===================================================== */
+
+.leader-select {
+
+    width: 100%;
+
+    height: 52px;
+
+    padding: 0 14px;
+
+    border: 1px solid #90CAF9;
+
+    border-radius: 9px;
+
+    background: white;
+
+    font-size: 16px;
+
+    color: #333;
+
+    outline: none;
+
+}
+
+
+.leader-select:focus {
+
+    border-color: #1565C0;
+
+    box-shadow:
+        0 0 0 2px rgba(21, 101, 192, 0.12);
+
+}
+
+
+/* =====================================================
+   ITEMS HEADER
+===================================================== */
+
+.items-header {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 10px;
+
+    margin-bottom: 15px;
+
+}
+
+
+.items-header h3 {
+
+    margin: 0;
+
+}
+
+
+.item-count {
+
+    background: #E3F2FD;
+
+    color: #0D47A1;
+
+    padding: 7px 12px;
+
+    border-radius: 20px;
+
+    font-size: 14px;
+
+    font-weight: bold;
+
+    white-space: nowrap;
+
+}
+
+
+/* =====================================================
+   ITEM CONTAINER
+===================================================== */
+
+#itemContainer {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 12px;
+
+}
+
+
+/* =====================================================
+   ITEM OPTION
+===================================================== */
+
+.item-option {
+
+    border: 1px solid #D6E4F0;
+
+    border-radius: 10px;
+
+    background: #FAFCFF;
+
+    transition: 0.2s;
+
+}
+
+
+.item-option:hover {
+
+    border-color: #90CAF9;
+
+    background: #F5FAFF;
+
+}
+
+
+.item-option label {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+
+    padding: 16px;
+
+    cursor: pointer;
+
+}
+
+
+.item-option input[type="checkbox"] {
+
+    width: 22px;
+
+    height: 22px;
+
+    flex-shrink: 0;
+
+    accent-color: #0D47A1;
+
+}
+
+
+/* =====================================================
+   ITEM INFORMATION
+===================================================== */
+
+.item-info {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 15px;
+
+    width: 100%;
+
+}
+
+
+.item-details {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 5px;
+
+}
+
+
+.item-code {
+
+    color: #0D47A1;
+
+    font-size: 17px;
+
+    font-weight: 700;
+
+}
+
+
+.item-description {
+
+    color: #555;
+
+    font-size: 14px;
+
+    line-height: 1.4;
+
+}
+
+
+.item-price {
+
+    color: #222;
+
+    font-size: 16px;
+
+    font-weight: 700;
+
+    white-space: nowrap;
+
+}
+
+
+/* =====================================================
+   EMPTY MESSAGE
+===================================================== */
+
+.empty-message {
+
+    padding: 20px;
+
+    text-align: center;
+
+    border: 1px dashed #B0BEC5;
+
+    border-radius: 9px;
+
+    background: #F8FAFC;
+
+    color: #666;
+
+    font-size: 15px;
+
+}
+
+
+/* =====================================================
+   SAVE BUTTON
+===================================================== */
+
+.save-btn {
+
+    width: 100%;
+
+    min-height: 52px;
+
+    margin-top: 20px;
+
+    border: none;
+
+    border-radius: 9px;
+
+    background: #0D47A1;
+
+    color: white;
+
+    font-size: 17px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+}
+
+
+.save-btn:hover {
+
+    background: #1565C0;
+
+}
+
+
+.save-btn:disabled {
+
+    background: #AAB8C5;
+
+    cursor: not-allowed;
+
+}
+
+
+/* =====================================================
+   STATUS
+===================================================== */
+
+#assignmentStatus {
+
+    margin: 12px 0 0;
+
+    color: #555;
+
+    font-size: 14px;
+
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 600px) {
+
+    .assignment-page {
+
+        padding: 20px 18px 40px;
+
+    }
+
+
+    .top-bar {
+
+        flex-direction: column;
+
+        align-items: stretch;
+
+        gap: 14px;
+
+    }
+
+
+    .page-title {
+
+        font-size: 26px;
+
+        line-height: 1.25;
+
+    }
+
+
+    .home-btn {
+
+        width: fit-content;
+
+        min-height: 44px;
+
+        padding: 11px 17px;
+
+        font-size: 15px;
+
+    }
+
+
+    .assignment-card {
+
+        padding: 20px;
+
+        margin-bottom: 20px;
+
+        border-radius: 14px;
+
+    }
+
+
+    .assignment-card h3 {
+
+        font-size: 20px;
+
+    }
+
+
+    .leader-select {
+
+        height: 54px;
+
+        font-size: 16px;
+
+    }
+
+
+    .item-option label {
+
+        padding: 17px 14px;
+
+    }
+
+
+    .item-code {
+
+        font-size: 17px;
+
+    }
+
+
+    .item-description {
+
+        font-size: 14px;
+
+    }
+
+
+    .item-price {
+
+        font-size: 15px;
+
+    }
+
+
+    .save-btn {
+
+        min-height: 54px;
+
+        font-size: 17px;
+
+    }
+
+}
+
+
+/* =====================================================
+   SMALL PHONES
+===================================================== */
+
+@media (max-width: 380px) {
+
+    .assignment-page {
+
+        padding-left: 14px;
+
+        padding-right: 14px;
+
+    }
+
+
+    .assignment-card {
+
+        padding: 17px;
+
+    }
+
+
+    .page-title {
+
+        font-size: 24px;
+
+    }
+
+
+    .item-info {
+
+        align-items: flex-start;
+
+    }
+
+
+    .item-price {
+
+        font-size: 14px;
+
+    }
+
+}
+
+</style>
 
 </head>
 

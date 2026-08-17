@@ -3095,3 +3095,211 @@ code {
     }
 
 }
+
+/* =====================================================
+   REPORT OPTIONS - SIDE BY SIDE
+===================================================== */
+
+.report-options {
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 18px;
+
+    width: 100%;
+
+    margin-top: 20px;
+}
+
+
+/* =====================================================
+   REPORT CARD
+===================================================== */
+
+.report-card {
+
+    background: #ffffff;
+
+    border-radius: 18px;
+
+    padding: 22px;
+
+    box-shadow:
+        0 4px 14px rgba(0, 0, 0, 0.08);
+
+    border: 1px solid #e3eaf2;
+
+    display: flex;
+
+    flex-direction: column;
+
+    box-sizing: border-box;
+}
+
+
+/* =====================================================
+   REPORT CARD HEADING
+===================================================== */
+
+.report-card h2 {
+
+    color: #0d47a1;
+
+    font-size: 24px;
+
+    margin: 0 0 10px 0;
+}
+
+
+/* =====================================================
+   REPORT CARD DESCRIPTION
+===================================================== */
+
+.report-card p {
+
+    color: #555;
+
+    font-size: 16px;
+
+    line-height: 1.5;
+
+    margin: 0 0 20px 0;
+
+    min-height: 72px;
+}
+
+
+/* =====================================================
+   GENERATE BUTTON
+===================================================== */
+
+.report-main-btn {
+
+    width: 100%;
+
+    min-height: 58px;
+
+    border: none;
+
+    border-radius: 12px;
+
+    background: #1858ad;
+
+    color: white;
+
+    font-size: 18px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    margin-top: auto;
+
+    transition: 0.2s;
+}
+
+
+.report-main-btn:active {
+
+    transform: scale(0.98);
+}
+
+
+/* =====================================================
+   EXPORT BUTTON
+===================================================== */
+
+.report-export-btn {
+
+    width: 100%;
+
+    min-height: 54px;
+
+    border: none;
+
+    border-radius: 12px;
+
+    background: #cfcfcf;
+
+    color: white;
+
+    font-size: 17px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    margin-top: 12px;
+}
+
+
+.report-export-btn:not(:disabled) {
+
+    background: #1858ad;
+
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 600px) {
+
+    .report-options {
+
+        grid-template-columns: 1fr 1fr;
+
+        gap: 12px;
+
+    }
+
+
+    .report-card {
+
+        padding: 16px;
+
+        border-radius: 16px;
+
+    }
+
+
+    .report-card h2 {
+
+        font-size: 19px;
+
+    }
+
+
+    .report-card p {
+
+        font-size: 14px;
+
+        min-height: 90px;
+
+    }
+
+
+    .report-main-btn {
+
+        font-size: 15px;
+
+        min-height: 52px;
+
+        padding: 8px;
+
+    }
+
+
+    .report-export-btn {
+
+        font-size: 14px;
+
+        min-height: 48px;
+
+        padding: 8px;
+
+    }
+
+}

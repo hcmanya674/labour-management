@@ -1114,3 +1114,9 @@ async function loadAssignmentOverview() {
     }
 
 }
+function goToAdminDashboard() {
+
+    window.location.href =
+        "admin.html";
+
+}

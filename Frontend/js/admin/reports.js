@@ -1709,3 +1709,10 @@ if (totalElement) {
     );
 
 }
+
+function goToAdminDashboard() {
+
+    window.location.href =
+        "admin.html";
+
+}

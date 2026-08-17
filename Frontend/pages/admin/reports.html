@@ -10,7 +10,7 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Reports</title>
+    <title>Repair Order Reports</title>
 
     <link
         rel="stylesheet"
@@ -19,593 +19,737 @@
 
     <style>
 
-/* =====================================================
-   REPORT PAGE
-===================================================== */
+        /* =====================================================
+           REPORT PAGE
+        ===================================================== */
 
-.report-page {
+        body {
+            margin: 0;
+            padding: 0;
 
-    width: 100%;
-    max-width: 1100px;
+            background: #f5f9ff;
 
-    margin: 0 auto;
+            font-family: Arial, sans-serif;
 
-    padding: 15px;
+            color: #111;
+        }
 
-    box-sizing: border-box;
 
-}
+        .reports-page {
 
+            width: 100%;
 
-/* =====================================================
-   TOP BAR
-===================================================== */
+            max-width: 1200px;
 
-.report-top-bar {
+            margin: 0 auto;
 
-    display: flex;
+            padding: 20px;
 
-    align-items: center;
+            box-sizing: border-box;
+        }
 
-    justify-content: space-between;
 
-    gap: 10px;
+        /* =====================================================
+           PAGE HEADER
+        ===================================================== */
 
-    margin-bottom: 20px;
+        .reports-header {
 
-}
+            margin-bottom: 20px;
+        }
 
 
-.report-title {
+        .reports-header h1 {
 
-    margin: 0;
+            margin: 0 0 15px 0;
 
-    font-size: 24px;
+            color: #0d47a1;
 
-    color: #0D47A1;
+            font-size: 34px;
 
-}
+            font-weight: 700;
+        }
 
 
-.report-home-btn {
+        /* =====================================================
+           HOME BUTTON
+        ===================================================== */
 
-    background: #0D47A1;
+        .home-btn {
 
-    color: white;
+            width: 100%;
 
-    border: none;
+            min-height: 58px;
 
-    border-radius: 8px;
+            border: none;
 
-    padding: 10px 16px;
+            border-radius: 14px;
 
-    font-size: 14px;
+            background: #1858ad;
 
-    font-weight: bold;
+            color: white;
 
-    cursor: pointer;
+            font-size: 20px;
 
-}
+            font-weight: 600;
 
+            cursor: pointer;
 
-.report-home-btn:hover {
+            margin-bottom: 20px;
+        }
 
-    background: #1565C0;
 
-}
+        .home-btn:active {
 
+            transform: scale(0.98);
+        }
 
-/* =====================================================
-   FILTER CARD
-===================================================== */
 
-.report-filter-card {
+        /* =====================================================
+           GENERAL CARD
+        ===================================================== */
 
-    background: white;
+        .report-section {
 
-    border-radius: 12px;
+            background: #ffffff;
 
-    padding: 18px;
+            border-radius: 20px;
 
-    margin-bottom: 20px;
+            padding: 26px;
 
-    box-shadow:
-        0 3px 10px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
 
-}
+            box-shadow:
+                0 5px 18px rgba(0, 0, 0, 0.08);
 
+            border: 1px solid #e3eaf2;
 
-.report-filter-card h3 {
+            box-sizing: border-box;
+        }
 
-    margin-top: 0;
 
-    margin-bottom: 15px;
+        .report-section h2 {
 
-    color: #0D47A1;
+            margin: 0 0 20px 0;
 
-}
+            color: #0d47a1;
 
+            font-size: 28px;
+        }
 
-.filter-group {
 
-    display: flex;
+        /* =====================================================
+           FILTERS
+        ===================================================== */
 
-    flex-direction: column;
+        .filter-grid {
 
-    margin-bottom: 14px;
+            display: grid;
 
-}
+            grid-template-columns:
+                repeat(3, 1fr);
 
+            gap: 20px;
+        }
 
-.filter-group label {
 
-    font-weight: bold;
+        .filter-group {
 
-    margin-bottom: 6px;
+            display: flex;
 
-    color: #333;
+            flex-direction: column;
+        }
 
-}
 
+        .filter-group label {
 
-.filter-group input,
-.filter-group select {
+            margin-bottom: 8px;
 
-    width: 100%;
+            font-size: 18px;
 
-    box-sizing: border-box;
+            font-weight: 600;
 
-    padding: 12px;
+            color: #222;
+        }
 
-    border: 1px solid #ccc;
 
-    border-radius: 8px;
+        .filter-group input,
+        .filter-group select {
 
-    font-size: 15px;
+            width: 100%;
 
-    background: #fff;
+            min-height: 58px;
 
-}
+            padding: 12px 15px;
 
+            box-sizing: border-box;
 
-/* =====================================================
-   REPORT CARDS
-===================================================== */
+            border: 1px solid #c8d0d8;
 
-.report-options {
+            border-radius: 12px;
 
-    display: grid;
+            background: white;
 
-    grid-template-columns:
-        repeat(2, minmax(0, 1fr));
+            font-size: 17px;
 
-    gap: 18px;
+            color: #111;
+        }
 
-}
 
+        .filter-group input:focus,
+        .filter-group select:focus {
 
-.report-card {
+            outline: none;
 
-    background: white;
+            border-color: #1976d2;
 
-    border-radius: 12px;
+            box-shadow:
+                0 0 0 3px rgba(25, 118, 210, 0.12);
+        }
 
-    padding: 18px;
 
-    box-shadow:
-        0 3px 10px rgba(0,0,0,0.08);
+        /* =====================================================
+           REPORT OPTIONS
+        ===================================================== */
 
-}
+        .report-options {
 
+            display: grid;
 
-.report-card h3 {
+            grid-template-columns: 1fr 1fr;
 
-    margin-top: 0;
+            gap: 20px;
 
-    color: #0D47A1;
+            margin-bottom: 20px;
+        }
 
-}
 
+        /* =====================================================
+           REPORT CARD
+        ===================================================== */
 
-.report-card p {
+        .report-card {
 
-    color: #666;
+            background: #ffffff;
 
-    line-height: 1.5;
+            border-radius: 20px;
 
-    font-size: 14px;
+            padding: 24px;
 
-}
+            box-shadow:
+                0 5px 18px rgba(0, 0, 0, 0.08);
 
+            border: 1px solid #e3eaf2;
 
-/* =====================================================
-   BUTTONS
-===================================================== */
+            box-sizing: border-box;
 
-.report-btn {
+            display: flex;
 
-    width: 100%;
+            flex-direction: column;
+        }
 
-    border: none;
 
-    border-radius: 8px;
+        .report-card h2 {
 
-    padding: 12px;
+            margin: 0 0 10px 0;
 
-    margin-top: 8px;
+            color: #0d47a1;
 
-    font-size: 15px;
+            font-size: 25px;
+        }
 
-    font-weight: bold;
 
-    cursor: pointer;
+        .report-card p {
 
-}
+            margin: 0 0 20px 0;
 
+            color: #555;
 
-.generate-btn {
+            font-size: 17px;
 
-    background: #0D47A1;
+            line-height: 1.5;
 
-    color: white;
+            min-height: 75px;
+        }
 
-}
 
+        /* =====================================================
+           GENERATE BUTTON
+        ===================================================== */
 
-.generate-btn:hover {
+        .report-main-btn {
 
-    background: #1565C0;
+            width: 100%;
 
-}
+            min-height: 58px;
 
+            padding: 12px;
 
-.export-btn {
+            border: none;
 
-    background: #2E7D32;
+            border-radius: 12px;
 
-    color: white;
+            background: #1858ad;
 
-}
+            color: white;
 
+            font-size: 18px;
 
-.export-btn:hover {
+            font-weight: 600;
 
-    background: #388E3C;
+            cursor: pointer;
 
-}
+            margin-top: auto;
+        }
 
 
-.report-btn:disabled {
+        .report-main-btn:hover {
 
-    background: #bdbdbd;
+            background: #0d47a1;
+        }
 
-    cursor: not-allowed;
 
-}
+        .report-main-btn:disabled {
 
+            background: #aebdca;
 
-/* =====================================================
-   REPORT RESULT CARD
-===================================================== */
+            cursor: not-allowed;
+        }
 
-.report-result-card {
 
-    background: white;
+        /* =====================================================
+           EXPORT BUTTON
+        ===================================================== */
 
-    border-radius: 12px;
+        .report-export-btn {
 
-    padding: 18px;
+            width: 100%;
 
-    margin-top: 20px;
+            min-height: 54px;
 
-    box-shadow:
-        0 3px 10px rgba(0,0,0,0.08);
+            padding: 12px;
 
-}
+            border: none;
 
+            border-radius: 12px;
 
-.report-result-card h3 {
+            background: #cfcfcf;
 
-    color: #0D47A1;
+            color: white;
 
-    margin-top: 0;
+            font-size: 17px;
 
-}
+            font-weight: 600;
 
+            cursor: pointer;
 
-/* =====================================================
-   TABLE SCROLL
-===================================================== */
+            margin-top: 12px;
+        }
 
-.table-wrapper {
 
-    width: 100%;
+        .report-export-btn:not(:disabled) {
 
-    overflow-x: auto;
+            background: #1858ad;
+        }
 
-    -webkit-overflow-scrolling: touch;
 
-    border-radius: 8px;
+        .report-export-btn:disabled {
 
-}
+            cursor: not-allowed;
 
+            background: #cfcfcf;
+        }
 
-.table-wrapper table {
 
-    width: 100%;
+        /* =====================================================
+           REPORT OUTPUT
+        ===================================================== */
 
-    min-width: 750px;
+        .report-output {
 
-    border-collapse: collapse;
+            background: white;
 
-}
+            border-radius: 20px;
 
+            padding: 24px;
 
-.table-wrapper th {
+            margin-bottom: 20px;
 
-    background: #0D47A1;
+            box-shadow:
+                0 5px 18px rgba(0, 0, 0, 0.08);
 
-    color: white;
+            border: 1px solid #e3eaf2;
 
-    padding: 10px;
+            box-sizing: border-box;
+        }
 
-    white-space: nowrap;
 
-}
+        .report-output h2,
+        .report-output h3 {
 
+            color: #0d47a1;
 
-.table-wrapper td {
+            margin-top: 0;
+        }
 
-    padding: 10px;
 
-    border-bottom: 1px solid #ddd;
+        /* =====================================================
+           TABLE SCROLL CONTAINER
+        ===================================================== */
 
-    white-space: nowrap;
+        .table-wrapper {
 
-}
+            width: 100%;
 
+            overflow-x: auto;
 
-.table-wrapper tr:nth-child(even) {
+            -webkit-overflow-scrolling: touch;
 
-    background: #f5f9ff;
+            border-radius: 12px;
+        }
 
-}
 
+        .table-wrapper table {
 
-/* =====================================================
-   ADVISOR REPORT
-===================================================== */
+            width: 100%;
 
-.advisor-report-section {
+            min-width: 750px;
 
-    margin-top: 25px;
+            border-collapse: collapse;
+        }
 
-}
 
+        .table-wrapper th {
 
-.advisor-report-section h3 {
+            background: #0d47a1;
 
-    color: #0D47A1;
+            color: white;
 
-}
+            padding: 14px;
 
+            font-size: 16px;
 
-.advisor-item-table {
+            text-align: left;
 
-    width: 100%;
+            white-space: nowrap;
+        }
 
-    min-width: 600px;
 
-    border-collapse: collapse;
+        .table-wrapper td {
 
-}
+            padding: 13px;
 
+            border-bottom: 1px solid #e1e8ef;
 
-.advisor-item-table th {
+            font-size: 16px;
 
-    background: #0D47A1;
+            vertical-align: middle;
+        }
 
-    color: white;
 
-    padding: 10px;
+        .table-wrapper tr:nth-child(even) {
 
-}
+            background: #f8fbff;
+        }
 
 
-.advisor-item-table td {
+        /* =====================================================
+           WORK ITEMS
+        ===================================================== */
 
-    padding: 10px;
+        .work-item {
 
-    border-bottom: 1px solid #ddd;
+            margin-bottom: 4px;
+        }
 
-}
 
+        /* =====================================================
+           ADVISOR ITEM REPORT
+        ===================================================== */
 
-/* =====================================================
-   ADVISOR TOTAL
-===================================================== */
+        .advisor-item-table {
 
-.advisor-total {
+            width: 100%;
 
-    margin-top: 10px;
+            min-width: 650px;
 
-    padding: 12px;
+            border-collapse: collapse;
 
-    background: #E3F2FD;
+            margin-bottom: 10px;
+        }
 
-    border-left: 4px solid #0D47A1;
 
-    border-radius: 6px;
+        .advisor-item-table th {
 
-    line-height: 1.8;
+            background: #0d47a1;
 
-}
+            color: white;
 
+            padding: 13px;
 
-.advisor-total strong {
+            text-align: left;
+        }
 
-    float: right;
 
-}
+        .advisor-item-table td {
 
+            padding: 12px;
 
-/* =====================================================
-   STATUS
-===================================================== */
+            border-bottom: 1px solid #ddd;
+        }
 
-#assignmentStatus {
 
-    margin-top: 10px;
+        .quantity-cell {
 
-    font-weight: bold;
+            text-align: center;
+        }
 
-}
 
+        .amount-cell {
 
-.empty-report {
+            text-align: right;
 
-    text-align: center;
+            font-weight: 600;
+        }
 
-    padding: 25px;
 
-    color: #d32f2f;
+        /* =====================================================
+           ADVISOR TOTAL
+        ===================================================== */
 
-    font-weight: bold;
+        .advisor-total {
 
-}
+            background: #f1f7ff;
 
+            border-left: 5px solid #1858ad;
 
-/* =====================================================
-   SPINNER
-===================================================== */
+            border-radius: 10px;
 
-.spinner {
+            padding: 15px;
 
-    display: inline-block;
+            margin-bottom: 25px;
 
-    width: 14px;
+            font-size: 16px;
 
-    height: 14px;
+            line-height: 1.8;
+        }
 
-    border: 2px solid rgba(255,255,255,0.4);
 
-    border-top-color: white;
+        /* =====================================================
+           MOBILE
+        ===================================================== */
 
-    border-radius: 50%;
+        @media (max-width: 700px) {
 
-    animation: spin 0.8s linear infinite;
+            .reports-page {
 
-    margin-right: 6px;
+                padding: 18px;
+            }
 
-}
 
+            .reports-header h1 {
 
-@keyframes spin {
+                font-size: 32px;
 
-    to {
+                line-height: 1.2;
+            }
 
-        transform: rotate(360deg);
 
-    }
+            .home-btn {
 
-}
+                min-height: 60px;
 
+                font-size: 20px;
+            }
 
-/* =====================================================
-   MOBILE
-===================================================== */
 
-@media (max-width: 700px) {
+            .report-section {
 
-    .report-page {
+                padding: 22px;
 
-        padding: 10px;
+                border-radius: 18px;
+            }
 
-    }
 
+            .report-section h2 {
 
-    .report-top-bar {
+                font-size: 27px;
+            }
 
-        align-items: flex-start;
 
-    }
+            /* Filters remain one below another */
 
+            .filter-grid {
 
-    .report-title {
+                grid-template-columns: 1fr;
 
-        font-size: 20px;
+                gap: 18px;
+            }
 
-    }
 
+            .filter-group label {
 
-    .report-home-btn {
+                font-size: 19px;
+            }
 
-        padding: 9px 12px;
 
-        font-size: 13px;
+            .filter-group input,
+            .filter-group select {
 
-    }
+                min-height: 62px;
 
+                font-size: 18px;
+            }
 
-    .report-options {
 
-        grid-template-columns: 1fr;
+            /* =============================================
+               REPORT CARDS SIDE BY SIDE
+            ============================================= */
 
-    }
+            .report-options {
 
+                grid-template-columns: 1fr 1fr;
 
-    .report-filter-card,
-    .report-card,
-    .report-result-card {
+                gap: 12px;
+            }
 
-        padding: 15px;
 
-    }
+            .report-card {
 
+                padding: 17px;
 
-    .report-card h3 {
+                border-radius: 17px;
+            }
 
-        font-size: 18px;
 
-    }
+            .report-card h2 {
 
+                font-size: 20px;
 
-    .table-wrapper {
+                line-height: 1.25;
+            }
 
-        margin-top: 10px;
 
-    }
+            .report-card p {
 
-}
+                font-size: 14px;
 
+                line-height: 1.45;
 
-/* =====================================================
-   SMALL PHONES
-===================================================== */
+                min-height: 100px;
+            }
 
-@media (max-width: 400px) {
 
-    .report-top-bar {
+            .report-main-btn {
 
-        flex-direction: column;
+                min-height: 58px;
 
-    }
+                padding: 8px;
 
+                font-size: 15px;
 
-    .report-home-btn {
+                line-height: 1.2;
+            }
 
-        width: 100%;
 
-    }
+            .report-export-btn {
 
+                min-height: 52px;
 
-    .report-title {
+                padding: 8px;
 
-        font-size: 19px;
+                font-size: 14px;
 
-    }
+                line-height: 1.2;
+            }
 
-}
+
+            /* =============================================
+               OUTPUT
+            ============================================= */
+
+            .report-output {
+
+                padding: 18px;
+
+                border-radius: 18px;
+            }
+
+
+            .report-output h2 {
+
+                font-size: 25px;
+            }
+
+
+            .report-output h3 {
+
+                font-size: 21px;
+            }
+
+
+            .table-wrapper {
+
+                margin-left: 0;
+
+                margin-right: 0;
+
+                width: 100%;
+            }
+
+        }
+
+
+        /* =====================================================
+           SMALL PHONES
+        ===================================================== */
+
+        @media (max-width: 400px) {
+
+            .reports-page {
+
+                padding: 14px;
+            }
+
+
+            .report-options {
+
+                gap: 9px;
+            }
+
+
+            .report-card {
+
+                padding: 14px;
+            }
+
+
+            .report-card h2 {
+
+                font-size: 18px;
+            }
+
+
+            .report-card p {
+
+                font-size: 13px;
+
+                min-height: 105px;
+            }
+
+
+            .report-main-btn {
+
+                font-size: 14px;
+            }
+
+
+            .report-export-btn {
+
+                font-size: 13px;
+            }
+
+        }
 
     </style>
 
@@ -615,25 +759,22 @@
 <body>
 
 
-<div class="report-page">
+<div class="reports-page">
 
 
     <!-- =================================================
-         TOP BAR
-    ================================================= -->
+         HEADER
+    ================================================== -->
 
-    <div class="report-top-bar">
+    <div class="reports-header">
 
-        <h2 class="report-title">
-
+        <h1>
             Repair Order Reports
-
-        </h2>
-
+        </h1>
 
         <button
-            class="report-home-btn"
-            onclick="window.location.href='admin.html'">
+            class="home-btn"
+            onclick="goToAdminDashboard()">
 
             🏠 Home
 
@@ -642,79 +783,79 @@
     </div>
 
 
-
     <!-- =================================================
-         FILTERS
-    ================================================= -->
+         REPORT FILTERS
+    ================================================== -->
 
-    <div class="report-filter-card">
+    <div class="report-section">
 
-        <h3>
-
+        <h2>
             Report Filters
-
-        </h3>
-
-
-        <div class="filter-group">
-
-            <label for="fromDate">
-
-                From Date
-
-            </label>
-
-            <input
-                type="date"
-                id="fromDate"
-            >
-
-        </div>
+        </h2>
 
 
-        <div class="filter-group">
-
-            <label for="toDate">
-
-                To Date
-
-            </label>
-
-            <input
-                type="date"
-                id="toDate"
-            >
-
-        </div>
+        <div class="filter-grid">
 
 
-        <div class="filter-group">
+            <!-- FROM DATE -->
 
-            <label for="reportRegion">
+            <div class="filter-group">
 
-                Region
+                <label for="fromDate">
+                    From Date
+                </label>
 
-            </label>
+                <input
+                    type="date"
+                    id="fromDate"
+                >
 
-            <select id="reportRegion">
+            </div>
 
-                <option value="">
 
-                    All Regions
+            <!-- TO DATE -->
 
-                </option>
+            <div class="filter-group">
 
-            </select>
+                <label for="toDate">
+                    To Date
+                </label>
+
+                <input
+                    type="date"
+                    id="toDate"
+                >
+
+            </div>
+
+
+            <!-- REGION -->
+
+            <div class="filter-group">
+
+                <label for="reportRegion">
+                    Region
+                </label>
+
+                <select id="reportRegion">
+
+                    <option value="">
+                        All Regions
+                    </option>
+
+                </select>
+
+            </div>
+
 
         </div>
 
     </div>
 
 
-
     <!-- =================================================
          REPORT OPTIONS
-    ================================================= -->
+    ================================================== -->
 
     <div class="report-options">
 
@@ -725,25 +866,20 @@
 
         <div class="report-card">
 
-            <h3>
-
+            <h2>
                 Repair Order Report
-
-            </h3>
-
+            </h2>
 
             <p>
-
                 Generate detailed repair order
                 information based on the selected
                 date and region.
-
             </p>
 
 
             <button
                 id="generateBtn"
-                class="report-btn generate-btn"
+                class="report-main-btn"
                 onclick="generateReport()">
 
                 Generate Report
@@ -753,7 +889,7 @@
 
             <button
                 id="exportBtn"
-                class="report-btn export-btn"
+                class="report-export-btn"
                 onclick="exportPDF()"
                 disabled>
 
@@ -764,32 +900,26 @@
         </div>
 
 
-
         <!-- =============================================
-             ADVISOR ITEM REPORT
+             ADVISOR-WISE BILLING REPORT
         ============================================== -->
 
         <div class="report-card">
 
-            <h3>
-
+            <h2>
                 Advisor-wise Billing
-
-            </h3>
-
+            </h2>
 
             <p>
-
                 View item codes, quantities,
                 billing amount, incentive and
                 net billing for each advisor.
-
             </p>
 
 
             <button
                 id="advisorGenerateBtn"
-                class="report-btn generate-btn"
+                class="report-main-btn"
                 onclick="generateAdvisorItemReport()">
 
                 Generate Advisor Report
@@ -799,7 +929,7 @@
 
             <button
                 id="advisorExportBtn"
-                class="report-btn export-btn"
+                class="report-export-btn"
                 onclick="exportAdvisorItemPDF()"
                 disabled>
 
@@ -809,21 +939,19 @@
 
         </div>
 
+
     </div>
 
 
-
     <!-- =================================================
-         REPAIR ORDER RESULT
-    ================================================= -->
+         REPAIR ORDER DETAILS
+    ================================================== -->
 
-    <div class="report-result-card">
+    <div class="report-output">
 
-        <h3>
-
+        <h2>
             Repair Order Details
-
-        </h3>
+        </h2>
 
 
         <div class="table-wrapper">
@@ -864,18 +992,15 @@
     </div>
 
 
-
     <!-- =================================================
-         ADVISOR SUMMARY
-    ================================================= -->
+         ADVISOR WISE WORK SUMMARY
+    ================================================== -->
 
-    <div class="report-result-card">
+    <div class="report-output">
 
-        <h3>
-
-            Advisor-wise Work Summary
-
-        </h3>
+        <h2>
+            Advisor Wise Work Summary
+        </h2>
 
 
         <div class="table-wrapper">
@@ -898,23 +1023,18 @@
     </div>
 
 
-
     <!-- =================================================
-         ADVISOR ITEM REPORT
-    ================================================= -->
+         ADVISOR ITEM & AMOUNT REPORT
+    ================================================== -->
 
-    <div class="report-result-card">
+    <div class="report-output">
 
-        <h3>
-
+        <h2>
             Advisor Item & Amount Report
+        </h2>
 
-        </h3>
 
-
-        <div
-            id="advisorItemReportContainer"
-            class="advisor-report-section">
+        <div id="advisorItemReportContainer">
 
         </div>
 
@@ -922,7 +1042,6 @@
 
 
 </div>
-
 
 
 <!-- =====================================================
@@ -936,13 +1055,22 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 
+<!-- =====================================================
+     FIREBASE CONFIG
+===================================================== -->
+
 <script src="../../js/common/firebase.js"></script>
+
+
+<!-- =====================================================
+     ADMIN COMMON
+===================================================== -->
 
 <script src="../../js/common/admin-common.js"></script>
 
 
 <!-- =====================================================
-     PDF
+     JSPDF
 ===================================================== -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
