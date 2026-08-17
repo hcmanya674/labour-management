@@ -1,175 +1,933 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
 
-<meta charset="UTF-8">
+    <meta charset="UTF-8">
 
-<title>Reports</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-<link rel="stylesheet" href="../../css/style.css">
+    <title>Reports</title>
+
+    <link
+        rel="stylesheet"
+        href="../../css/style.css"
+    >
+
+    <style>
+
+/* =====================================================
+   REPORT PAGE
+===================================================== */
+
+.report-page {
+
+    width: 100%;
+    max-width: 1100px;
+
+    margin: 0 auto;
+
+    padding: 15px;
+
+    box-sizing: border-box;
+
+}
+
+
+/* =====================================================
+   TOP BAR
+===================================================== */
+
+.report-top-bar {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 10px;
+
+    margin-bottom: 20px;
+
+}
+
+
+.report-title {
+
+    margin: 0;
+
+    font-size: 24px;
+
+    color: #0D47A1;
+
+}
+
+
+.report-home-btn {
+
+    background: #0D47A1;
+
+    color: white;
+
+    border: none;
+
+    border-radius: 8px;
+
+    padding: 10px 16px;
+
+    font-size: 14px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+
+}
+
+
+.report-home-btn:hover {
+
+    background: #1565C0;
+
+}
+
+
+/* =====================================================
+   FILTER CARD
+===================================================== */
+
+.report-filter-card {
+
+    background: white;
+
+    border-radius: 12px;
+
+    padding: 18px;
+
+    margin-bottom: 20px;
+
+    box-shadow:
+        0 3px 10px rgba(0,0,0,0.08);
+
+}
+
+
+.report-filter-card h3 {
+
+    margin-top: 0;
+
+    margin-bottom: 15px;
+
+    color: #0D47A1;
+
+}
+
+
+.filter-group {
+
+    display: flex;
+
+    flex-direction: column;
+
+    margin-bottom: 14px;
+
+}
+
+
+.filter-group label {
+
+    font-weight: bold;
+
+    margin-bottom: 6px;
+
+    color: #333;
+
+}
+
+
+.filter-group input,
+.filter-group select {
+
+    width: 100%;
+
+    box-sizing: border-box;
+
+    padding: 12px;
+
+    border: 1px solid #ccc;
+
+    border-radius: 8px;
+
+    font-size: 15px;
+
+    background: #fff;
+
+}
+
+
+/* =====================================================
+   REPORT CARDS
+===================================================== */
+
+.report-options {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 18px;
+
+}
+
+
+.report-card {
+
+    background: white;
+
+    border-radius: 12px;
+
+    padding: 18px;
+
+    box-shadow:
+        0 3px 10px rgba(0,0,0,0.08);
+
+}
+
+
+.report-card h3 {
+
+    margin-top: 0;
+
+    color: #0D47A1;
+
+}
+
+
+.report-card p {
+
+    color: #666;
+
+    line-height: 1.5;
+
+    font-size: 14px;
+
+}
+
+
+/* =====================================================
+   BUTTONS
+===================================================== */
+
+.report-btn {
+
+    width: 100%;
+
+    border: none;
+
+    border-radius: 8px;
+
+    padding: 12px;
+
+    margin-top: 8px;
+
+    font-size: 15px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+
+}
+
+
+.generate-btn {
+
+    background: #0D47A1;
+
+    color: white;
+
+}
+
+
+.generate-btn:hover {
+
+    background: #1565C0;
+
+}
+
+
+.export-btn {
+
+    background: #2E7D32;
+
+    color: white;
+
+}
+
+
+.export-btn:hover {
+
+    background: #388E3C;
+
+}
+
+
+.report-btn:disabled {
+
+    background: #bdbdbd;
+
+    cursor: not-allowed;
+
+}
+
+
+/* =====================================================
+   REPORT RESULT CARD
+===================================================== */
+
+.report-result-card {
+
+    background: white;
+
+    border-radius: 12px;
+
+    padding: 18px;
+
+    margin-top: 20px;
+
+    box-shadow:
+        0 3px 10px rgba(0,0,0,0.08);
+
+}
+
+
+.report-result-card h3 {
+
+    color: #0D47A1;
+
+    margin-top: 0;
+
+}
+
+
+/* =====================================================
+   TABLE SCROLL
+===================================================== */
+
+.table-wrapper {
+
+    width: 100%;
+
+    overflow-x: auto;
+
+    -webkit-overflow-scrolling: touch;
+
+    border-radius: 8px;
+
+}
+
+
+.table-wrapper table {
+
+    width: 100%;
+
+    min-width: 750px;
+
+    border-collapse: collapse;
+
+}
+
+
+.table-wrapper th {
+
+    background: #0D47A1;
+
+    color: white;
+
+    padding: 10px;
+
+    white-space: nowrap;
+
+}
+
+
+.table-wrapper td {
+
+    padding: 10px;
+
+    border-bottom: 1px solid #ddd;
+
+    white-space: nowrap;
+
+}
+
+
+.table-wrapper tr:nth-child(even) {
+
+    background: #f5f9ff;
+
+}
+
+
+/* =====================================================
+   ADVISOR REPORT
+===================================================== */
+
+.advisor-report-section {
+
+    margin-top: 25px;
+
+}
+
+
+.advisor-report-section h3 {
+
+    color: #0D47A1;
+
+}
+
+
+.advisor-item-table {
+
+    width: 100%;
+
+    min-width: 600px;
+
+    border-collapse: collapse;
+
+}
+
+
+.advisor-item-table th {
+
+    background: #0D47A1;
+
+    color: white;
+
+    padding: 10px;
+
+}
+
+
+.advisor-item-table td {
+
+    padding: 10px;
+
+    border-bottom: 1px solid #ddd;
+
+}
+
+
+/* =====================================================
+   ADVISOR TOTAL
+===================================================== */
+
+.advisor-total {
+
+    margin-top: 10px;
+
+    padding: 12px;
+
+    background: #E3F2FD;
+
+    border-left: 4px solid #0D47A1;
+
+    border-radius: 6px;
+
+    line-height: 1.8;
+
+}
+
+
+.advisor-total strong {
+
+    float: right;
+
+}
+
+
+/* =====================================================
+   STATUS
+===================================================== */
+
+#assignmentStatus {
+
+    margin-top: 10px;
+
+    font-weight: bold;
+
+}
+
+
+.empty-report {
+
+    text-align: center;
+
+    padding: 25px;
+
+    color: #d32f2f;
+
+    font-weight: bold;
+
+}
+
+
+/* =====================================================
+   SPINNER
+===================================================== */
+
+.spinner {
+
+    display: inline-block;
+
+    width: 14px;
+
+    height: 14px;
+
+    border: 2px solid rgba(255,255,255,0.4);
+
+    border-top-color: white;
+
+    border-radius: 50%;
+
+    animation: spin 0.8s linear infinite;
+
+    margin-right: 6px;
+
+}
+
+
+@keyframes spin {
+
+    to {
+
+        transform: rotate(360deg);
+
+    }
+
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 700px) {
+
+    .report-page {
+
+        padding: 10px;
+
+    }
+
+
+    .report-top-bar {
+
+        align-items: flex-start;
+
+    }
+
+
+    .report-title {
+
+        font-size: 20px;
+
+    }
+
+
+    .report-home-btn {
+
+        padding: 9px 12px;
+
+        font-size: 13px;
+
+    }
+
+
+    .report-options {
+
+        grid-template-columns: 1fr;
+
+    }
+
+
+    .report-filter-card,
+    .report-card,
+    .report-result-card {
+
+        padding: 15px;
+
+    }
+
+
+    .report-card h3 {
+
+        font-size: 18px;
+
+    }
+
+
+    .table-wrapper {
+
+        margin-top: 10px;
+
+    }
+
+}
+
+
+/* =====================================================
+   SMALL PHONES
+===================================================== */
+
+@media (max-width: 400px) {
+
+    .report-top-bar {
+
+        flex-direction: column;
+
+    }
+
+
+    .report-home-btn {
+
+        width: 100%;
+
+    }
+
+
+    .report-title {
+
+        font-size: 19px;
+
+    }
+
+}
+
+    </style>
 
 </head>
 
+
 <body>
-<button onclick="window.location.href='admin.html'" class="home-btn">🏠 Go to Home Page</button>
-<div class="container">
 
 
-<div class="main">
+<div class="report-page">
 
-<h2>Repair Order Reports</h2>
 
-<div class="form-box">
+    <!-- =================================================
+         TOP BAR
+    ================================================= -->
 
-<label>From Date</label>
+    <div class="report-top-bar">
 
-<input type="date" id="fromDate">
+        <h2 class="report-title">
 
-<label>To Date</label>
+            Repair Order Reports
 
-<input type="date" id="toDate">
-<label>Region</label>
+        </h2>
 
-<select id="reportRegion">
-    <option value="">All Regions</option>
-</select>
-
-<br><br>
-
-<br><br>
-<div class="report-options">
-
-    <!-- ================================= -->
-    <!-- REPAIR ORDER REPORT -->
-    <!-- ================================= -->
-
-    <div class="report-card">
-
-        <h2>Repair Order Report</h2>
-
-        <p>
-            Generate a detailed repair order report
-            based on the selected date and region.
-        </p>
 
         <button
-            id="generateBtn"
-            onclick="generateReport()">
+            class="report-home-btn"
+            onclick="window.location.href='admin.html'">
 
-            Generate Report
-
-        </button>
-
-        <button
-            id="exportBtn"
-            onclick="exportPDF()"
-            disabled>
-
-            Export PDF
+            🏠 Home
 
         </button>
 
     </div>
 
 
-    <!-- ================================= -->
-    <!-- ADVISOR-WISE REPORT -->
-    <!-- ================================= -->
 
-    <div class="report-card">
+    <!-- =================================================
+         FILTERS
+    ================================================= -->
 
-        <h2>Advisor-wise Billing Report</h2>
+    <div class="report-filter-card">
 
-        <p>
-            Generate billing details grouped
-            advisor-wise with item codes.
-        </p>
+        <h3>
 
-        <button
-            id="advisorGenerateBtn"
-            onclick="generateAdvisorItemReport()">
+            Report Filters
 
-            Generate Advisor Report
+        </h3>
 
-        </button>
 
-        <button
-            id="advisorExportBtn"
-            onclick="exportAdvisorItemPDF()"
-            disabled>
+        <div class="filter-group">
 
-            Export Advisor PDF
+            <label for="fromDate">
 
-        </button>
+                From Date
+
+            </label>
+
+            <input
+                type="date"
+                id="fromDate"
+            >
+
+        </div>
+
+
+        <div class="filter-group">
+
+            <label for="toDate">
+
+                To Date
+
+            </label>
+
+            <input
+                type="date"
+                id="toDate"
+            >
+
+        </div>
+
+
+        <div class="filter-group">
+
+            <label for="reportRegion">
+
+                Region
+
+            </label>
+
+            <select id="reportRegion">
+
+                <option value="">
+
+                    All Regions
+
+                </option>
+
+            </select>
+
+        </div>
 
     </div>
 
-</div>
+
+
+    <!-- =================================================
+         REPORT OPTIONS
+    ================================================= -->
+
+    <div class="report-options">
+
+
+        <!-- =============================================
+             REPAIR ORDER REPORT
+        ============================================== -->
+
+        <div class="report-card">
+
+            <h3>
+
+                Repair Order Report
+
+            </h3>
+
+
+            <p>
+
+                Generate detailed repair order
+                information based on the selected
+                date and region.
+
+            </p>
+
+
+            <button
+                id="generateBtn"
+                class="report-btn generate-btn"
+                onclick="generateReport()">
+
+                Generate Report
+
+            </button>
+
+
+            <button
+                id="exportBtn"
+                class="report-btn export-btn"
+                onclick="exportPDF()"
+                disabled>
+
+                Export PDF
+
+            </button>
+
+        </div>
+
+
+
+        <!-- =============================================
+             ADVISOR ITEM REPORT
+        ============================================== -->
+
+        <div class="report-card">
+
+            <h3>
+
+                Advisor-wise Billing
+
+            </h3>
+
+
+            <p>
+
+                View item codes, quantities,
+                billing amount, incentive and
+                net billing for each advisor.
+
+            </p>
+
+
+            <button
+                id="advisorGenerateBtn"
+                class="report-btn generate-btn"
+                onclick="generateAdvisorItemReport()">
+
+                Generate Advisor Report
+
+            </button>
+
+
+            <button
+                id="advisorExportBtn"
+                class="report-btn export-btn"
+                onclick="exportAdvisorItemPDF()"
+                disabled>
+
+                Export Advisor PDF
+
+            </button>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =================================================
+         REPAIR ORDER RESULT
+    ================================================= -->
+
+    <div class="report-result-card">
+
+        <h3>
+
+            Repair Order Details
+
+        </h3>
+
+
+        <div class="table-wrapper">
+
+            <table id="reportTable">
+
+                <thead>
+
+                    <tr>
+
+                        <th>RO Number</th>
+
+                        <th>Date</th>
+
+                        <th>Region</th>
+
+                        <th>Advisor</th>
+
+                        <th>Vehicle</th>
+
+                        <th>Work Done</th>
+
+                        <th>Billing Amount</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="reportBody">
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =================================================
+         ADVISOR SUMMARY
+    ================================================= -->
+
+    <div class="report-result-card">
+
+        <h3>
+
+            Advisor-wise Work Summary
+
+        </h3>
+
+
+        <div class="table-wrapper">
+
+            <table id="advisorSummaryTable">
+
+                <thead id="advisorSummaryHead">
+
+                </thead>
+
+
+                <tbody id="advisorSummaryBody">
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =================================================
+         ADVISOR ITEM REPORT
+    ================================================= -->
+
+    <div class="report-result-card">
+
+        <h3>
+
+            Advisor Item & Amount Report
+
+        </h3>
+
+
+        <div
+            id="advisorItemReportContainer"
+            class="advisor-report-section">
+
+        </div>
+
+    </div>
+
 
 </div>
 
-<br>
 
-<table id="reportTable">
 
-<thead>
-
-<tr>
-
-<th>RO Number</th>
-
-<th>Date</th>
-
-<th>Region</th>
-
-<th>Advisor</th>
-
-<th>Vehicle</th>
-
-<th>Work Done</th>
-
-<th>Billing Amount</th>
-</tr>
-
-</thead>
-<tbody id="reportBody">
-
-</tbody>
-
-</table>
-<br><br>
-
-<h3>Advisor Wise Work Summary</h3>
-<table id="advisorSummaryTable">
-
-    <thead id="advisorSummaryHead">
-
-    </thead>
-
-    <tbody id="advisorSummaryBody">
-
-    </tbody>
-
-</table>
-<hr>
-
-<h2>Advisor Item & Amount Report</h2>
-
-<table id="advisorItemReportTable">
-
-   <div id="advisorItemReportContainer"></div>
-<br><br>
-<button
-    id="advisorExportBtn"
-    onclick="exportAdvisorItemPDF()"
-    disabled>
-    Export Advisor Item PDF
-</button>
-</table>
-</div>
-
-</div>
+<!-- =====================================================
+     FIREBASE
+===================================================== -->
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 
@@ -177,13 +935,24 @@
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
+
 <script src="../../js/common/firebase.js"></script>
 
 <script src="../../js/common/admin-common.js"></script>
 
+
+<!-- =====================================================
+     PDF
+===================================================== -->
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+
+<!-- =====================================================
+     REPORT JS
+===================================================== -->
 
 <script src="../../js/admin/reports.js"></script>
 

@@ -28,7 +28,7 @@ loadAdminLayout("Dashboard",`
 
 </div>
 
-`);
+`,true);
 
 
 

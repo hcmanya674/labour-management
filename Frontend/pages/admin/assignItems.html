@@ -21,19 +21,19 @@
 
     <!-- ================= TOP BAR ================= -->
 
-    <div class="top-bar">
-
+    <div class="assignment-header">
+         <button
+            type="button"
+            class="assignment-home-btn"
+            onclick="goToAdminDashboard()"
+        >
+            🏠Go to Home Page
+        </button>
+        <br><br>
         <h2 class="page-title">
             Assign Items to Leader
         </h2>
 
-        <button
-            class="home-btn"
-            onclick="goToAdminDashboard()">
-
-            🏠 Home
-
-        </button>
 
     </div>
 
@@ -41,7 +41,7 @@
     <!-- ================= LEADER SELECTION ================= -->
 
     <div class="assignment-card">
-
+        <div class="section-title"></div>
         <h3>Select Leader</h3>
 
         <select
@@ -63,11 +63,16 @@
     <div class="assignment-card">
 
         <div class="items-header">
-
+            <div>
             <h3>
                 Available Items
             </h3>
+             <p class="items-subtitle">
+                    Select the items that should be assigned
+                    to this leader.
+                </p>
 
+            </div>
             <span
                 id="itemCount"
                 class="item-count">
@@ -79,7 +84,10 @@
         </div>
 
 
-        <div id="itemContainer">
+         <div
+            id="itemContainer"
+            class="item-container"
+        >
 
             <div class="empty-message">
 
@@ -91,7 +99,10 @@
 
 
         <!-- ================= SAVE ================= -->
-
+          <p
+            id="assignmentStatus"
+            class="assignment-status"
+        ></p>
         <button
             id="saveAssignmentBtn"
             class="save-btn"
@@ -102,11 +113,50 @@
 
         </button>
 
+    </div>
+<!-- =====================================================
+     ASSIGNMENT OVERVIEW
+===================================================== -->
 
-        <p id="assignmentStatus"></p>
+<div class="assignment-card assignment-overview-card">
+
+    <div class="items-header">
+
+        <div>
+
+            <h2>
+                Assignment Overview
+            </h2>
+
+            <p class="items-subtitle">
+                View which items are assigned to each leader.
+            </p>
+
+        </div>
 
     </div>
 
+
+    <!-- Summary -->
+
+    <div
+        id="assignmentOverviewSummary"
+        class="assignment-overview-summary"
+    >
+        Loading assignments...
+    </div>
+
+
+    <!-- Leader assignment cards -->
+
+    <div
+        id="assignmentOverview"
+        class="assignment-overview"
+    >
+
+    </div>
+
+</div>
 </div>
 
 

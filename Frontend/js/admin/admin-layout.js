@@ -1,47 +1,139 @@
-// ===========================================
+// =====================================================
 // ADMIN LAYOUT
-// ===========================================
+// =====================================================
+// Sidebar is optional.
+// Default: NO SIDEBAR
+//
+// Usage:
+// loadAdminLayout("Region Management", content);
+// loadAdminLayout("Dashboard", content, true);
+// =====================================================
 
-function loadAdminLayout(pageTitle, pageContent) {
 
-document.body.innerHTML = `
+function loadAdminLayout(
+    pageTitle,
+    pageContent,
+    showSidebar = false
+) {
 
-<div class="container">
+    // =================================================
+    // SIDEBAR
+    // =================================================
 
-    <!-- Sidebar -->
+    const sidebarHTML = showSidebar
+        ? `
 
-    <div class="sidebar">
+            <div class="sidebar">
 
-        <h2>Admin Panel</h2>
+                <h2>Admin Panel</h2>
 
-        <button onclick="showDashboard()">Dashboard</button>
+                <button
+                    type="button"
+                    onclick="showDashboard()"
+                >
+                    Dashboard
+                </button>
 
-        <button onclick="showRegions()">Region Management</button>
 
-        <button onclick="showItemCodes()">Item Codes</button>
+                <button
+                    type="button"
+                    onclick="showRegions()"
+                >
+                    Region Management
+                </button>
 
-        <button onclick="showLeaders()">Leader Management</button>
 
-        <button onclick="showAssignItems()">Assign Items</button>
-        
-        <button onclick="showReports()">Reports</button>
+                <button
+                    type="button"
+                    onclick="showItemCodes()"
+                >
+                    Item Codes
+                </button>
 
-        <button onclick="logout()">Logout</button>
 
-    </div>
+                <button
+                    type="button"
+                    onclick="showLeaders()"
+                >
+                    Leader Management
+                </button>
 
-    <!-- Main -->
 
-    <div class="main">
+                <button
+                    type="button"
+                    onclick="showAssignItems()"
+                >
+                    Assign Items
+                </button>
 
-        <h1>${pageTitle}</h1>
 
-        ${pageContent}
+                <button
+                    type="button"
+                    onclick="showReports()"
+                >
+                    Reports
+                </button>
 
-    </div>
 
-</div>
+                <button
+                    type="button"
+                    onclick="logout()"
+                >
+                    Logout
+                </button>
 
-`;
+            </div>
 
-}  
+        `
+        : "";
+
+
+    // =================================================
+    // MAIN PAGE
+    // =================================================
+
+    document.body.innerHTML = `
+
+        <div class="container">
+
+            ${sidebarHTML}
+
+
+            <div class="main">
+                <button onclick="window.location.href='admin.html'"
+                 class="home-btn">
+                 🏠 Go to Home Page
+                 </button>
+                <h1>${pageTitle}</h1>
+
+                ${pageContent}
+
+            </div>
+
+        </div>
+
+    `;
+
+
+    // =================================================
+    // INITIALIZE CURRENT PAGE
+    // =================================================
+
+    if (
+        typeof initializePage === "function"
+    ) {
+
+        initializePage();
+
+    }
+
+}
+// =====================================================
+// GO TO ADMIN HOME
+// =====================================================
+
+function goToAdminHome() {
+
+    window.location.href = "dashboard.html";
+
+}

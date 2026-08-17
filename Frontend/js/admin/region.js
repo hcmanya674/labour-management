@@ -4,7 +4,7 @@
 
 // Load Admin Layout
 loadAdminLayout("Region Management", `
-
+     
 <div class="form-box">
 
     <label>Region ID</label>
@@ -72,7 +72,7 @@ loadAdminLayout("Region Management", `
 
 </table>
 
-`);
+`,false);
 // =====================================================
 // INITIALIZE PAGE
 // =====================================================
@@ -938,4 +938,5 @@ async function deleteRegion(
 
     }
 
+    
 }

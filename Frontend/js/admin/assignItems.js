@@ -85,6 +85,10 @@ auth.onAuthStateChanged(async (user) => {
         // ---------------------------------------------
 
         await loadItems();
+         // ---------------------------------------------
+         // Load assignment overview
+        // ---------------------------------------------
+        await loadAssignmentOverview();
 
 
     }
@@ -713,5 +717,400 @@ function logout() {
             );
 
         });
+
+}
+
+// =====================================================
+// LOAD ASSIGNMENT OVERVIEW
+// =====================================================
+
+async function loadAssignmentOverview() {
+
+    const overview =
+        document.getElementById(
+            "assignmentOverview"
+        );
+
+    const summary =
+        document.getElementById(
+            "assignmentOverviewSummary"
+        );
+
+
+    if (!overview) {
+
+        console.error(
+            "Assignment overview container not found."
+        );
+
+        return;
+
+    }
+
+
+    overview.innerHTML = `
+        <div class="assignment-loading">
+            Loading assignments...
+        </div>
+    `;
+
+
+    try {
+
+        // =================================================
+        // GET ACTIVE ASSIGNMENTS
+        // =================================================
+
+        const snapshot =
+            await db
+                .collection("leaderItemAssignments")
+                .where(
+                    "active",
+                    "==",
+                    true
+                )
+                .get();
+
+
+        // =================================================
+        // GROUP ITEMS BY LEADER
+        // =================================================
+
+        const assignmentsByLeader = {};
+
+
+        snapshot.forEach(
+            doc => {
+
+                const data =
+                    doc.data();
+
+
+                const leaderUid =
+                    data.leaderUid;
+
+
+                const itemCode =
+                    data.itemCode;
+
+
+                if (!leaderUid) {
+
+                    return;
+
+                }
+
+
+                if (
+                    !assignmentsByLeader[
+                        leaderUid
+                    ]
+                ) {
+
+                    assignmentsByLeader[
+                        leaderUid
+                    ] = [];
+
+                }
+
+
+                assignmentsByLeader[
+                    leaderUid
+                ].push(itemCode);
+
+            }
+        );
+
+
+        // =================================================
+        // CLEAR OVERVIEW
+        // =================================================
+
+        overview.innerHTML = "";
+
+
+        // =================================================
+        // NO ACTIVE ASSIGNMENTS
+        // =================================================
+
+        const leaderIds =
+            Object.keys(
+                assignmentsByLeader
+            );
+
+
+        if (
+            leaderIds.length === 0
+        ) {
+
+            overview.innerHTML = `
+
+                <div class="empty-message">
+
+                    No active item assignments found.
+
+                </div>
+
+            `;
+
+
+            if (summary) {
+
+                summary.textContent =
+                    "0 leaders have items assigned.";
+
+            }
+
+
+            return;
+
+        }
+
+
+        // =================================================
+        // SUMMARY
+        // =================================================
+
+        const totalAssignments =
+            snapshot.size;
+
+
+        if (summary) {
+
+            summary.textContent =
+                `${leaderIds.length} leader(s) • ` +
+                `${totalAssignments} active assignment(s)`;
+
+        }
+
+
+        // =================================================
+        // SORT LEADERS
+        // =================================================
+
+        leaderIds.sort(
+            (a, b) => {
+
+                const leaderA =
+                    leaders[a] || {};
+
+                const leaderB =
+                    leaders[b] || {};
+
+
+                const nameA =
+                    (
+                        leaderA.name ||
+                        "Unknown"
+                    )
+                    .toLowerCase();
+
+
+                const nameB =
+                    (
+                        leaderB.name ||
+                        "Unknown"
+                    )
+                    .toLowerCase();
+
+
+                return nameA.localeCompare(
+                    nameB
+                );
+
+            }
+        );
+
+
+        // =================================================
+        // CREATE LEADER CARDS
+        // =================================================
+
+        leaderIds.forEach(
+            leaderUid => {
+
+                const leader =
+                    leaders[
+                        leaderUid
+                    ] || {};
+
+
+                const assignedItems =
+                    assignmentsByLeader[
+                        leaderUid
+                    ] || [];
+
+
+                assignedItems.sort();
+
+
+                // -----------------------------------------
+                // LEADER CARD
+                // -----------------------------------------
+
+                const card =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                card.className =
+                    "leader-assignment-card";
+
+
+                // -----------------------------------------
+                // ITEM HTML
+                // -----------------------------------------
+
+                let itemsHTML = "";
+
+
+                assignedItems.forEach(
+                    itemCode => {
+
+                        const item =
+                            itemMap[
+                                itemCode
+                            ] || {};
+
+
+                        const description =
+                            item.description ||
+                            "Unknown item";
+
+
+                        itemsHTML += `
+
+                            <div
+                                class="assigned-item"
+                            >
+
+                                <span
+                                    class="assigned-item-code"
+                                >
+                                    ${itemCode}
+                                </span>
+
+                                <span
+                                    class="assigned-item-description"
+                                >
+                                    ${description}
+                                </span>
+
+                            </div>
+
+                        `;
+
+                    }
+                );
+
+
+                // -----------------------------------------
+                // CARD HTML
+                // -----------------------------------------
+
+                card.innerHTML = `
+
+                    <div
+                        class="leader-assignment-header"
+                    >
+
+                        <div>
+
+                            <h3
+                                class="leader-name"
+                            >
+                                👤 ${
+                                    leader.name ||
+                                    "Unknown Leader"
+                                }
+                            </h3>
+
+
+                            <div
+                                class="leader-region"
+                            >
+                                📍 ${
+                                    leader.region ||
+                                    "No Region"
+                                }
+                            </div>
+
+                        </div>
+
+
+                        <span
+                            class="assigned-count"
+                        >
+                            ${
+                                assignedItems.length
+                            }
+                            ${
+                                assignedItems.length === 1
+                                ? "Item"
+                                : "Items"
+                            }
+                        </span>
+
+                    </div>
+
+
+                    <div
+                        class="assigned-items-list"
+                    >
+
+                        ${
+                            itemsHTML ||
+                            `
+                            <div
+                                class="no-assignment"
+                            >
+                                No active items assigned.
+                            </div>
+                            `
+                        }
+
+                    </div>
+
+                `;
+
+
+                overview.appendChild(
+                    card
+                );
+
+            }
+        );
+
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Error loading assignment overview:",
+            error
+        );
+
+
+        overview.innerHTML = `
+
+            <div class="empty-message">
+
+                Unable to load assignment overview.
+
+            </div>
+
+        `;
+
+
+        if (summary) {
+
+            summary.textContent =
+                "Unable to load assignments.";
+
+        }
+
+    }
 
 }
