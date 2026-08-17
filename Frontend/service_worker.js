@@ -3,36 +3,7 @@
    Service Worker
 ========================================== */
 
-const CACHE_NAME = "labour-management-v1";
-
-/* Files to cache */
-const FILES_TO_CACHE = [
-
-    "/",
-
-    "index.html",
-
-    "../../pages/auth/loginindex.html",
-
-    "../../pages/leader/dashboard.html",
-
-    "../../pages/admin/admin.html",
-
-    "css/style.css",
-    "js/common/script.js",
-
-    "../../js/admin/admin.js",
-
-    "../../js/common/firebase.js",
-
-    "manifest.json",
-
-    "images/labourproject.png",
-
-    "images/labourproject2.png"
-
-];
-
+const CACHE_NAME = "labour-management-v2";
 
 /* ==========================================
    INSTALL
@@ -40,19 +11,10 @@ const FILES_TO_CACHE = [
 
 self.addEventListener("install", event => {
 
-    console.log("Service Worker Installed");
+    console.log("Service Worker: Installing...");
 
-    event.waitUntil(
-
-        caches.open(CACHE_NAME)
-
-        .then(cache => {
-
-            return cache.addAll(FILES_TO_CACHE);
-
-        })
-
-    );
+    // Activate the new service worker immediately
+    self.skipWaiting();
 
 });
 
@@ -63,7 +25,7 @@ self.addEventListener("install", event => {
 
 self.addEventListener("activate", event => {
 
-    console.log("Service Worker Activated");
+    console.log("Service Worker: Activating...");
 
     event.waitUntil(
 
@@ -71,17 +33,27 @@ self.addEventListener("activate", event => {
 
             return Promise.all(
 
-                cacheNames.map(cache => {
+                cacheNames.map(cacheName => {
 
-                    if(cache !== CACHE_NAME){
+                    if (cacheName !== CACHE_NAME) {
 
-                        return caches.delete(cache);
+                        console.log(
+                            "Deleting old cache:",
+                            cacheName
+                        );
+
+                        return caches.delete(cacheName);
 
                     }
 
                 })
 
             );
+
+        }).then(() => {
+
+            // Take control of all open pages
+            return self.clients.claim();
 
         })
 
@@ -96,15 +68,151 @@ self.addEventListener("activate", event => {
 
 self.addEventListener("fetch", event => {
 
+    const request = event.request;
+
+    // Only handle GET requests
+    if (request.method !== "GET") {
+        return;
+    }
+
+    const url = new URL(request.url);
+
+
+    /* ==========================================
+       DO NOT CACHE FIREBASE / EXTERNAL REQUESTS
+    ========================================== */
+
+    if (
+        url.origin !== self.location.origin
+    ) {
+
+        return;
+
+    }
+
+
+    /* ==========================================
+       HTML FILES
+       
+       NETWORK FIRST
+       
+       Always try Firebase first.
+       Cache is only used when offline.
+    ========================================== */
+
+    if (
+        request.mode === "navigate" ||
+        url.pathname.endsWith(".html") ||
+        url.pathname === "/"
+    ) {
+
+        event.respondWith(
+
+            fetch(request)
+
+                .then(response => {
+
+                    // Save latest version
+                    const responseClone =
+                        response.clone();
+
+                    caches.open(CACHE_NAME)
+                        .then(cache => {
+
+                            cache.put(
+                                request,
+                                responseClone
+                            );
+
+                        });
+
+                    return response;
+
+                })
+
+                .catch(() => {
+
+                    // Offline → use cached version
+                    return caches.match(request);
+
+                })
+
+        );
+
+        return;
+
+    }
+
+
+    /* ==========================================
+       CSS / JS / IMAGES
+       
+       NETWORK FIRST
+       
+       This ensures updated files are
+       obtained after deployment.
+    ========================================== */
+
+    if (
+        url.pathname.endsWith(".css") ||
+        url.pathname.endsWith(".js") ||
+        url.pathname.endsWith(".png") ||
+        url.pathname.endsWith(".jpg") ||
+        url.pathname.endsWith(".jpeg") ||
+        url.pathname.endsWith(".svg") ||
+        url.pathname.endsWith(".webp") ||
+        url.pathname.endsWith(".json")
+    ) {
+
+        event.respondWith(
+
+            fetch(request)
+
+                .then(response => {
+
+                    const responseClone =
+                        response.clone();
+
+                    caches.open(CACHE_NAME)
+                        .then(cache => {
+
+                            cache.put(
+                                request,
+                                responseClone
+                            );
+
+                        });
+
+                    return response;
+
+                })
+
+                .catch(() => {
+
+                    return caches.match(request);
+
+                })
+
+        );
+
+        return;
+
+    }
+
+
+    /* ==========================================
+       OTHER REQUESTS
+    ========================================== */
+
     event.respondWith(
 
-        caches.match(event.request)
+        fetch(request)
 
-        .then(response => {
+            .catch(() => {
 
-            return response || fetch(event.request);
+                return caches.match(request);
 
-        })
+            })
 
     );
 
