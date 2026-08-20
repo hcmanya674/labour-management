@@ -583,7 +583,26 @@ console.log(
     saveBtn.innerHTML = "Saving...";
 
     try {
+            // ==========================================
+            // VERIFY LOGGED-IN USER
+            // ==========================================
 
+            const currentUser = auth.currentUser;
+
+            if (!currentUser) {
+
+                alert("User is not logged in.");
+
+                return;
+
+            }
+
+            const leaderUid = currentUser.uid;
+
+            console.log(
+                "Saving RO for Leader UID:",
+                leaderUid
+            );
         // --------------------------------------
         // Create date
         // --------------------------------------
@@ -618,11 +637,21 @@ console.log(
         // Check duplicate RO Number
         // --------------------------------------
 
-        const existing =
-            await db.collection("repairorders")
-            .where("roNumber", "==", roNumber)
-            .get();
+    
+if (!currentUser) {
 
+    alert("User is not logged in.");
+
+    return;
+
+}
+
+
+const existing =
+    await db.collection("repairorders")
+        .where("leaderUid", "==", leaderUid)
+        .where("roNumber", "==", roNumber)
+        .get();
         if (!existing.empty) {
 
             alert("RO Number already exists.");
@@ -643,7 +672,7 @@ console.log(
 
             documentId: documentId,
 
-            leaderUid: uid,
+            leaderUid: auth.currentUser.uid,
 
             leaderName: leaderData.name,
 
