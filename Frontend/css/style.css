@@ -4706,3 +4706,52 @@ input[type="checkbox"] {
     }
 
 }
+/* =====================================================
+   HOME BUTTON
+   ===================================================== */
+
+.home-btn {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 110px !important;
+    min-width: 110px;
+    max-width: 110px;
+    padding: 9px 12px;
+
+
+    margin: 20px 0 10px 0;
+
+    background: #1565C0;
+    color: #FFFFFF;
+
+    border: none;
+    border-radius: 12px;
+    font-size: 17px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    box-sizing: border-box;
+}
+
+.home-btn:hover {
+    background: #0D47A1;
+}
+
+/* =====================================================
+   MOBILE HOME BUTTON
+   ===================================================== */
+
+@media (max-width: 768px) {
+
+    .home-btn {
+        width: 110px !important;
+        min-width: 110px;
+        max-width: 110px;
+        padding: 9px 12px;
+        font-size: 17px;
+        border-radius: 12px;
+    }
+
+}
