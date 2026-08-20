@@ -4,7 +4,15 @@
 
 // Load Admin Layout
 loadAdminLayout("Region Management", `
-     
+     <button
+    type="button"
+    class="home-btn"
+    onclick="window.location.href='admin.html'"
+>
+    🏠 Home
+</button>
+
+<h1>Region Management</h1>
 <div class="form-box">
 
     <label>Region ID</label>

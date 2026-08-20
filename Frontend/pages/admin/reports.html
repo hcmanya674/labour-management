@@ -74,36 +74,32 @@
         /* =====================================================
            HOME BUTTON
         ===================================================== */
+.home-btn {
+    width: auto;
+    min-height: 60px;
+    padding: 10px 16px;
 
-        .home-btn {
+    border: none;
+    border-radius: 8px;
 
-            width: 100%;
+    background: #1858ad;
+    color: white;
 
-            min-height: 58px;
+    font-size: 15px;
+    font-weight: 600;
 
-            border: none;
+    cursor: pointer;
 
-            border-radius: 14px;
+    margin-bottom: 15px;
+}
 
-            background: #1858ad;
+.home-btn:hover {
+    background: #0d47a1;
+}
 
-            color: white;
-
-            font-size: 20px;
-
-            font-weight: 600;
-
-            cursor: pointer;
-
-            margin-bottom: 20px;
-        }
-
-
-        .home-btn:active {
-
-            transform: scale(0.98);
-        }
-
+.home-btn:active {
+    transform: scale(0.98);
+}
 
         /* =====================================================
            GENERAL CARD
@@ -758,7 +754,11 @@
 
 <body>
 
-
+ <button
+        onclick="window.location.href='admin.html'"
+        class="home-btn">
+        🏠 Home 
+    </button>
 <div class="reports-page">
 
 
@@ -772,13 +772,7 @@
             Repair Order Reports
         </h1>
 
-        <button
-            class="home-btn"
-            onclick="goToAdminDashboard()">
-
-            🏠 Home
-
-        </button>
+       
 
     </div>
 

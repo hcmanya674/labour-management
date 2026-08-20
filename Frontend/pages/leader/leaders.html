@@ -5,7 +5,7 @@
 <head>
 
 <meta charset="UTF-8">
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Leader Dashboard</title>
 
 <link rel="stylesheet" href="../../css/style.css">
@@ -13,49 +13,94 @@
 </head>
 
 <body>
+    <div class="container leader-dashboard">
 
-<div class="container">
+    <!-- Sidebar -->
 
-<div class="sidebar">
+    <div class="sidebar">
 
-<h2>Leader Panel</h2>
+        <h2>Leader Panel</h2>
 
-<button onclick="showDashboard()">Dashboard</button>
-<button onclick="showCreateRO()">Create RO</button>
-<button onclick="showRepairOrders()">Repair Orders</button>
-<button onclick="logout()">Logout</button>
+        <button onclick="showDashboard()">
+            🏠 Dashboard
+        </button>
 
-</div>
+        <button onclick="showCreateRO()">
+            📋 Create RO
+        </button>
+
+        <button onclick="showRepairOrders()">
+            📑 Repair Orders
+        </button>
+
+        <button onclick="logout()">
+            ↪ Logout
+        </button>
+
+    </div>
 
 <div class="main">
 
-<h2 id="leaderName">WELCOME</h2>
-<br>
-<h3 id="leaderRegion" >REGION</h3>
-<br>
-<div class="cards">
+    <div class="leader-header">
 
-    <div class="card">
-        <h1 id="todayCount">0</h1>
-        <p>Today's Repair Orders</p>
+        <h2 id="leaderName">
+            WELCOME
+        </h2>
+
+        <h3 id="leaderRegion">
+            REGION
+        </h3>
+
     </div>
 
-</div>
 
-<button onclick="location=' ../../pages/leader/repairOrders.html'">
+    <div class="cards">
 
-Repair Orders
+        <div class="card today-card">
 
-</button>
-<div>
-<br></div>
-<button onclick="showCreateRO()">
+            <div class="today-icon">
+                📋
+            </div>
 
-+ Create Repair Order
+            <div class="today-info">
 
-</button>
+                <h1 id="todayCount">
+                    0
+                </h1>
 
-</div>
+                <p>
+                    Today's Repair Orders
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="leader-actions">
+
+        <button
+            onclick="location='../../pages/leader/repairOrders.html'"
+            class="leader-action-btn"
+        >
+            📋
+            <span>Repair Orders</span>
+            <strong>›</strong>
+        </button>
+
+
+        <button
+            onclick="showCreateRO()"
+            class="leader-action-btn"
+        >
+            ＋
+            <span>Create Repair Order</span>
+            <strong>›</strong>
+        </button>
+
+    </div>
 
 </div>
 

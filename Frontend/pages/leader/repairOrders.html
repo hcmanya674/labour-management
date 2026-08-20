@@ -7,7 +7,7 @@
 
     <meta
         name="viewport"
-        content="width=device-width,initial-scale=1"
+        content="width=device-width, initial-scale=1.0"
     >
 
     <title>Repair Orders</title>
@@ -19,114 +19,171 @@
 
 </head>
 
+
 <body>
 
-    <br>
+    <div class="repair-orders-page">
 
-    <button
-        class="home-btn"
-        onclick="goToLeaderDashboard()"
-    >
-        🏠 Home
-    </button>
 
-    <br>
+        <!-- =====================================
+             HOME BUTTON
+             ===================================== -->
 
-    <h2>Repair Orders</h2>
+        <button
+            class="repair-home-btn"
+            onclick="goToLeaderDashboard()"
+        >
+            🏠 Home
+        </button>
 
-    <br>
 
-    <div class="container">
+        <!-- =====================================
+             PAGE TITLE
+             ===================================== -->
+
+        <h1>
+            Repair Orders
+        </h1>
+
 
         <!-- =====================================
              FILTER SECTION
              ===================================== -->
 
-        <div class="ro-filter-box">
+        <div class="repair-filter-section">
 
-            <label for="monthFilter">
-                Select Month:
-            </label>
 
-            <select
-                id="monthFilter"
-                onchange="loadRepairOrders()"
+            <div class="ro-filter-box">
+
+
+                <!-- MONTH -->
+
+                <div class="month-filter">
+
+                    <label for="monthFilter">
+                        Select Month:
+                    </label>
+
+                    <select
+                        id="monthFilter"
+                        onchange="loadRepairOrders()"
+                    >
+                    </select>
+
+                </div>
+
+
+                <!-- DELETE -->
+
+                <button
+                    class="delete-selected-btn"
+                    id="deleteSelectedBtn"
+                    onclick="deleteSelectedROs()"
+                    disabled
+                >
+                    🗑 Delete Selected
+                </button>
+
+
+            </div>
+
+
+            <!-- =====================================
+                 STATUS
+                 ===================================== -->
+
+            <div
+                id="roStatus"
+                class="ro-status"
             >
-            </select>
+                Loading Repair Orders...
+            </div>
 
-            <button
-                class="delete-selected-btn"
-                id="deleteSelectedBtn"
-                onclick="deleteSelectedROs()"
-                disabled
-            >
-                🗑 Delete Selected
-            </button>
+
+            <!-- =====================================
+                 TABLE
+                 ===================================== -->
+
+            <div class="repair-table-wrapper">
+
+
+                <table id="repairOrderTable">
+
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+
+                                <input
+                                    type="checkbox"
+                                    id="selectAllRO"
+                                    onchange="toggleSelectAll(this)"
+                                >
+
+                            </th>
+
+
+                            <th>
+                                RO No
+                            </th>
+
+
+                            <th>
+                                Date
+                            </th>
+
+
+                            <th>
+                                Vehicle
+                            </th>
+
+
+                            <th>
+                                Advisor
+                            </th>
+
+
+                            <th>
+                                Item Code
+                            </th>
+
+
+                            <th>
+                                Work Done
+                            </th>
+
+
+                            <th>
+                                Billing Amount
+                            </th>
+
+
+                            <th>
+                                Action
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="repairOrderBody">
+
+                    </tbody>
+
+
+                </table>
+
+            </div>
+
 
         </div>
 
-
-        <!-- =====================================
-             STATUS
-             ===================================== -->
-
-        <div
-            id="roStatus"
-            class="ro-status"
-        >
-            Loading Repair Orders...
-        </div>
-
-
-        <!-- =====================================
-             TABLE
-             ===================================== -->
-
-        <div class="table-card">
-
-            <table id="roTable">
-
-                <thead>
-
-                    <tr>
-
-                        <th>
-                            <input
-                                type="checkbox"
-                                id="selectAllRO"
-                                onchange="toggleSelectAll(this)"
-                            >
-                        </th>
-
-                        <th>RO No</th>
-
-                        <th>Date</th>
-
-                        <th>Vehicle</th>
-
-                        <th>Advisor</th>
-
-                        <th>Item Code</th>
-
-                        <th>Work Done</th>
-
-                        <th>Billing Amount</th>
-
-                        <th>Action</th>
-
-                    </tr>
-
-                </thead>
-
-                <tbody>
-
-                </tbody>
-
-            </table>
-
-        </div>
 
     </div>
+    <!-- END repair-orders-page -->
 
 
     <!-- =====================================
@@ -140,19 +197,26 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 
-    <!-- Firebase Config -->
+    <!-- =====================================
+         FIREBASE CONFIG
+         ===================================== -->
 
     <script src="../../js/common/firebase.js"></script>
 
 
-    <!-- Common Leader Code -->
+    <!-- =====================================
+         COMMON LEADER CODE
+         ===================================== -->
 
     <script src="../../js/common/leader-common.js"></script>
 
 
-    <!-- Repair Orders -->
+    <!-- =====================================
+         REPAIR ORDERS JS
+         ===================================== -->
 
     <script src="../../js/leader/repairOrders.js"></script>
+
 
 </body>
 

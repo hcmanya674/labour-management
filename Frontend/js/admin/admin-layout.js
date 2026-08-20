@@ -100,11 +100,7 @@ function loadAdminLayout(
 
 
             <div class="main">
-                <button onclick="window.location.href='admin.html'"
-                 class="home-btn">
-                 🏠 Go to Home Page
-                 </button>
-                <h1>${pageTitle}</h1>
+            
 
                 ${pageContent}
 
@@ -126,14 +122,5 @@ function loadAdminLayout(
         initializePage();
 
     }
-
-}
-// =====================================================
-// GO TO ADMIN HOME
-// =====================================================
-
-function goToAdminHome() {
-
-    window.location.href = "dashboard.html";
 
 }

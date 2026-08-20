@@ -3303,3 +3303,1406 @@ code {
     }
 
 }
+
+/* =====================================================
+   LEADER MOBILE DASHBOARD
+   ===================================================== */
+
+@media (max-width: 768px) {
+
+    /* Main layout */
+
+    .container {
+        width: 100%;
+        min-height: 100vh;
+    }
+
+
+    /* Sidebar */
+
+    .sidebar {
+        width: 230px;
+        min-width: 230px;
+        padding: 20px 14px;
+        box-sizing: border-box;
+    }
+
+
+    .sidebar h2 {
+        font-size: 22px;
+        margin-bottom: 20px;
+    }
+
+
+    .sidebar button {
+        width: 100%;
+        min-height: 48px;
+        margin-bottom: 10px;
+
+        font-size: 16px;
+        font-weight: 600;
+
+        border-radius: 8px;
+    }
+
+
+    /* Main content */
+
+    .main {
+        padding: 24px;
+        box-sizing: border-box;
+    }
+
+
+    /* Welcome */
+
+    .main h2 {
+        font-size: 28px;
+        margin: 0 0 12px 0;
+    }
+
+
+    .main h3 {
+        font-size: 20px;
+        margin: 0 0 20px 0;
+    }
+
+
+    /* Dashboard card */
+
+    .cards {
+        width: 100%;
+    }
+
+
+    .card {
+        width: 100%;
+        min-height: 90px;
+
+        padding: 20px;
+        box-sizing: border-box;
+
+        border-radius: 14px;
+    }
+
+
+    .card h1 {
+        font-size: 32px;
+        margin: 0 0 5px 0;
+    }
+
+
+    .card p {
+        font-size: 17px;
+        margin: 0;
+    }
+
+
+    /* Dashboard buttons */
+
+    .main > button {
+        width: 100%;
+        min-height: 50px;
+
+        margin-top: 10px;
+        padding: 12px 16px;
+
+        font-size: 16px;
+        font-weight: 600;
+
+        border-radius: 9px;
+    }
+
+}
+
+/* =====================================================
+   LEADER DASHBOARD - MOBILE UI
+   ===================================================== */
+
+.leader-dashboard {
+    width: 100%;
+    min-height: 100vh;
+
+    display: flex;
+
+    background: #f5f9ff;
+}
+
+
+/* =====================================================
+   LEADER SIDEBAR
+   ===================================================== */
+
+.leader-dashboard .sidebar {
+
+    width: 34%;
+    min-width: 135px;
+    max-width: 280px;
+
+    min-height: 100vh;
+
+    padding: 24px 16px;
+
+    box-sizing: border-box;
+
+    background: #1d2b3f;
+
+    color: white;
+}
+
+
+/* Sidebar title */
+
+.leader-dashboard .sidebar h2 {
+
+    margin: 0 0 25px 0;
+
+    text-align: center;
+
+    font-size: 22px;
+
+    font-weight: 700;
+
+    color: white;
+}
+
+
+/* Sidebar buttons */
+
+.leader-dashboard .sidebar button {
+
+    width: 100%;
+
+    min-height: 50px;
+
+    margin-bottom: 12px;
+
+    padding: 10px 8px;
+
+    border: none;
+
+    border-radius: 9px;
+
+    background: #30445d;
+
+    color: white;
+
+    font-size: 15px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+}
+
+
+.leader-dashboard .sidebar button:hover {
+
+    background: #1565c0;
+}
+
+
+.leader-dashboard .sidebar button:active {
+
+    transform: scale(0.97);
+}
+
+
+/* =====================================================
+   MAIN CONTENT
+   ===================================================== */
+
+.leader-dashboard .main {
+
+    flex: 1;
+
+    min-width: 0;
+
+    padding: 28px 24px;
+
+    box-sizing: border-box;
+
+    background: #f5f9ff;
+}
+
+
+/* =====================================================
+   HEADER
+   ===================================================== */
+
+.leader-header {
+
+    margin-bottom: 24px;
+}
+
+
+.leader-header h2 {
+
+    margin: 0 0 12px 0;
+
+    color: #102a43;
+
+    font-size: 28px;
+
+    font-weight: 700;
+}
+
+
+.leader-header h3 {
+
+    margin: 0;
+
+    color: #222;
+
+    font-size: 18px;
+
+    font-weight: 600;
+}
+
+
+/* =====================================================
+   DASHBOARD CARD
+   ===================================================== */
+
+.leader-dashboard .cards {
+
+    width: 100%;
+
+    margin-bottom: 24px;
+}
+
+
+.leader-dashboard .today-card {
+
+    width: 100%;
+
+    min-height: 125px;
+
+    padding: 22px;
+
+    box-sizing: border-box;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 20px;
+
+    background: #ffffff;
+
+    border-radius: 18px;
+
+    border: 1px solid #e5ebf2;
+
+    box-shadow:
+        0 5px 18px rgba(0, 0, 0, 0.08);
+}
+
+
+/* =====================================================
+   CARD ICON
+   ===================================================== */
+
+.today-icon {
+
+    width: 70px;
+
+    height: 70px;
+
+    flex-shrink: 0;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 18px;
+
+    background: #e3f2fd;
+
+    font-size: 34px;
+}
+
+
+/* =====================================================
+   CARD INFORMATION
+   ===================================================== */
+
+.today-info h1 {
+
+    margin: 0 0 3px 0;
+
+    color: #0d47a1;
+
+    font-size: 38px;
+
+    line-height: 1;
+
+    font-weight: 700;
+}
+
+
+.today-info p {
+
+    margin: 0;
+
+    color: #333;
+
+    font-size: 17px;
+
+    line-height: 1.3;
+}
+
+
+/* =====================================================
+   ACTION BUTTONS
+   ===================================================== */
+
+.leader-actions {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 14px;
+
+    width: 100%;
+}
+
+
+.leader-action-btn {
+
+    width: 100%;
+
+    min-height: 62px;
+
+    padding: 12px 16px;
+
+    box-sizing: border-box;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+
+    border: none;
+
+    border-radius: 12px;
+
+    background: #1565c0;
+
+    color: white;
+
+    font-size: 17px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 3px 8px rgba(13, 71, 161, 0.20);
+
+    transition: 0.2s;
+}
+
+
+.leader-action-btn:hover {
+
+    background: #0d47a1;
+}
+
+
+.leader-action-btn:active {
+
+    transform: scale(0.98);
+}
+
+
+/* Icon */
+
+.leader-action-btn:first-letter {
+
+    font-size: 22px;
+}
+
+
+/* Button text */
+
+.leader-action-btn span {
+
+    flex: 1;
+
+    text-align: left;
+}
+
+
+/* Arrow */
+
+.leader-action-btn strong {
+
+    font-size: 28px;
+
+    line-height: 1;
+
+    font-weight: 400;
+}
+
+
+/* =====================================================
+   MOBILE
+   ===================================================== */
+
+@media (max-width: 768px) {
+
+    .leader-dashboard {
+
+        display: flex;
+
+        width: 100%;
+
+        min-height: 100vh;
+    }
+
+
+    .leader-dashboard .sidebar {
+
+        width: 34%;
+
+        min-width: 125px;
+
+        max-width: 180px;
+
+        padding: 20px 12px;
+    }
+
+
+    .leader-dashboard .sidebar h2 {
+
+        font-size: 19px;
+
+        margin-bottom: 20px;
+    }
+
+
+    .leader-dashboard .sidebar button {
+
+        min-height: 48px;
+
+        padding: 8px 5px;
+
+        font-size: 14px;
+
+        margin-bottom: 10px;
+    }
+
+
+    .leader-dashboard .main {
+
+        padding: 24px 18px;
+    }
+
+
+    .leader-header h2 {
+
+        font-size: 26px;
+    }
+
+
+    .leader-header h3 {
+
+        font-size: 17px;
+    }
+
+
+    .leader-dashboard .today-card {
+
+        min-height: 110px;
+
+        padding: 18px;
+
+        gap: 14px;
+
+        border-radius: 16px;
+    }
+
+
+    .today-icon {
+
+        width: 58px;
+
+        height: 58px;
+
+        border-radius: 15px;
+
+        font-size: 28px;
+    }
+
+
+    .today-info h1 {
+
+        font-size: 34px;
+    }
+
+
+    .today-info p {
+
+        font-size: 15px;
+    }
+
+
+    .leader-action-btn {
+
+        min-height: 58px;
+
+        font-size: 16px;
+
+        padding: 10px 13px;
+    }
+
+}
+
+
+/* =====================================================
+   SMALL PHONES
+   ===================================================== */
+
+@media (max-width: 400px) {
+
+    .leader-dashboard .sidebar {
+
+        width: 35%;
+
+        min-width: 118px;
+
+        padding: 18px 9px;
+    }
+
+
+    .leader-dashboard .sidebar h2 {
+
+        font-size: 17px;
+    }
+
+
+    .leader-dashboard .sidebar button {
+
+        font-size: 12px;
+
+        min-height: 45px;
+    }
+
+
+    .leader-dashboard .main {
+
+        padding: 20px 13px;
+    }
+
+
+    .leader-header h2 {
+
+        font-size: 23px;
+    }
+
+
+    .leader-header h3 {
+
+        font-size: 15px;
+    }
+
+
+    .leader-dashboard .today-card {
+
+        padding: 15px;
+
+        gap: 10px;
+    }
+
+
+    .today-icon {
+
+        width: 50px;
+
+        height: 50px;
+
+        font-size: 24px;
+    }
+
+
+    .today-info h1 {
+
+        font-size: 30px;
+    }
+
+
+    .today-info p {
+
+        font-size: 13px;
+    }
+
+
+    .leader-action-btn {
+
+        min-height: 54px;
+
+        font-size: 14px;
+
+        gap: 8px;
+    }
+
+}
+/* =====================================================
+   LEADER MOBILE UI
+   Keep Sidebar LEFT + Main RIGHT
+===================================================== */
+
+@media (max-width: 700px) {
+
+    /* Main container */
+    .container {
+        display: flex;
+        flex-direction: row !important;
+        width: 100%;
+        min-height: 100vh;
+        align-items: stretch;
+    }
+
+    /* ================================================
+       SIDEBAR
+    ================================================ */
+
+    .sidebar {
+        width: 205px !important;
+        min-width: 205px !important;
+        max-width: 205px !important;
+
+        min-height: 100vh;
+
+        box-sizing: border-box;
+
+        padding: 18px 12px;
+
+        flex-shrink: 0;
+
+        display: flex;
+        flex-direction: column;
+
+        background: #1e2c40;
+    }
+
+    .sidebar h2 {
+        font-size: 20px;
+        text-align: center;
+
+        margin: 0 0 20px 0;
+
+        color: white;
+    }
+
+    .sidebar button {
+        width: 100%;
+
+        min-height: 42px;
+
+        margin-bottom: 12px;
+
+        padding: 8px 5px;
+
+        border: none;
+        border-radius: 7px;
+
+        background: #344861;
+
+        color: white;
+
+        font-size: 13px;
+
+        cursor: pointer;
+    }
+
+    .sidebar button:active {
+        transform: scale(0.98);
+    }
+
+
+    /* ================================================
+       MAIN CONTENT
+    ================================================ */
+
+    .main {
+        flex: 1;
+
+        min-width: 0;
+
+        box-sizing: border-box;
+
+        padding: 25px 18px;
+
+        background: #f5f9ff;
+    }
+
+
+    /* ================================================
+       WELCOME
+    ================================================ */
+
+    .main h2 {
+        font-size: 27px;
+
+        margin: 0 0 10px 0;
+
+        line-height: 1.2;
+
+        color: #0d47a1;
+    }
+
+    .main h3 {
+        font-size: 18px;
+
+        margin: 0 0 25px 0;
+
+        color: #111;
+    }
+
+
+    /* ================================================
+       DASHBOARD CARD
+    ================================================ */
+
+    .cards {
+        width: 100%;
+
+        display: block;
+    }
+
+    .card {
+        width: 100%;
+
+        min-height: 120px;
+
+        box-sizing: border-box;
+
+        padding: 20px;
+
+        margin-bottom: 25px;
+
+        background: white;
+
+        border-radius: 18px;
+
+        box-shadow:
+            0 5px 18px rgba(0, 0, 0, 0.08);
+
+        display: flex;
+
+        flex-direction: column;
+
+        justify-content: center;
+    }
+
+    .card h1 {
+        margin: 0;
+
+        font-size: 38px;
+
+        color: #0d47a1;
+    }
+
+    .card p {
+        margin: 5px 0 0 0;
+
+        font-size: 16px;
+
+        color: #222;
+    }
+
+
+    /* ================================================
+       DASHBOARD ACTION BUTTONS
+    ================================================ */
+
+    .main > button {
+        width: 100%;
+
+        min-height: 58px;
+
+        margin: 0 0 16px 0;
+
+        padding: 12px 16px;
+
+        border: none;
+
+        border-radius: 12px;
+
+        background: #1565c0;
+
+        color: white;
+
+        font-size: 16px;
+
+        font-weight: 600;
+
+        text-align: left;
+
+        cursor: pointer;
+    }
+
+    .main > button:active {
+        transform: scale(0.98);
+    }
+
+}
+/* ================================================
+   DASHBOARD ACTION BUTTONS
+================================================ */
+
+.dashboard-action {
+
+    width: 100%;
+
+    min-height: 58px;
+
+    margin-bottom: 16px;
+
+    padding: 0 15px;
+
+    border: none;
+
+    border-radius: 12px;
+
+    background: #1565c0;
+
+    color: white;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    font-size: 16px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.dashboard-action span:first-child {
+    font-size: 18px;
+}
+
+.dashboard-action strong {
+
+    margin-left: auto;
+
+    font-size: 28px;
+
+    font-weight: 400;
+}
+
+.dashboard-action:active {
+
+    transform: scale(0.98);
+}
+
+/* =====================================================
+   CREATE REPAIR ORDER PAGE
+   No Sidebar
+===================================================== */
+
+.create-ro-page {
+
+    min-height: 100vh;
+
+    background: #f5f9ff;
+
+    box-sizing: border-box;
+
+    padding: 20px;
+}
+
+
+/* =====================================================
+   HOME BUTTON
+===================================================== */
+
+.create-ro-home {
+
+    width: auto;
+
+    min-width: 110px;
+
+    min-height: 45px;
+
+    padding: 10px 20px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    background: #1565c0;
+
+    color: white;
+
+    font-size: 16px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    margin-bottom: 20px;
+}
+
+
+.create-ro-home:hover {
+
+    background: #0d47a1;
+}
+
+
+.create-ro-home:active {
+
+    transform: scale(0.97);
+}
+
+
+/* =====================================================
+   CREATE RO MAIN
+===================================================== */
+
+.create-ro-main {
+
+    width: 100%;
+
+    max-width: 900px;
+
+    margin: 0 auto;
+}
+
+
+.create-ro-main h2 {
+
+    margin: 0 0 20px 0;
+
+    color: #0d47a1;
+
+    font-size: 32px;
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 700px) {
+
+    .create-ro-page {
+
+        padding: 18px;
+
+    }
+
+
+    .create-ro-home {
+
+        min-width: 100px;
+
+        min-height: 45px;
+
+        padding: 9px 17px;
+
+        font-size: 15px;
+
+        margin-bottom: 18px;
+
+    }
+
+
+    .create-ro-main {
+
+        width: 100%;
+
+    }
+
+
+    .create-ro-main h2 {
+
+        font-size: 28px;
+
+        margin-bottom: 18px;
+
+    }
+
+
+    .create-ro-main .form-box {
+
+        width: 100%;
+
+        box-sizing: border-box;
+
+        padding: 22px;
+
+        border-radius: 18px;
+
+        background: white;
+
+        box-shadow:
+            0 5px 18px rgba(0, 0, 0, 0.08);
+
+    }
+
+
+    .create-ro-main .form-box label {
+
+        font-size: 17px;
+
+        font-weight: 600;
+
+        margin-top: 14px;
+
+        margin-bottom: 7px;
+
+    }
+
+
+ /* ==========================================
+   TEXT INPUTS ONLY
+========================================== */
+
+.create-ro-main .form-box input[type="text"] {
+
+    width: 100%;
+
+    min-height: 55px;
+
+    box-sizing: border-box;
+
+    padding: 12px 15px;
+
+    font-size: 17px;
+
+    border-radius: 10px;
+}
+
+
+/* ==========================================
+   ITEM CHECKBOX
+========================================== */
+
+.create-ro-main
+.item-checkbox
+input[type="checkbox"] {
+
+    width: 22px !important;
+
+    height: 22px !important;
+
+    min-width: 22px !important;
+
+    min-height: 22px !important;
+
+    margin: 0 12px 0 0;
+
+    padding: 0;
+
+    flex-shrink: 0;
+
+    cursor: pointer;
+}
+
+
+    .create-ro-main #saveBtn {
+
+        width: 100%;
+
+        min-height: 55px;
+
+        border-radius: 11px;
+
+        font-size: 17px;
+
+        font-weight: 600;
+
+    }
+
+}
+/* =====================================================
+   REPAIR ORDERS PAGE - MOBILE FIX
+   ===================================================== */
+
+.repair-orders-page {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* Home button */
+
+.repair-home-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: auto;
+    min-width: 150px;
+    height: 58px;
+
+    padding: 0 24px;
+
+    border: none;
+    border-radius: 14px;
+
+    background: #1858ad;
+    color: white;
+
+    font-size: 20px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    margin-bottom: 25px;
+}
+
+.repair-home-btn:active {
+    transform: scale(0.98);
+}
+
+
+/* Page title */
+
+.repair-orders-page h1,
+.repair-orders-page h2 {
+    color: #111;
+    margin-top: 0;
+}
+
+
+/* Filter section */
+
+.repair-filter-section {
+    width: 100%;
+    box-sizing: border-box;
+
+    display: flex;
+    align-items: center;
+    gap: 20px;
+
+    margin: 25px 0;
+}
+
+
+/* Table wrapper */
+
+.repair-table-wrapper {
+    width: 100%;
+    max-width: 100%;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    -webkit-overflow-scrolling: touch;
+
+    box-sizing: border-box;
+
+    border-radius: 16px;
+}
+
+
+/* Table */
+
+.repair-table-wrapper table {
+    width: 100%;
+    min-width: 850px;
+
+    border-collapse: collapse;
+}
+
+
+/* Table header */
+
+.repair-table-wrapper th {
+    background: #0d47a1;
+    color: white;
+
+    padding: 15px;
+
+    font-size: 17px;
+
+    white-space: nowrap;
+
+    text-align: left;
+}
+
+
+/* Table cells */
+
+.repair-table-wrapper td {
+    padding: 14px;
+
+    font-size: 16px;
+
+    border-bottom: 1px solid #ddd;
+
+    white-space: nowrap;
+}
+
+
+/* =====================================================
+   MOBILE
+   ===================================================== */
+
+@media (max-width: 700px) {
+
+    /* IMPORTANT:
+       Remove desktop layout restrictions
+    */
+
+    body {
+        margin: 0;
+        padding: 0;
+
+        width: 100%;
+        overflow-x: hidden;
+    }
+
+
+    .repair-orders-page {
+
+        width: 100%;
+
+        max-width: none;
+
+        margin: 0;
+
+        padding: 18px;
+
+        box-sizing: border-box;
+    }
+
+
+    /* Home */
+
+    .repair-home-btn {
+
+        min-width: 145px;
+
+        height: 58px;
+
+        padding: 0 22px;
+
+        font-size: 20px;
+
+        margin-bottom: 25px;
+    }
+
+
+    /* Title */
+
+    .repair-orders-page h1 {
+
+        font-size: 34px;
+
+        line-height: 1.2;
+
+        margin: 0 0 30px 0;
+    }
+
+
+    .repair-orders-page h2 {
+
+        font-size: 27px;
+    }
+
+
+    /* Filters */
+
+    .repair-filter-section {
+
+        width: 100%;
+
+        display: flex;
+
+        flex-direction: column;
+
+        align-items: stretch;
+
+        gap: 15px;
+
+        margin: 20px 0 30px 0;
+    }
+
+
+    /* Table */
+
+    .repair-table-wrapper {
+
+        width: 100%;
+
+        max-width: 100%;
+
+        overflow-x: auto;
+
+        margin: 0;
+
+        padding: 0;
+
+        border-radius: 14px;
+    }
+
+
+    .repair-table-wrapper table {
+
+        min-width: 850px;
+    }
+
+
+    .repair-table-wrapper th {
+
+        font-size: 16px;
+
+        padding: 14px;
+    }
+
+
+    .repair-table-wrapper td {
+
+        font-size: 15px;
+
+        padding: 13px;
+    }
+
+}
+
+
+/* =====================================================
+   SMALL PHONES
+   ===================================================== */
+
+@media (max-width: 400px) {
+
+    .repair-orders-page {
+
+        padding: 14px;
+    }
+
+
+    .repair-home-btn {
+
+        min-width: 135px;
+
+        height: 54px;
+
+        font-size: 18px;
+    }
+
+
+    .repair-orders-page h1 {
+
+        font-size: 30px;
+    }
+
+}

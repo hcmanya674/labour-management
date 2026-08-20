@@ -744,6 +744,7 @@ async function loadRepairOrders() {
                     style="
                         text-align:center;
                         color:red;
+                         padding:20px;
                     "
                 >
 
@@ -763,20 +764,44 @@ async function loadRepairOrders() {
         // DISPLAY
         // ==========================================
 
-        document
-            .querySelector(
-                "#roTable tbody"
-            )
-            .innerHTML =
+    
+        const tableBody =
+            document.getElementById(
+                "repairOrderBody"
+            );
+
+
+        if (tableBody) {
+
+            tableBody.innerHTML =
                 html;
+
+        }
+        else {
+
+            console.error(
+                "repairOrderBody not found."
+            );
+
+            return;
+
+        }
 
 
         updateDeleteButton();
 
 
+        const selectAll =
         document.getElementById(
             "selectAllRO"
-        ).checked = false;
+        );
+
+
+    if (selectAll) {
+
+        selectAll.checked = false;
+
+    }
 
 
         // ==========================================
