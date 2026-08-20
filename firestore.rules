@@ -1,0 +1,192 @@
+rules_version = '2';
+
+service cloud.firestore {
+
+  match /databases/{database}/documents {
+
+    // =====================================================
+    // HELPER FUNCTIONS
+    // =====================================================
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc() {
+      return get(
+        /databases/$(database)/documents/users/$(request.auth.uid)
+      );
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+             userDoc().data.role == "admin";
+    }
+
+    function isLeader() {
+      return isSignedIn() &&
+             userDoc().data.role == "leader";
+    }
+
+
+    // =====================================================
+    // USERS
+    // =====================================================
+
+    match /users/{userId} {
+
+      allow read: if isSignedIn() &&
+                  (
+                    request.auth.uid == userId ||
+                    isAdmin()
+                  );
+
+      allow create: if isAdmin()
+                    ||
+                    (
+                      isSignedIn() &&
+                      request.auth.uid == userId
+                    );
+
+      allow update: if isAdmin()
+                    ||
+                    (
+                      isSignedIn() &&
+                      request.auth.uid == userId &&
+                      request.resource.data.role ==
+                      resource.data.role &&
+                      request.resource.data.resource ==
+                      resource.data.resource
+                    );
+
+      allow delete: if isAdmin();
+    }
+
+
+    // =====================================================
+    // REGIONS
+    // =====================================================
+
+    match /regions/{regionId} {
+
+      allow read: if isAdmin() || isLeader();
+
+      allow create, update, delete: if isAdmin();
+    }
+
+
+    // =====================================================
+    // ITEM CODES
+    // =====================================================
+
+    match /itemcodes/{itemId} {
+
+      allow read: if isAdmin() || isLeader();
+
+      allow create: if isAdmin();
+
+      allow update: if isAdmin();
+
+      allow delete: if isAdmin();
+    }
+
+
+    // =====================================================
+    // ITEM CODE ADMIN DATA
+    // =====================================================
+
+    match /itemcodeAdmin/{itemId} {
+
+      allow read: if isAdmin();
+
+      allow create: if isAdmin();
+
+      allow update: if isAdmin();
+
+      allow delete: if isAdmin();
+    }
+
+
+    // =====================================================
+    // REPAIR ORDERS
+    // =====================================================
+
+    match /repairorders/{roId} {
+
+      // ADMIN
+      allow read, create, update, delete: if isAdmin();
+
+
+      // LEADER - READ OWN
+      allow read: if isLeader()
+                  &&
+                  resource.data.leaderUid ==
+                  request.auth.uid;
+
+
+      // LEADER - CREATE OWN
+      allow create: if isLeader()
+                    &&
+                    request.resource.data.leaderUid ==
+                    request.auth.uid;
+
+
+      // LEADER - UPDATE OWN
+      allow update: if isLeader()
+                    &&
+                    resource.data.leaderUid ==
+                    request.auth.uid
+                    &&
+                    request.resource.data.leaderUid ==
+                    request.auth.uid;
+
+
+      // LEADER - DELETE OWN
+      allow delete: if isLeader()
+                    &&
+                    resource.data.leaderUid ==
+                    request.auth.uid;
+    }
+
+
+    // =====================================================
+    // RESOURCES
+    // =====================================================
+
+    match /resources/{resourceId}/data/{documentId} {
+
+      allow read, create, update, delete: if isAdmin();
+
+      allow read, create, update: if isLeader() &&
+        userDoc().data.resource == resourceId;
+
+      allow delete: if isAdmin();
+    }
+
+
+    // =====================================================
+    // COUNTERS
+    // =====================================================
+
+    match /counters/{counterId} {
+
+      allow read, write: if isAdmin() || isLeader();
+    }
+
+
+    // =====================================================
+    // LEADER ITEM ASSIGNMENTS
+    // =====================================================
+
+    match /leaderItemAssignments/{assignmentId} {
+
+      allow read, create, update, delete: if isAdmin();
+
+      allow read: if isLeader()
+                  &&
+                  resource.data.leaderUid ==
+                  request.auth.uid;
+    }
+
+  }
+}

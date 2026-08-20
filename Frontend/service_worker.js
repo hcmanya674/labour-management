@@ -1,9 +1,10 @@
 /* ==========================================
-   Labour Management System
-   Service Worker
+   LABOUR MANAGEMENT SYSTEM
+   SERVICE WORKER
 ========================================== */
 
-const CACHE_NAME = "labour-management-v2";
+const CACHE_NAME = "labour-management-v3";
+
 
 /* ==========================================
    INSTALL
@@ -11,9 +12,12 @@ const CACHE_NAME = "labour-management-v2";
 
 self.addEventListener("install", event => {
 
-    console.log("Service Worker: Installing...");
+    console.log(
+        "Installing Service Worker:",
+        CACHE_NAME
+    );
 
-    // Activate the new service worker immediately
+    // Do not wait for old service worker
     self.skipWaiting();
 
 });
@@ -25,7 +29,10 @@ self.addEventListener("install", event => {
 
 self.addEventListener("activate", event => {
 
-    console.log("Service Worker: Activating...");
+    console.log(
+        "Activating Service Worker:",
+        CACHE_NAME
+    );
 
     event.waitUntil(
 
@@ -35,14 +42,18 @@ self.addEventListener("activate", event => {
 
                 cacheNames.map(cacheName => {
 
-                    if (cacheName !== CACHE_NAME) {
+                    if (
+                        cacheName !== CACHE_NAME
+                    ) {
 
                         console.log(
-                            "Deleting old cache:",
+                            "Removing old cache:",
                             cacheName
                         );
 
-                        return caches.delete(cacheName);
+                        return caches.delete(
+                            cacheName
+                        );
 
                     }
 
@@ -52,7 +63,6 @@ self.addEventListener("activate", event => {
 
         }).then(() => {
 
-            // Take control of all open pages
             return self.clients.claim();
 
         })
@@ -68,149 +78,29 @@ self.addEventListener("activate", event => {
 
 self.addEventListener("fetch", event => {
 
-    const request = event.request;
-
-    // Only handle GET requests
-    if (request.method !== "GET") {
-        return;
-    }
-
-    const url = new URL(request.url);
-
-
-    /* ==========================================
-       DO NOT CACHE FIREBASE / EXTERNAL REQUESTS
-    ========================================== */
-
     if (
-        url.origin !== self.location.origin
+        event.request.method !== "GET"
     ) {
 
         return;
 
     }
-
-
-    /* ==========================================
-       HTML FILES
-       
-       NETWORK FIRST
-       
-       Always try Firebase first.
-       Cache is only used when offline.
-    ========================================== */
-
-    if (
-        request.mode === "navigate" ||
-        url.pathname.endsWith(".html") ||
-        url.pathname === "/"
-    ) {
-
-        event.respondWith(
-
-            fetch(request)
-
-                .then(response => {
-
-                    // Save latest version
-                    const responseClone =
-                        response.clone();
-
-                    caches.open(CACHE_NAME)
-                        .then(cache => {
-
-                            cache.put(
-                                request,
-                                responseClone
-                            );
-
-                        });
-
-                    return response;
-
-                })
-
-                .catch(() => {
-
-                    // Offline → use cached version
-                    return caches.match(request);
-
-                })
-
-        );
-
-        return;
-
-    }
-
-
-    /* ==========================================
-       CSS / JS / IMAGES
-       
-       NETWORK FIRST
-       
-       This ensures updated files are
-       obtained after deployment.
-    ========================================== */
-
-    if (
-        url.pathname.endsWith(".css") ||
-        url.pathname.endsWith(".js") ||
-        url.pathname.endsWith(".png") ||
-        url.pathname.endsWith(".jpg") ||
-        url.pathname.endsWith(".jpeg") ||
-        url.pathname.endsWith(".svg") ||
-        url.pathname.endsWith(".webp") ||
-        url.pathname.endsWith(".json")
-    ) {
-
-        event.respondWith(
-
-            fetch(request)
-
-                .then(response => {
-
-                    const responseClone =
-                        response.clone();
-
-                    caches.open(CACHE_NAME)
-                        .then(cache => {
-
-                            cache.put(
-                                request,
-                                responseClone
-                            );
-
-                        });
-
-                    return response;
-
-                })
-
-                .catch(() => {
-
-                    return caches.match(request);
-
-                })
-
-        );
-
-        return;
-
-    }
-
-
-    /* ==========================================
-       OTHER REQUESTS
-    ========================================== */
 
     event.respondWith(
 
-        fetch(request)
+        fetch(event.request)
+
+            .then(response => {
+
+                return response;
+
+            })
 
             .catch(() => {
 
-                return caches.match(request);
+                return caches.match(
+                    event.request
+                );
 
             })
 
