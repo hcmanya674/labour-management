@@ -288,6 +288,9 @@ async function loadLeaderAssignments() {
             "leaderSelect"
         ).value;
 
+    // Refresh active items from Firestore
+    await loadItems();
+
 
     const container =
         document.getElementById(
@@ -498,7 +501,6 @@ async function loadLeaderAssignments() {
 
 }
 
-
 // =====================================================
 // SAVE ASSIGNMENTS
 // =====================================================
@@ -506,154 +508,172 @@ async function loadLeaderAssignments() {
 async function saveAssignments() {
 
     const leaderUid =
-        document.getElementById(
-            "leaderSelect"
-        ).value;
-
+        document.getElementById("leaderSelect").value;
 
     const saveBtn =
-        document.getElementById(
-            "saveAssignmentBtn"
-        );
-
+        document.getElementById("saveAssignmentBtn");
 
     if (!leaderUid) {
 
-        alert(
-            "Please select a leader."
-        );
-
+        alert("Please select a leader.");
         return;
 
     }
-
 
     const selectedItems =
         Array.from(
             document.querySelectorAll(
                 'input[name="assignedItem"]:checked'
             )
-        )
-        .map(
-            checkbox =>
-                checkbox.value
+        ).map(
+            checkbox => checkbox.value
         );
-
 
     console.log(
         "Selected Items:",
         selectedItems
     );
 
-
     saveBtn.disabled = true;
-
-    saveBtn.innerHTML =
-        "Saving...";
-
+    saveBtn.textContent = "Saving...";
 
     try {
 
         // =================================================
-        // FIRST: GET EXISTING ASSIGNMENTS
+        // GET EXISTING ASSIGNMENTS
         // =================================================
 
         const existingSnapshot =
-            await db.collection(
-                "leaderItemAssignments"
-            )
-            .where(
-                "leaderUid",
-                "==",
-                leaderUid
-            )
-            .get();
-
-
-        const batch =
-            db.batch();
+            await db.collection("leaderItemAssignments")
+                .where(
+                    "leaderUid",
+                    "==",
+                    leaderUid
+                )
+                .get();
 
 
         // =================================================
-        // DISABLE OLD ASSIGNMENTS
+        // CREATE BATCH
         // =================================================
 
-        existingSnapshot.forEach(
-            doc => {
-
-                batch.update(
-                    doc.ref,
-                    {
-                        active: false
-                    }
-                );
-
-            }
-        );
+        const batch = db.batch();
 
 
         // =================================================
-        // CREATE NEW ASSIGNMENTS
+        // DISABLE ALL OLD ASSIGNMENTS
         // =================================================
 
-        selectedItems.forEach(
-            itemCode => {
+        existingSnapshot.forEach(doc => {
 
-                const assignmentId =
-                    `${leaderUid}_${itemCode}`;
+            batch.update(
+                doc.ref,
+                {
+                    active: false
+                }
+            );
 
-
-                const ref =
-                    db.collection(
-                        "leaderItemAssignments"
-                    )
-                    .doc(assignmentId);
+        });
 
 
-                batch.set(
-                    ref,
-                    {
+        // =================================================
+        // CREATE / REACTIVATE SELECTED ASSIGNMENTS
+        // =================================================
 
-                        leaderUid:
-                            leaderUid,
+        selectedItems.forEach(itemCode => {
 
-                        itemCode:
-                            itemCode,
+            const assignmentId =
+                `${leaderUid}_${itemCode}`;
 
-                        active:
-                            true,
+            const ref =
+                db.collection(
+                    "leaderItemAssignments"
+                )
+                .doc(assignmentId);
 
-                        assignedBy:
-                            auth.currentUser.uid,
 
-                        assignedAt:
-                            firebase.firestore
+            batch.set(
+                ref,
+                {
+
+                    leaderUid:
+                        leaderUid,
+
+                    itemCode:
+                        itemCode,
+
+                    active:
+                        true,
+
+                    assignedBy:
+                        auth.currentUser.uid,
+
+                    assignedAt:
+                        firebase.firestore
                             .FieldValue
                             .serverTimestamp()
 
-                    },
-                    {
-                        merge: true
-                    }
-                );
+                },
+                {
+                    merge: true
+                }
+            );
 
-            }
-        );
+        });
 
 
         // =================================================
-        // SAVE
+        // COMMIT
         // =================================================
 
         await batch.commit();
 
+
+        console.log(
+            "Assignments successfully saved."
+        );
+
+
+        // =================================================
+        // SUCCESS MESSAGE
+        // =================================================
 
         alert(
             "Item assignments saved successfully."
         );
 
 
+        // =================================================
+        // IMPORTANT:
+        // REFRESH SELECTED LEADER ASSIGNMENTS
+        // =================================================
+
         await loadLeaderAssignments();
+
+
+        // =================================================
+        // IMPORTANT:
+        // REFRESH ASSIGNMENT OVERVIEW
+        // =================================================
+
+        await loadAssignmentOverview();
+
+
+        // =================================================
+        // UPDATE STATUS
+        // =================================================
+
+        const status =
+            document.getElementById(
+                "assignmentStatus"
+            );
+
+        if (status) {
+
+            status.textContent =
+                `${selectedItems.length} item(s) currently assigned.`;
+
+        }
 
 
     }
@@ -666,7 +686,7 @@ async function saveAssignments() {
         );
 
         alert(
-            "Unable to save assignments: " +
+            "Unable to save assignments:\n" +
             error.message
         );
 
@@ -676,7 +696,7 @@ async function saveAssignments() {
 
         saveBtn.disabled = false;
 
-        saveBtn.innerHTML =
+        saveBtn.textContent =
             "Save Assignment";
 
     }
@@ -691,7 +711,7 @@ async function saveAssignments() {
 function goToAdminDashboard() {
 
     window.location.href =
-        "adminDashboard.html";
+        "admin.html";
 
 }
 
