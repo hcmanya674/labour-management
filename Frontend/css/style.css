@@ -340,7 +340,7 @@ table tr:hover {
     width: 520px;
     max-width: calc(100vw - 30px);
     background: white;
-    display: flex;
+    display: none;
     justify-content: space-between;
     align-items: center;
     padding: 18px;

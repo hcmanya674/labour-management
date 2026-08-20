@@ -4,83 +4,171 @@
 <head>
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>Labour Management System</title>
 
-    <link rel="stylesheet" href="../../css/style.css">
+    <link
+        rel="stylesheet"
+        href="../../css/style.css"
+    >
 
     <!-- PWA -->
-    <link rel="manifest" href="../../manifest.json">
-    <meta name="theme-color" content="#1a73e8">
+    <link
+        rel="manifest"
+        href="../../manifest.json"
+    >
+
+    <meta
+        name="theme-color"
+        content="#1a73e8"
+    >
 
 </head>
 
 <body>
 
-<!-- ================= Splash Screen ================= -->
+<!-- =================================================
+     SPLASH SCREEN
+================================================= -->
 
 <div id="splashScreen">
 
     <img
-    src="../../images/labourproject.png"
-    class="install-icon">
+        src="../../images/labourproject.png"
+        class="install-icon"
+        alt="Labour Management"
+    >
 
-    <h2>Labour Management System</h2>
+    <h2>
+        Labour Management System
+    </h2>
 
 </div>
-<!-- ================= Install Banner ================= -->
-<div id="installBanner" class="install-banner">
+
+
+<!-- =================================================
+     INSTALL BANNER
+================================================= -->
+
+<div
+    id="installBanner"
+    class="install-banner"
+    style="display:none;"
+>
 
     <div class="install-left">
 
-        <img src="../../images/labourproject.png" class="install-icon">
+        <img
+            src="../../images/labourproject.png"
+            class="install-icon"
+            alt="Labour Management"
+        >
 
         <div class="install-text">
 
-            <h1>Labour Management</h1>
+            <h1>
+                Labour Management
+            </h1>
 
-            <h2>Install this App</h2>
+            <h2>
+                Install this App
+            </h2>
 
         </div>
 
     </div>
 
-    <button id="installBtn">
+
+    <button
+        id="installBtn"
+        type="button"
+    >
         Install
     </button>
 
 </div>
 
 
-<!-- ================= Login Card ================= -->
+<!-- =================================================
+     LOGIN PAGE
+================================================= -->
 
-<div id="loginPage" class="login-page">
+<div
+    id="loginPage"
+    class="login-page"
+>
+
     <div class="login-box">
-        <h1>Labour Management</h1>
-        <p>Please login to continue</p>
-        <form id="loginForm">
-        <input
-            type="email"
-            id="userid"
-            placeholder="Email">
-        <input
-            type="password"
-            id="password"
-            placeholder="Password">
-        <button type="submit" id="loginBtn">
-            Log In
-        </button>
-        <p style="margin-top:15px;text-align:center;">
-        <a href="#" id="forgotPasswordLink"> Forgot Password?</a>
+
+        <h1>
+            Labour Management
+        </h1>
+
+        <p>
+            Please login to continue
         </p>
+
+
+        <form id="loginForm">
+
+            <input
+                type="email"
+                id="userid"
+                placeholder="Email"
+                autocomplete="username"
+            >
+
+
+            <input
+                type="password"
+                id="password"
+                placeholder="Password"
+                autocomplete="current-password"
+            >
+
+
+            <button
+                type="submit"
+                id="loginBtn"
+            >
+                Log In
+            </button>
+
+
+            <p
+                style="
+                    margin-top:15px;
+                    text-align:center;
+                "
+            >
+
+                <a
+                    href="#"
+                    id="forgotPasswordLink"
+                >
+                    Forgot Password?
+                </a>
+
+            </p>
+
         </form>
+
+
         <p id="message"></p>
+
     </div>
 
 </div>
 
-<!-- Firebase -->
+
+<!-- =================================================
+     FIREBASE
+================================================= -->
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 
@@ -90,116 +178,16 @@
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 
+
+<!-- =================================================
+     YOUR COMMON FILES
+================================================= -->
+
 <script src="../../js/common/firebase.js"></script>
 
 <script src="../../js/common/script.js"></script>
 
 <script src="../../js/common/api.js"></script>
-<script>
-
-let deferredPrompt;
-
-const splash = document.getElementById("splashScreen");
-const loginPage = document.getElementById("loginPage");
-const banner = document.getElementById("installBanner");
-const installBtn = document.getElementById("installBtn");
-
-// Hide login and banner initially
-//loginPage.style.display = "none";
-//banner.style.display = "none";
-
-// ================= Splash Screen =================
-
-/*window.onload = function () {
-
-    setTimeout(function () {
-
-        splash.style.display = "none";
-
-        // If app is already installed, show login
-        if (
-            window.matchMedia("(display-mode: standalone)").matches ||
-            window.navigator.standalone === true
-        ) {
-        
-loginPage.style.display = "flex";
-        }
-
-    }, 2000);
-
-};
-
-*/
-window.onload = function () {
-
-    setTimeout(function () {
-
-        splash.style.display = "none";
-
-        // Always show login page while developing
-        loginPage.style.display = "flex";
-
-    }, 2000);
-
-};
-// ================= Install Prompt =================
-
-window.addEventListener("beforeinstallprompt",(e)=>{
-
-    e.preventDefault();
-
-    deferredPrompt = e;
-
-    // Show install banner only if app is NOT installed
-    if(!window.matchMedia("(display-mode: standalone)").matches){
-
-        banner.style.display = "flex";
-
-    }
-
-});
-
-// ================= Install Button =================
-
-installBtn.addEventListener("click", async ()=>{
-
-    if(!deferredPrompt) return;
-
-    deferredPrompt.prompt();
-
-    const result = await deferredPrompt.userChoice;
-
-    if(result.outcome === "accepted"){
-
-        console.log("User accepted installation");
-
-    }
-
-    deferredPrompt = null;
-
-});
-
-// ================= After Installation =================
-
-window.addEventListener("appinstalled", ()=>{
-
-    console.log("App Installed");
-
-    banner.style.display = "none";
-
-    alert("Installation Complete!\nPlease open the Labour Management app from your Desktop/Home Screen.");
-
-});
-
-// ================= Service Worker =================
-
-if("serviceWorker" in navigator){
-
-    navigator.serviceWorker.register("../../service_worker.js");
-
-}   
-testBackend();
-</script>
 
 </body>
 
