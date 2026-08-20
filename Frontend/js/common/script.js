@@ -290,126 +290,115 @@ if (loginForm) {
 }
 
 
-
 // =====================================================
 // AUTO LOGIN
 // =====================================================
 
-auth.onAuthStateChanged(
-    function (user) {
+auth.onAuthStateChanged(function(user) {
 
-        if (!user) {
+    if (!user) {
+        return;
+    }
 
-            return;
-        }
+    localStorage.setItem("uid", user.uid);
 
+    console.log(
+        "AutoLogin UID:",
+        user.uid
+    );
 
-        localStorage.setItem(
-            "uid",
-            user.uid
-        );
+    db.collection("users")
+        .doc(user.uid)
+        .get()
 
+        .then(function(doc) {
 
-        console.log(
-            "AutoLogin UID:",
-            user.uid
-        );
-
-
-        db.collection("users")
-            .doc(user.uid)
-            .get()
-
-            .then((doc) => {
-
-                if (!doc.exists) {
-
-                    auth.signOut();
-
-                    return;
-                }
-
-
-                const data =
-                    doc.data();
-
-
-                // ---------------------------------
-                // CHECK ACTIVE
-                // ---------------------------------
-
-                if (data.active === false) {
-
-                    alert(
-                        "Your account has been deactivated."
-                    );
-
-                    auth.signOut();
-
-                    return;
-                }
-
-
-                // ---------------------------------
-                // ADMIN
-                // ---------------------------------
-
-                if (data.role === "admin") {
-
-                    console.log(
-                        "AutoLogin → Admin"
-                    );
-
-
-                    window.location.replace(
-                        "pages/admin/admin.html"
-                    );
-
-                }
-
-
-                // ---------------------------------
-                // LEADER
-                // ---------------------------------
-
-                else if (data.role === "leader") {
-
-                    console.log(
-                        "AutoLogin → Leader"
-                    );
-
-
-                    window.location.replace(
-                        "pages/leader/leaders.html"
-                    );
-
-                }
-
-
-                else {
-
-                    alert(
-                        "Invalid Role"
-                    );
-
-                    auth.signOut();
-
-                }
-
-            })
-
-            .catch((error) => {
+            if (!doc.exists) {
 
                 console.error(
-                    "Auto login error:",
-                    error
+                    "User record not found."
                 );
 
-            });
+                auth.signOut();
 
-    }
-);
+                return;
+            }
 
+            const data = doc.data();
+
+            // -----------------------------------------
+            // CHECK ACTIVE
+            // -----------------------------------------
+
+            if (data.active === false) {
+
+                alert(
+                    "Your account has been deactivated."
+                );
+
+                auth.signOut();
+
+                return;
+            }
+
+            // -----------------------------------------
+            // ADMIN
+            // -----------------------------------------
+
+            if (data.role === "admin") {
+
+                console.log(
+                    "AutoLogin → Admin"
+                );
+
+                window.location.replace(
+                    "../../pages/admin/admin.html"
+                );
+
+            }
+
+            // -----------------------------------------
+            // LEADER
+            // -----------------------------------------
+
+            else if (data.role === "leader") {
+
+                console.log(
+                    "AutoLogin → Leader"
+                );
+
+                window.location.replace(
+                    "../../pages/leader/leaders.html"
+                );
+
+            }
+
+            // -----------------------------------------
+            // INVALID ROLE
+            // -----------------------------------------
+
+            else {
+
+                alert(
+                    "Invalid Role"
+                );
+
+                auth.signOut();
+
+            }
+
+        })
+
+        .catch(function(error) {
+
+            console.error(
+                "Auto login error:",
+                error
+            );
+
+        });
+
+});
 
 function exitApp() {
 
@@ -420,7 +409,7 @@ function exitApp() {
         localStorage.removeItem("uid");
 
         window.location.replace(
-            "/pages/auth/loginindex.html"
+            "../../pages/auth/loginindex.html"
         );
 
     });
@@ -437,7 +426,7 @@ function logout() {
         localStorage.removeItem("uid");
 
         window.location.replace(
-            "/pages/auth/loginindex.html"
+            "../../pages/auth/loginindex.html"
         );
 
     });
