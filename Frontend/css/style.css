@@ -4211,7 +4211,102 @@ code {
    CREATE REPAIR ORDER PAGE
    No Sidebar
 ===================================================== */
+/* ==========================================
+   CREATE REPAIR ORDER - TOP BUTTONS
+========================================== */
 
+.create-ro-top-buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    width: 100%;
+
+    margin-bottom: 15px;
+}
+
+
+/* ==========================================
+   HOME BUTTON
+========================================== */
+
+.create-ro-home {
+    background: #0D47A1;
+    color: #FFFFFF;
+
+    border: none;
+
+    padding: 10px 18px;
+
+    border-radius: 8px;
+
+    font-size: 15px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+
+/* ==========================================
+   LOGOUT BUTTON
+========================================== */
+
+.create-ro-logout {
+    background: #d32f2f;
+    color: #FFFFFF;
+
+    border: none;
+
+    padding: 10px 18px;
+
+    border-radius: 8px;
+
+    font-size: 15px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+
+/* ==========================================
+   HOVER
+========================================== */
+
+.create-ro-home:hover {
+    background: #1565C0;
+}
+
+
+.create-ro-logout:hover {
+    background: #b71c1c;
+}
+
+
+/* ==========================================
+   MOBILE
+========================================== */
+
+@media (max-width: 600px) {
+
+    .create-ro-top-buttons {
+
+        gap: 10px;
+
+    }
+
+
+    .create-ro-home,
+    .create-ro-logout {
+
+        padding: 9px 13px;
+
+        font-size: 14px;
+
+    }
+
+}
 .create-ro-page {
 
     min-height: 100vh;

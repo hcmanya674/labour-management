@@ -11,13 +11,42 @@
 let deferredPrompt = null;
 
 
+
+// =====================================================
+// LEADER INTERNAL EMAIL
+// =====================================================
+//
+// IMPORTANT:
+//
+// Leaders never see or enter this email.
+//
+// Firebase Authentication requires an identifier.
+// We generate one internally from the phone number.
+//
+// Example:
+//
+// 9876543210
+//
+// becomes:
+//
+// 9876543210@leader.labour.local
+//
+// =====================================================
+
+function getLeaderInternalEmail(phone) {
+
+    return phone + "@leader.labour.local";
+
+}
+
+
 // =====================================================
 // LOGIN FUNCTION
 // =====================================================
 
 function login() {
 
-    const email =
+    const userid =
         document.getElementById("userid").value.trim();
 
     const password =
@@ -27,24 +56,24 @@ function login() {
         document.getElementById("loginBtn");
 
 
-    // ---------------------------------------------
+    // =================================================
     // VALIDATION
-    // ---------------------------------------------
+    // =================================================
 
-    if (email === "" && password === "") {
+    if (userid === "" && password === "") {
 
         alert(
-            "Please enter your email and password."
+            "Please enter your Email/Mobile Number and Password."
         );
 
         return;
     }
 
 
-    if (email === "") {
+    if (userid === "") {
 
         alert(
-            "Please enter your email address."
+            "Please enter Admin Email or Leader Mobile Number."
         );
 
         return;
@@ -61,17 +90,76 @@ function login() {
     }
 
 
+    // =================================================
+    // DETERMINE LOGIN TYPE
+    // =================================================
+
+    const isEmail =
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userid);
+
+
+    const isPhone =
+        /^[0-9]{10}$/.test(userid);
+
+
+    // =================================================
+    // INVALID LOGIN ID
+    // =================================================
+
+    if (!isEmail && !isPhone) {
+
+        alert(
+            "Please enter a valid Admin Email or 10-digit Leader Mobile Number."
+        );
+
+        return;
+    }
+
+
+    // =================================================
+    // FIREBASE EMAIL USED FOR LOGIN
+    // =================================================
+
+    let firebaseEmail;
+
+
+    if (isEmail) {
+
+        // ---------------------------------------------
+        // ADMIN LOGIN
+        // ---------------------------------------------
+
+        firebaseEmail = userid;
+
+    }
+
+    else {
+
+        // ---------------------------------------------
+        // LEADER LOGIN
+        // ---------------------------------------------
+
+        firebaseEmail =
+            userid + "@leader.labour.local";
+
+    }
+
+
+    // =================================================
+    // DISABLE BUTTON
+    // =================================================
+
     btn.disabled = true;
 
     btn.innerHTML = "Logging in...";
 
 
-    // ---------------------------------------------
+    // =================================================
     // FIREBASE LOGIN
-    // ---------------------------------------------
+    // =================================================
 
     auth.signInWithEmailAndPassword(
-        email,
+        firebaseEmail,
         password
     )
 
@@ -81,6 +169,10 @@ function login() {
             userCredential.user.uid;
 
 
+        // ---------------------------------------------
+        // SAVE UID
+        // ---------------------------------------------
+
         localStorage.setItem(
             "uid",
             uid
@@ -88,10 +180,14 @@ function login() {
 
 
         console.log(
-            "UID Saved:",
+            "Login successful. UID:",
             uid
         );
 
+
+        // ---------------------------------------------
+        // GET USER PROFILE
+        // ---------------------------------------------
 
         return db
             .collection("users")
@@ -103,13 +199,19 @@ function login() {
 
     .then((doc) => {
 
+        // =================================================
+        // USER DOCUMENT NOT FOUND
+        // =================================================
+
         if (!doc.exists) {
 
             alert(
-                "User record not found."
+                "User record not found. Please contact administrator."
             );
 
             auth.signOut();
+
+            localStorage.removeItem("uid");
 
             btn.disabled = false;
 
@@ -124,23 +226,25 @@ function login() {
 
 
         console.log(
-            "User:",
+            "Logged in user:",
             user
         );
 
 
-        // -----------------------------------------
+        // =================================================
         // CHECK ACTIVE STATUS
-        // -----------------------------------------
+        // =================================================
 
         if (user.active === false) {
 
             alert(
-                "Your account has been deactivated.\n" +
+                "Your account has been deactivated.\n\n" +
                 "Please contact the administrator."
             );
 
             auth.signOut();
+
+            localStorage.removeItem("uid");
 
             btn.disabled = false;
 
@@ -150,47 +254,88 @@ function login() {
         }
 
 
-        // -----------------------------------------
-        // ADMIN
-        // -----------------------------------------
+        // =================================================
+        // ADMIN LOGIN
+        // =================================================
 
         if (user.role === "admin") {
 
-            window.location.href =
-                "/pages/admin/admin.html";
-
-        }
-
-
-        // -----------------------------------------
-        // LEADER
-        // -----------------------------------------
-
-        else if (user.role === "leader") {
-
-            window.location.href =
-                "/pages/leader/leaders.html";
-
-        }
-
-
-        // -----------------------------------------
-        // INVALID ROLE
-        // -----------------------------------------
-
-        else {
-
-            alert(
-                "Your account role is invalid.\n" +
-                "Please contact the administrator."
+            console.log(
+                "Admin login successful."
             );
 
-            auth.signOut();
 
-            btn.disabled = false;
+            window.location.replace(
+                "../../pages/admin/admin.html"
+            );
 
-            btn.innerHTML = "Log In";
+            return;
         }
+
+
+        // =================================================
+        // LEADER LOGIN
+        // =================================================
+
+        if (user.role === "leader") {
+
+            console.log(
+                "Leader login successful."
+            );
+
+
+            // ---------------------------------------------
+            // IMPORTANT:
+            // Make sure the entered number belongs to
+            // this leader.
+            // ---------------------------------------------
+
+            if (
+                user.phone &&
+                user.phone !== userid
+            ) {
+
+                alert(
+                    "Mobile number does not match the leader account."
+                );
+
+                auth.signOut();
+
+                localStorage.removeItem("uid");
+
+                btn.disabled = false;
+
+                btn.innerHTML = "Log In";
+
+                return;
+            }
+
+
+            window.location.replace(
+                "../../pages/leader/leaders.html"
+            );
+
+            return;
+        }
+
+
+        // =================================================
+        // INVALID ROLE
+        // =================================================
+
+        alert(
+            "Invalid user role.\n\n" +
+            "Please contact the administrator."
+        );
+
+
+        auth.signOut();
+
+        localStorage.removeItem("uid");
+
+        btn.disabled = false;
+
+        btn.innerHTML = "Log In";
 
     })
 
@@ -203,6 +348,16 @@ function login() {
         );
 
 
+        console.error(
+            "Firebase error code:",
+            error.code
+        );
+
+
+        // =================================================
+        // NETWORK ERROR
+        // =================================================
+
         if (
             error.code ===
             "auth/network-request-failed"
@@ -214,16 +369,22 @@ function login() {
 
         }
 
+
+        // =================================================
+        // WRONG EMAIL / PASSWORD
+        // =================================================
+
         else if (
             error.code ===
             "auth/invalid-credential"
         ) {
 
             alert(
-                "Invalid email or password."
+                "Invalid Email/Mobile Number or Password."
             );
 
         }
+
 
         else if (
             error.code ===
@@ -231,10 +392,11 @@ function login() {
         ) {
 
             alert(
-                "Invalid email or password."
+                "Invalid Email/Mobile Number or Password."
             );
 
         }
+
 
         else if (
             error.code ===
@@ -242,15 +404,29 @@ function login() {
         ) {
 
             alert(
-                "Invalid email or password."
+                "Invalid Email/Mobile Number or Password."
             );
 
         }
 
+
+        else if (
+            error.code ===
+            "auth/invalid-email"
+        ) {
+
+            alert(
+                "Invalid login details."
+            );
+
+        }
+
+
         else {
 
             alert(
-                "Login failed."
+                "Login failed.\n\n" +
+                error.message
             );
 
         }
@@ -290,22 +466,39 @@ if (loginForm) {
 }
 
 
+
 // =====================================================
 // AUTO LOGIN
 // =====================================================
 
 auth.onAuthStateChanged(function(user) {
 
+    // ---------------------------------------------
+    // No authenticated user
+    // ---------------------------------------------
+
     if (!user) {
+
         return;
+
     }
 
-    localStorage.setItem("uid", user.uid);
 
     console.log(
-        "AutoLogin UID:",
+        "Firebase authenticated user:",
         user.uid
     );
+
+
+    localStorage.setItem(
+        "uid",
+        user.uid
+    );
+
+
+    // =================================================
+    // GET USER PROFILE
+    // =================================================
 
     db.collection("users")
         .doc(user.uid)
@@ -321,14 +514,25 @@ auth.onAuthStateChanged(function(user) {
 
                 auth.signOut();
 
+                localStorage.removeItem("uid");
+
                 return;
             }
 
-            const data = doc.data();
 
-            // -----------------------------------------
-            // CHECK ACTIVE
-            // -----------------------------------------
+            const data =
+                doc.data();
+
+
+            console.log(
+                "AutoLogin user:",
+                data
+            );
+
+
+            // =================================================
+            // CHECK ACTIVE STATUS
+            // =================================================
 
             if (data.active === false) {
 
@@ -338,56 +542,69 @@ auth.onAuthStateChanged(function(user) {
 
                 auth.signOut();
 
+                localStorage.removeItem("uid");
+
                 return;
             }
 
-            // -----------------------------------------
-            // ADMIN
-            // -----------------------------------------
 
-            if (data.role === "admin") {
+            // =================================================
+            // ADMIN
+            // =================================================
+
+            if (
+                data.role === "admin"
+            ) {
 
                 console.log(
                     "AutoLogin → Admin"
                 );
 
+
                 window.location.replace(
                     "../../pages/admin/admin.html"
                 );
 
+                return;
             }
 
-            // -----------------------------------------
-            // LEADER
-            // -----------------------------------------
 
-            else if (data.role === "leader") {
+            // =================================================
+            // LEADER
+            // =================================================
+
+            if (
+                data.role === "leader"
+            ) {
 
                 console.log(
                     "AutoLogin → Leader"
                 );
 
+
                 window.location.replace(
                     "../../pages/leader/leaders.html"
                 );
 
+                return;
             }
 
-            // -----------------------------------------
+
+            // =================================================
             // INVALID ROLE
-            // -----------------------------------------
+            // =================================================
 
-            else {
+            console.error(
+                "Invalid user role."
+            );
 
-                alert(
-                    "Invalid Role"
-                );
 
-                auth.signOut();
+            auth.signOut();
 
-            }
+            localStorage.removeItem("uid");
 
         })
+
 
         .catch(function(error) {
 
@@ -400,438 +617,459 @@ auth.onAuthStateChanged(function(user) {
 
 });
 
-function exitApp() {
 
-    console.log("ExitApp triggered");
 
-    auth.signOut().finally(() => {
-
-        localStorage.removeItem("uid");
-
-        window.location.replace(
-            "../../pages/auth/loginindex.html"
-        );
-
-    });
-
-}
-
+// =====================================================
+// LOGOUT
+// =====================================================
 
 function logout() {
 
-    console.log("Logout triggered");
-
-    auth.signOut().finally(() => {
-
-        localStorage.removeItem("uid");
-
-        window.location.replace(
-            "../../pages/auth/loginindex.html"
-        );
-
-    });
-
-}
-
-// =====================================================
-// FORGOT PASSWORD
-// =====================================================
-
-const forgotPasswordLink =
-    document.getElementById(
-        "forgotPasswordLink"
-    );
-
-
-if (forgotPasswordLink) {
-
-    forgotPasswordLink.addEventListener(
-        "click",
-        function (event) {
-
-            event.preventDefault();
-
-
-            const email =
-                document
-                    .getElementById("userid")
-                    .value
-                    .trim();
-
-
-            if (email === "") {
-
-                alert(
-                    "Please enter your registered email address first."
-                );
-
-                return;
-            }
-
-
-            auth.sendPasswordResetEmail(
-                email
-            )
-
-            .then(() => {
-
-                alert(
-                    "Password reset link has been sent to your email.\n\n" +
-                    "Please check your inbox."
-                );
-
-            })
-
-            .catch((error) => {
-
-                console.error(
-                    error
-                );
-
-
-                if (
-                    error.code ===
-                    "auth/user-not-found"
-                ) {
-
-                    alert(
-                        "No account exists with this email."
-                    );
-
-                }
-
-                else if (
-                    error.code ===
-                    "auth/invalid-email"
-                ) {
-
-                    alert(
-                        "Please enter a valid email address."
-                    );
-
-                }
-
-                else {
-
-                    alert(
-                        error.message
-                    );
-
-                }
-
-            });
-
-        }
-    );
-
-}
-
-
-
-// =====================================================
-// ================= PWA SECTION =======================
-// =====================================================
-
-
-// =====================================================
-// CHECK IF APP IS INSTALLED
-// =====================================================
-
-function isAppInstalled() {
-
-    // ---------------------------------------------
-    // Android / Chrome / Edge
-    // ---------------------------------------------
-
-    if (
-        window.matchMedia(
-            "(display-mode: standalone)"
-        ).matches
-    ) {
-
-        return true;
-
-    }
-
-
-    // ---------------------------------------------
-    // iOS Safari
-    // ---------------------------------------------
-
-    if (
-        window.navigator.standalone === true
-    ) {
-
-        return true;
-
-    }
-
-
-    // ---------------------------------------------
-    // Previously confirmed installation
-    // ---------------------------------------------
-
-    if (
-        localStorage.getItem(
-            "labourAppInstalled"
-        ) === "true"
-    ) {
-
-        return true;
-
-    }
-
-
-    return false;
-
-}
-
-
-
-// =====================================================
-// HIDE INSTALL BANNER
-// =====================================================
-
-function hideInstallBanner() {
-
-    const banner =
-        document.getElementById(
-            "installBanner"
-        );
-
-
-    if (banner) {
-
-        banner.style.display =
-            "none";
-
-    }
-
-}
-
-
-
-// =====================================================
-// SHOW INSTALL BANNER
-// =====================================================
-
-function showInstallBanner() {
-
-    const banner =
-        document.getElementById(
-            "installBanner"
-        );
-
-
-    if (!banner) {
-
-        return;
-
-    }
-
-
-    // ---------------------------------------------
-    // NEVER SHOW IF ALREADY INSTALLED
-    // ---------------------------------------------
-
-    if (isAppInstalled()) {
-
-        hideInstallBanner();
-
-        return;
-
-    }
-
-
-    // ---------------------------------------------
-    // Show banner
-    // ---------------------------------------------
-
-    banner.style.display =
-        "flex";
-
-
     console.log(
-        "Install banner shown."
+        "Logout triggered"
     );
 
-}
 
+    auth.signOut()
 
+        .finally(() => {
 
-// =====================================================
-// BEFORE INSTALL PROMPT
-// =====================================================
-
-window.addEventListener(
-    "beforeinstallprompt",
-    function (event) {
-
-        console.log(
-            "PWA installation available."
-        );
-
-
-        // Stop browser's automatic prompt
-        event.preventDefault();
-
-
-        // Save prompt
-        deferredPrompt =
-            event;
-
-
-        // Show our custom banner
-        showInstallBanner();
-
-    }
-);
-
-
-
-// =====================================================
-// INSTALL BUTTON
-// =====================================================
-
-document.addEventListener(
-    "DOMContentLoaded",
-    function () {
-
-        const installBtn =
-            document.getElementById(
-                "installBtn"
+            localStorage.removeItem(
+                "uid"
             );
 
 
-        if (!installBtn) {
+            window.location.replace(
+                "../../pages/auth/loginindex.html"
+            );
+
+        });
+
+}
+
+
+
+// =====================================================
+// EXIT APP
+// =====================================================
+
+function exitApp() {
+
+    console.log(
+        "ExitApp triggered"
+    );
+
+
+    auth.signOut()
+
+        .finally(() => {
+
+            localStorage.removeItem(
+                "uid"
+            );
+
+
+            window.location.replace(
+                "../../pages/auth/loginindex.html"
+            );
+
+        });
+}
+
+
+// =====================================================
+// LOGIN FUNCTION
+// =====================================================
+
+function login() {
+
+    const useridElement =
+        document.getElementById("userid");
+
+    const passwordElement =
+        document.getElementById("password");
+
+    const btn =
+        document.getElementById("loginBtn");
+
+
+    if (!useridElement || !passwordElement || !btn) {
+
+        console.error(
+            "Login elements not found."
+        );
+
+        return;
+
+    }
+
+
+    const userid =
+        useridElement.value.trim();
+
+    const password =
+        passwordElement.value.trim();
+
+
+    // =================================================
+    // VALIDATION
+    // =================================================
+
+    if (userid === "") {
+
+        alert(
+            "Please enter your email or mobile number."
+        );
+
+        return;
+
+    }
+
+
+    if (password === "") {
+
+        alert(
+            "Please enter your password."
+        );
+
+        return;
+
+    }
+
+
+    // =================================================
+    // DETERMINE LOGIN TYPE
+    // =================================================
+
+    let firebaseEmail = "";
+
+
+    // -------------------------------------------------
+    // ADMIN LOGIN
+    // -------------------------------------------------
+
+    if (userid.includes("@")) {
+
+        firebaseEmail =
+            userid.toLowerCase();
+
+        console.log(
+            "Login type: ADMIN / EMAIL"
+        );
+
+    }
+
+
+    // -------------------------------------------------
+    // LEADER LOGIN
+    // -------------------------------------------------
+
+    else {
+
+        const phone =
+            userid.replace(/\D/g, "");
+
+
+        if (!/^[0-9]{10}$/.test(phone)) {
+
+            alert(
+                "Leader mobile number must contain exactly 10 digits."
+            );
 
             return;
 
         }
 
 
-        installBtn.addEventListener(
-            "click",
-            async function () {
-
-                // ---------------------------------
-                // Already installed
-                // ---------------------------------
-
-                if (isAppInstalled()) {
-
-                    hideInstallBanner();
-
-                    return;
-
-                }
+        firebaseEmail =
+            getLeaderInternalEmail(phone);
 
 
-                // ---------------------------------
-                // Prompt unavailable
-                // ---------------------------------
+        console.log(
+            "Login type: LEADER / MOBILE"
+        );
 
-                if (!deferredPrompt) {
-
-                    console.log(
-                        "Install prompt unavailable."
-                    );
-
-                    return;
-
-                }
+    }
 
 
-                installBtn.disabled =
-                    true;
+    // =================================================
+    // DISABLE LOGIN BUTTON
+    // =================================================
+
+    btn.disabled = true;
+
+    btn.innerHTML =
+        "Logging in...";
 
 
-                installBtn.textContent =
-                    "Installing...";
+    // =================================================
+    // FIREBASE LOGIN
+    // =================================================
+
+    auth
+        .signInWithEmailAndPassword(
+            firebaseEmail,
+            password
+        )
+
+        .then(function(userCredential) {
+
+            const firebaseUser =
+                userCredential.user;
 
 
-                try {
-
-                    // Show browser installation
-                    // dialog
-
-                    deferredPrompt.prompt();
+            const uid =
+                firebaseUser.uid;
 
 
-                    const choice =
-                        await deferredPrompt.userChoice;
+            console.log(
+                "Firebase Login Successful"
+            );
+
+            console.log(
+                "UID:",
+                uid
+            );
 
 
-                    console.log(
-                        "Installation result:",
-                        choice.outcome
-                    );
+            localStorage.setItem(
+                "uid",
+                uid
+            );
 
 
-                    // --------------------------------
-                    // ACCEPTED
-                    // --------------------------------
+            // =========================================
+            // LOAD USER PROFILE
+            // =========================================
 
-                    if (
-                        choice.outcome ===
-                        "accepted"
-                    ) {
+            return db
+                .collection("users")
+                .doc(uid)
+                .get();
 
-                        console.log(
-                            "User accepted installation."
-                        );
+        })
 
 
-                        // Wait for appinstalled
-                        // event to confirm installation
+        .then(function(doc) {
 
-                    }
+            // =========================================
+            // USER PROFILE NOT FOUND
+            // =========================================
 
+            if (!doc.exists) {
 
-                    // --------------------------------
-                    // CANCELLED
-                    // --------------------------------
-
-                    else {
-
-                        console.log(
-                            "User cancelled installation."
-                        );
+                alert(
+                    "User profile not found. Please contact administrator."
+                );
 
 
-                        installBtn.disabled =
-                            false;
+                return auth.signOut();
+
+            }
 
 
-                        installBtn.textContent =
-                            "Install";
-
-                    }
-
-                }
-
-                catch (error) {
-
-                    console.error(
-                        "Installation error:",
-                        error
-                    );
+            const user =
+                doc.data();
 
 
-                    installBtn.disabled =
-                        false;
+            console.log(
+                "Logged in user:",
+                user
+            );
 
 
-                    installBtn.textContent =
-                        "Install";
+            // =========================================
+            // CHECK ACTIVE STATUS
+            // =========================================
 
-                }
+            if (user.active === false) {
+
+                alert(
+                    "Your account has been deactivated.\n\n" +
+                    "Please contact the administrator."
+                );
 
 
-                // Prompt cannot be reused
+                return auth.signOut();
 
-                deferredPrompt =
-                    null;
+            }
+
+
+            // =========================================
+            // ADMIN
+            // =========================================
+
+            if (user.role === "admin") {
+
+                console.log(
+                    "Redirecting to Admin Dashboard"
+                );
+
+
+                window.location.replace(
+                    "../../pages/admin/admin.html"
+                );
+
+
+                return;
+
+            }
+
+
+            // =========================================
+            // LEADER
+            // =========================================
+
+            if (user.role === "leader") {
+
+                console.log(
+                    "Redirecting to Leader Dashboard"
+                );
+
+
+                window.location.replace(
+                    "../../pages/leader/leaders.html"
+                );
+
+
+                return;
+
+            }
+
+
+            // =========================================
+            // INVALID ROLE
+            // =========================================
+
+            alert(
+                "Invalid user role.\n\n" +
+                "Please contact the administrator."
+            );
+
+
+            return auth.signOut();
+
+        })
+
+
+        .catch(function(error) {
+
+            console.error(
+                "Login Error:",
+                error
+            );
+
+
+            // =========================================
+            // ERROR HANDLING
+            // =========================================
+
+            if (
+                error.code ===
+                "auth/network-request-failed"
+            ) {
+
+                alert(
+                    "Network error.\n\n" +
+                    "Please check your internet connection."
+                );
+
+            }
+
+            else if (
+                error.code ===
+                "auth/invalid-email"
+            ) {
+
+                alert(
+                    "Invalid login ID."
+                );
+
+            }
+
+            else if (
+                error.code ===
+                "auth/user-not-found"
+            ) {
+
+                alert(
+                    "Invalid mobile number/email or password."
+                );
+
+            }
+
+            else if (
+                error.code ===
+                "auth/wrong-password"
+            ) {
+
+                alert(
+                    "Invalid mobile number/email or password."
+                );
+
+            }
+
+            else if (
+                error.code ===
+                "auth/invalid-credential"
+            ) {
+
+                alert(
+                    "Invalid mobile number/email or password."
+                );
+
+            }
+
+            else {
+
+                alert(
+                    "Login failed.\n\n" +
+                    error.message
+                );
+
+            }
+
+        })
+
+
+        .finally(function() {
+
+            btn.disabled = false;
+
+            btn.innerHTML =
+                "Log In";
+
+        });
+
+}
+
+
+// =====================================================
+// LOGIN FORM
+// =====================================================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function() {
+
+        const loginForm =
+            document.getElementById("loginForm");
+
+
+        if (!loginForm) {
+
+            return;
+
+        }
+
+
+        loginForm.addEventListener(
+            "submit",
+            function(event) {
+
+                event.preventDefault();
+
+                login();
 
             }
         );
@@ -849,14 +1087,11 @@ window.addEventListener(
     "appinstalled",
     function () {
 
+
         console.log(
             "Labour Management App installed."
         );
 
-
-        // ---------------------------------------------
-        // Remember installation
-        // ---------------------------------------------
 
         localStorage.setItem(
             "labourAppInstalled",
@@ -864,16 +1099,8 @@ window.addEventListener(
         );
 
 
-        // ---------------------------------------------
-        // Hide banner
-        // ---------------------------------------------
-
         hideInstallBanner();
 
-
-        // ---------------------------------------------
-        // Remove prompt
-        // ---------------------------------------------
 
         deferredPrompt =
             null;
@@ -891,6 +1118,7 @@ document.addEventListener(
     "DOMContentLoaded",
     function () {
 
+
         const banner =
             document.getElementById(
                 "installBanner"
@@ -904,11 +1132,8 @@ document.addEventListener(
         }
 
 
-        // ---------------------------------------------
-        // APP ALREADY INSTALLED
-        // ---------------------------------------------
-
         if (isAppInstalled()) {
+
 
             console.log(
                 "App already installed."
@@ -919,15 +1144,15 @@ document.addEventListener(
 
         }
 
+
         else {
 
-            // Keep hidden until
-            // beforeinstallprompt fires
 
             banner.style.display =
                 "none";
 
         }
+
 
     }
 );
@@ -942,36 +1167,45 @@ if (
     "serviceWorker" in navigator
 ) {
 
+
     window.addEventListener(
         "load",
         function () {
+
 
             navigator.serviceWorker
                 .register(
                     "../../service_worker.js"
                 )
 
+
                 .then(
                     function (registration) {
+
 
                         console.log(
                             "Service Worker registered:",
                             registration.scope
                         );
 
+
                     }
                 )
 
+
                 .catch(
                     function (error) {
+
 
                         console.error(
                             "Service Worker registration failed:",
                             error
                         );
 
+
                     }
                 );
+
 
         }
     );
@@ -987,6 +1221,7 @@ if (
 window.addEventListener(
     "load",
     function () {
+
 
         const splash =
             document.getElementById(
@@ -1007,12 +1242,9 @@ window.addEventListener(
         }
 
 
-        // ---------------------------------------------
-        // Keep splash for 2 seconds
-        // ---------------------------------------------
-
         setTimeout(
             function () {
+
 
                 splash.style.display =
                     "none";
@@ -1025,9 +1257,11 @@ window.addEventListener(
 
                 }
 
+
             },
             2000
         );
+
 
     }
 );

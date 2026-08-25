@@ -1,14 +1,21 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta charset="UTF-8">
 
-<title>Create Repair Order</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
 
-<link rel="stylesheet" href="../../css/style.css">
+    <title>Create Repair Order</title>
+
+    <link
+        rel="stylesheet"
+        href="../../css/style.css"
+    >
 
 </head>
 
@@ -17,61 +24,140 @@
 <div class="create-ro-page">
 
     <!-- ==========================================
-         HOME BUTTON
+         TOP BUTTONS
     =========================================== -->
 
-    <button
-        class="create-ro-home"
-        onclick="showDashboard()"
-    >
-        🏠Home
-    </button>
+    <div class="create-ro-top-buttons">
+
+        <!-- HOME -->
+
+        <button
+            type="button"
+            class="create-ro-home"
+            onclick="showDashboard()"
+        >
+            🏠 Home
+        </button>
 
 
-    <!-- Main -->
+        <!-- LOGOUT -->
+
+        <button
+            type="button"
+            class="create-ro-logout"
+            onclick="logout()"
+        >
+            🚪 Logout
+        </button>
+
+    </div>
+
+
+    <!-- ==========================================
+         MAIN
+    =========================================== -->
 
     <div class="create-ro-main">
 
-        <h2>Create Repair Order</h2>
+        <h2>
+            Create Repair Order
+        </h2>
+
 
         <div class="form-box">
 
-            <label>Leader Name</label>
+
+            <!-- =====================================
+                 LEADER NAME
+            ====================================== -->
+
+            <label>
+                Leader Name
+            </label>
 
             <input
                 type="text"
                 id="leaderName"
-                readonly>
+                readonly
+            >
 
-            <label>Region</label>
+
+            <!-- =====================================
+                 REGION
+            ====================================== -->
+
+            <label>
+                Region
+            </label>
 
             <input
                 type="text"
                 id="region"
-                readonly>
-           <label>RO Number</label>
+                readonly
+            >
+
+
+            <!-- =====================================
+                 RO NUMBER - OPTIONAL
+            ====================================== -->
+
+            <label>
+                RO Number
+                <span style="font-weight:normal;">
+                    (Optional)
+                </span>
+            </label>
+
             <input
                 type="text"
                 id="roNumber"
-                placeholder="Enter RO Number">
-            <label>Vehicle Number</label>
+                placeholder="Enter RO Number (Optional)"
+            >
+
+
+            <!-- =====================================
+                 VEHICLE NUMBER
+            ====================================== -->
+
+            <label>
+                Vehicle Number
+            </label>
 
             <input
                 type="text"
                 id="vehicleNumber"
-                placeholder="Enter Vehicle Number">
-
-            <label>Advisor Name</label>
-
-            <input type="text"
-                 id="advisorName"
-                 placeholder="Enter Advisor Name"
-                 maxlength="20">
+                placeholder="Enter Vehicle Number"
+            >
 
 
-            <label>Item Codes</label>
+            <!-- =====================================
+                 ADVISOR NAME
+            ====================================== -->
 
-            <div id="itemCodeContainer" class="item-code-container">
+            <label>
+                Advisor Name
+            </label>
+
+            <input
+                type="text"
+                id="advisorName"
+                placeholder="Enter Advisor Name"
+                maxlength="30"
+            >
+
+
+            <!-- =====================================
+                 ITEM CODES
+            ====================================== -->
+
+            <label>
+                Item Codes
+            </label>
+
+            <div
+                id="itemCodeContainer"
+                class="item-code-container"
+            >
                 Loading items...
             </div>
 
@@ -79,7 +165,14 @@
                 Select one or more item codes.
             </small>
 
-            <br><br>
+
+            <br>
+            <br>
+
+
+            <!-- =====================================
+                 BILLING
+            ====================================== -->
 
             <div class="billing-box">
 
@@ -92,10 +185,24 @@
                 </span>
 
             </div>
-            <br><br>
-            <button id="saveBtn" onclick="saveRO()">
-            Save Repair Order
+
+
+            <br>
+            <br>
+
+
+            <!-- =====================================
+                 SAVE BUTTON
+            ====================================== -->
+
+            <button
+                type="button"
+                id="saveBtn"
+                onclick="saveRO()"
+            >
+                Save Repair Order
             </button>
+
 
         </div>
 
@@ -103,17 +210,28 @@
 
 </div>
 
+
+<!-- ==========================================
+     FIREBASE
+=========================================== -->
+
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
+
+<!-- ==========================================
+     COMMON FILES
+=========================================== -->
+
 <script src="../../js/common/firebase.js"></script>
 
 <script src="../../js/common/leader-common.js"></script>
 
 <script src="../../js/leader/createRO.js"></script>
+
 
 </body>
 

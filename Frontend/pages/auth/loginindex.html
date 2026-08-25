@@ -17,7 +17,6 @@
         href="../../css/style.css"
     >
 
-    <!-- PWA -->
     <link
         rel="manifest"
         href="../../manifest.json"
@@ -25,7 +24,7 @@
 
     <meta
         name="theme-color"
-        content="#1a73e8"
+        content="#0D47A1"
     >
 
 </head>
@@ -116,11 +115,21 @@
 
         <form id="loginForm">
 
+            <!--
+                Admin:
+                Email
+
+                Leader:
+                10 digit mobile number
+            -->
+
             <input
-                type="email"
+                type="text"
                 id="userid"
-                placeholder="Email"
+                placeholder="Email / Mobile Number"
+                maxlength="50"
                 autocomplete="username"
+                required
             >
 
 
@@ -129,6 +138,7 @@
                 id="password"
                 placeholder="Password"
                 autocomplete="current-password"
+                required
             >
 
 
@@ -138,23 +148,6 @@
             >
                 Log In
             </button>
-
-
-            <p
-                style="
-                    margin-top:15px;
-                    text-align:center;
-                "
-            >
-
-                <a
-                    href="#"
-                    id="forgotPasswordLink"
-                >
-                    Forgot Password?
-                </a>
-
-            </p>
 
         </form>
 
@@ -180,7 +173,7 @@
 
 
 <!-- =================================================
-     YOUR COMMON FILES
+     COMMON FILES
 ================================================= -->
 
 <script src="../../js/common/firebase.js"></script>

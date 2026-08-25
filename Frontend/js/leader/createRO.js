@@ -5,6 +5,7 @@
 let leaderData = {};
 let isSaving = false;
 
+
 // ==========================================
 // LOAD LOGGED-IN LEADER
 // ==========================================
@@ -13,38 +14,97 @@ document.addEventListener("DOMContentLoaded", function () {
 
     auth.onAuthStateChanged(async (user) => {
 
+        // --------------------------------------
+        // USER NOT LOGGED IN
+        // --------------------------------------
+
         if (!user) {
-            location = "../pages/auth/loginindex.html";
+
+            window.location.replace(
+                "../auth/loginindex.html"
+            );
+
             return;
         }
 
+
         try {
 
-            const doc = await db.collection("users")
-                .doc(user.uid)
-                .get();
+            // ----------------------------------
+            // GET LEADER DATA
+            // ----------------------------------
+
+            const doc =
+                await db
+                    .collection("users")
+                    .doc(user.uid)
+                    .get();
+
 
             if (!doc.exists) {
 
-                alert("Leader record not found.");
+                alert(
+                    "Leader record not found."
+                );
+
                 return;
 
             }
 
-            leaderData = doc.data();
 
-            document.getElementById("leaderName").value =
-                leaderData.name;
+            leaderData =
+                doc.data();
 
-            // Load region
+
+            console.log(
+                "Logged-in Leader:",
+                leaderData
+            );
+
+
+            // ----------------------------------
+            // DISPLAY LEADER NAME
+            // ----------------------------------
+
+            const leaderName =
+                document.getElementById(
+                    "leaderName"
+                );
+
+
+            if (leaderName) {
+
+                leaderName.value =
+                    leaderData.name || "";
+
+            }
+
+
+            // ----------------------------------
+            // LOAD REGION
+            // ----------------------------------
+
             loadRegion();
 
-            // Load item codes
+
+            // ----------------------------------
+            // LOAD ITEMS
+            // ----------------------------------
+
             loadItems();
 
-        } catch (error) {
+        }
 
-            console.error("Error loading leader:", error);
+        catch (error) {
+
+            console.error(
+                "Error loading leader:",
+                error
+            );
+
+            alert(
+                "Unable to load leader information."
+            );
 
         }
 
@@ -54,30 +114,84 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 // ==========================================
-// Load Region
+// LOAD REGION
 // ==========================================
 
 function loadRegion() {
 
-    console.log("Leader Region ID:", leaderData.region);
+    console.log(
+        "Leader Region ID:",
+        leaderData.region
+    );
+
+
+    if (!leaderData.region) {
+
+        console.error(
+            "Leader region is missing."
+        );
+
+        return;
+
+    }
+
 
     db.collection("regions")
-    .doc(leaderData.region)
-    .get()
-    .then((doc) => {
+        .doc(leaderData.region)
+        .get()
 
-        console.log("Region Exists:", doc.exists);
+        .then((doc) => {
 
-        if (!doc.exists) return;
+            console.log(
+                "Region Exists:",
+                doc.exists
+            );
 
-        console.log(doc.data());
 
-        document.getElementById("region").value =
-            doc.data().regionName;
+            if (!doc.exists) {
 
-    });
+                console.error(
+                    "Region document not found."
+                );
+
+                return;
+
+            }
+
+
+            console.log(
+                "Region Data:",
+                doc.data()
+            );
+
+
+            const regionInput =
+                document.getElementById(
+                    "region"
+                );
+
+
+            if (regionInput) {
+
+                regionInput.value =
+                    doc.data().regionName || "";
+
+            }
+
+        })
+
+        .catch((error) => {
+
+            console.error(
+                "Error loading region:",
+                error
+            );
+
+        });
 
 }
+
+
 // ========================================================
 // LOAD ONLY ITEMS ASSIGNED TO THIS LEADER
 // ========================================================
@@ -85,7 +199,10 @@ function loadRegion() {
 async function loadItems() {
 
     const container =
-        document.getElementById("itemCodeContainer");
+        document.getElementById(
+            "itemCodeContainer"
+        );
+
 
     if (!container) {
 
@@ -94,19 +211,23 @@ async function loadItems() {
         );
 
         return;
+
     }
+
 
     container.innerHTML =
         "Loading assigned items...";
 
+
     try {
 
-        // =================================================
-        // CURRENT LEADER UID
-        // =================================================
+        // ==========================================
+        // CURRENT LEADER
+        // ==========================================
 
         const currentUser =
             auth.currentUser;
+
 
         if (!currentUser) {
 
@@ -117,10 +238,13 @@ async function loadItems() {
             `;
 
             return;
+
         }
+
 
         const leaderUid =
             currentUser.uid;
+
 
         console.log(
             "Current Leader UID:",
@@ -128,12 +252,15 @@ async function loadItems() {
         );
 
 
-        // =================================================
+        // ==========================================
         // GET ACTIVE ASSIGNMENTS
-        // =================================================
+        // ==========================================
 
         const assignmentSnapshot =
-            await db.collection("leaderItemAssignments")
+            await db
+                .collection(
+                    "leaderItemAssignments"
+                )
                 .where(
                     "leaderUid",
                     "==",
@@ -147,16 +274,18 @@ async function loadItems() {
                 .get();
 
 
-        // =================================================
+        // ==========================================
         // GET ASSIGNED ITEM CODES
-        // =================================================
+        // ==========================================
 
         const assignedItemCodes = [];
+
 
         assignmentSnapshot.forEach(doc => {
 
             const data =
                 doc.data();
+
 
             if (data.itemCode) {
 
@@ -175,9 +304,9 @@ async function loadItems() {
         );
 
 
-        // =================================================
-        // NO ASSIGNED ITEMS
-        // =================================================
+        // ==========================================
+        // NO ITEMS
+        // ==========================================
 
         if (
             assignedItemCodes.length === 0
@@ -191,15 +320,17 @@ async function loadItems() {
             `;
 
             return;
+
         }
 
 
-        // =================================================
+        // ==========================================
         // LOAD ACTIVE ITEM DETAILS
-        // =================================================
+        // ==========================================
 
         const itemSnapshot =
-            await db.collection("itemcodes")
+            await db
+                .collection("itemcodes")
                 .where(
                     "active",
                     "==",
@@ -210,12 +341,13 @@ async function loadItems() {
 
         container.innerHTML = "";
 
+
         let assignedCount = 0;
 
 
-        // =================================================
-        // DISPLAY ONLY ASSIGNED ITEMS
-        // =================================================
+        // ==========================================
+        // DISPLAY ASSIGNED ITEMS
+        // ==========================================
 
         itemSnapshot.forEach(doc => {
 
@@ -227,12 +359,14 @@ async function loadItems() {
                 data.itemCode || doc.id;
 
 
-            // ---------------------------------------------
-            // Only show items assigned to this leader
-            // ---------------------------------------------
+            // --------------------------------------
+            // ONLY ASSIGNED ITEMS
+            // --------------------------------------
 
             if (
-                !assignedItemCodes.includes(itemCode)
+                !assignedItemCodes.includes(
+                    itemCode
+                )
             ) {
 
                 return;
@@ -254,7 +388,9 @@ async function loadItems() {
 
 
             const itemDiv =
-                document.createElement("div");
+                document.createElement(
+                    "div"
+                );
 
 
             itemDiv.className =
@@ -299,9 +435,9 @@ async function loadItems() {
         });
 
 
-        // =================================================
+        // ==========================================
         // ASSIGNED ITEMS NOT FOUND
-        // =================================================
+        // ==========================================
 
         if (
             assignedCount === 0
@@ -320,12 +456,13 @@ async function loadItems() {
             );
 
             return;
+
         }
 
 
-        // =================================================
+        // ==========================================
         // INITIAL BILLING
-        // =================================================
+        // ==========================================
 
         calculateBillingAmount();
 
@@ -344,6 +481,7 @@ async function loadItems() {
             error
         );
 
+
         container.innerHTML = `
             <p style="color:red;">
                 Unable to load assigned items.
@@ -354,7 +492,6 @@ async function loadItems() {
 
 }
 
-      
 
 // ==========================================
 // CALCULATE TOTAL BILLING AMOUNT
@@ -367,23 +504,30 @@ function calculateBillingAmount() {
             'input[name="itemCode"]:checked'
         );
 
+
     let total = 0;
 
-    selectedItems.forEach(checkbox => {
 
-        const cost =
-            Number(
-                checkbox.dataset.cost
-            ) || 0;
+    selectedItems.forEach(
+        checkbox => {
 
-        total += cost;
+            const cost =
+                Number(
+                    checkbox.dataset.cost
+                ) || 0;
 
-    });
+
+            total += cost;
+
+        }
+    );
+
 
     const totalElement =
         document.getElementById(
             "totalBillingAmount"
         );
+
 
     if (totalElement) {
 
@@ -400,135 +544,194 @@ function calculateBillingAmount() {
     }
 
 }
+
+
 // ==========================================
 // SAVE REPAIR ORDER
 // ==========================================
 
 async function saveRO() {
 
-    const saveBtn = document.getElementById("saveBtn");
+    // --------------------------------------
+    // PREVENT DOUBLE CLICK
+    // --------------------------------------
 
-    // ------------------------------------------
-    // Get values
-    // ------------------------------------------
+    if (isSaving) {
 
-    const roNumber =
-        document.getElementById("roNumber")
-        .value
-        .trim()
-        .toUpperCase();
-
-    const vehicleNumber =
-        document.getElementById("vehicleNumber")
-        .value
-        .trim()
-        .toUpperCase();
-
-    const advisorName =
-        document.getElementById("advisorName")
-        .value
-        .trim()
-        .toUpperCase();
-
-    // ------------------------------------------
-    // Get selected item codes
-    // ------------------------------------------
-
-const selectedCheckboxes =
-    Array.from(
-        document.querySelectorAll(
-            'input[name="itemCode"]:checked'
-        )
-    );
-
-const selectedItems =
-    selectedCheckboxes.map(
-        checkbox => checkbox.value
-    );
-
-
-// ==========================================
-// ITEM DETAILS SNAPSHOT
-// ==========================================
-
-const itemDetails =
-    selectedCheckboxes.map(checkbox => {
-
-        return {
-
-            itemCode:
-                checkbox.value,
-
-            description:
-                checkbox.dataset.description || "",
-
-            billingAmount:
-                Number(
-                    checkbox.dataset.cost
-                ) || 0
-
-        };
-
-    });
-
-console.log(
-    "Selected Item Details:",
-    itemDetails
-);
-   // ==========================================
-   // CALCULATE BILLING AMOUNT
-   // ==========================================
-
-let billingAmount = 0;
-
-document
-    .querySelectorAll(
-        'input[name="itemCode"]:checked'
-    )
-    .forEach(checkbox => {
-
-        billingAmount +=
-            Number(
-                checkbox.dataset.cost
-            ) || 0;
-
-    });
-
-console.log(
-    "Billing Amount:",
-    billingAmount
-);
-    // ------------------------------------------
-    // Validation
-    // ------------------------------------------
-
-    if (!roNumber) {
-
-        alert("Please enter RO Number.");
         return;
 
     }
+
+
+    const saveBtn =
+        document.getElementById(
+            "saveBtn"
+        );
+
+
+    // ======================================
+    // GET VALUES
+    // ======================================
+
+    const roNumber =
+        document
+            .getElementById("roNumber")
+            .value
+            .trim()
+            .toUpperCase();
+
+
+    const vehicleNumber =
+        document
+            .getElementById("vehicleNumber")
+            .value
+            .trim()
+            .toUpperCase();
+
+
+    const advisorName =
+        document
+            .getElementById("advisorName")
+            .value
+            .trim()
+            .toUpperCase();
+
+
+    // ======================================
+    // GET SELECTED ITEMS
+    // ======================================
+
+    const selectedCheckboxes =
+        Array.from(
+            document.querySelectorAll(
+                'input[name="itemCode"]:checked'
+            )
+        );
+
+
+    const selectedItems =
+        selectedCheckboxes.map(
+            checkbox =>
+                checkbox.value
+        );
+
+
+    // ======================================
+    // ITEM DETAILS
+    // ======================================
+
+    const itemDetails =
+        selectedCheckboxes.map(
+            checkbox => {
+
+                return {
+
+                    itemCode:
+                        checkbox.value,
+
+                    description:
+                        checkbox.dataset
+                            .description || "",
+
+                    billingAmount:
+                        Number(
+                            checkbox.dataset.cost
+                        ) || 0
+
+                };
+
+            }
+        );
+
+
+    console.log(
+        "Selected Item Details:",
+        itemDetails
+    );
+
+
+    // ======================================
+    // CALCULATE BILLING
+    // ======================================
+
+    let billingAmount = 0;
+
+
+    selectedCheckboxes.forEach(
+        checkbox => {
+
+            billingAmount +=
+                Number(
+                    checkbox.dataset.cost
+                ) || 0;
+
+        }
+    );
+
+
+    console.log(
+        "Billing Amount:",
+        billingAmount
+    );
+
+
+    // ======================================
+    // VALIDATION
+    // ======================================
+
+    // IMPORTANT:
+    // RO NUMBER IS OPTIONAL
+    //
+    // Therefore we DO NOT check:
+    //
+    // if (!roNumber)
+    //
+    // ======================================
+
+
+    // --------------------------------------
+    // VEHICLE NUMBER
+    // --------------------------------------
 
     if (!vehicleNumber) {
 
-        alert("Please enter Vehicle Number.");
+        alert(
+            "Please enter Vehicle Number."
+        );
+
         return;
 
     }
+
+
+    // --------------------------------------
+    // ADVISOR NAME
+    // --------------------------------------
 
     if (!advisorName) {
 
-        alert("Please enter Advisor Name.");
+        alert(
+            "Please enter Advisor Name."
+        );
+
         return;
 
     }
 
-    // Advisor name validation
+
+    // --------------------------------------
+    // ADVISOR NAME FORMAT
+    // --------------------------------------
 
     const namePattern =
         /^[A-Za-z]+(?: [A-Za-z]+)*$/;
 
-    if (!namePattern.test(advisorName)) {
+
+    if (
+        !namePattern.test(
+            advisorName
+        )
+    ) {
 
         alert(
             "Advisor name can contain only letters and spaces."
@@ -538,7 +741,10 @@ console.log(
 
     }
 
-    if (advisorName.length < 3) {
+
+    if (
+        advisorName.length < 3
+    ) {
 
         alert(
             "Advisor name must contain at least 3 characters."
@@ -548,7 +754,10 @@ console.log(
 
     }
 
-    if (advisorName.length > 30) {
+
+    if (
+        advisorName.length > 30
+    ) {
 
         alert(
             "Advisor name cannot exceed 30 characters."
@@ -559,177 +768,315 @@ console.log(
     }
 
 
-    
-    // ------------------------------------------
-    // Item validation
-    // ------------------------------------------
+    // --------------------------------------
+    // ITEM VALIDATION
+    // --------------------------------------
 
-    if (selectedItems.length === 0) {
+    if (
+        selectedItems.length === 0
+    ) {
 
-    alert("Please select at least one item.");
+        alert(
+            "Please select at least one item."
+        );
 
-    saveBtn.disabled = false;
-    saveBtn.innerHTML = "Save Repair Order";
+        return;
 
-    return;
+    }
 
-}
 
-    // ------------------------------------------
-    // Disable button
-    // ------------------------------------------
+    // ======================================
+    // DISABLE SAVE BUTTON
+    // ======================================
 
-    saveBtn.disabled = true;
-    saveBtn.innerHTML = "Saving...";
+    isSaving = true;
+
+
+    saveBtn.disabled =
+        true;
+
+
+    saveBtn.innerHTML =
+        "Saving...";
+
 
     try {
-            // ==========================================
-            // VERIFY LOGGED-IN USER
-            // ==========================================
 
-            const currentUser = auth.currentUser;
+        // ==================================
+        // VERIFY LOGGED-IN USER
+        // ==================================
 
-            if (!currentUser) {
+        const currentUser =
+            auth.currentUser;
 
-                alert("User is not logged in.");
 
-                return;
+        if (!currentUser) {
 
-            }
-
-            const leaderUid = currentUser.uid;
-
-            console.log(
-                "Saving RO for Leader UID:",
-                leaderUid
+            alert(
+                "User is not logged in."
             );
-        // --------------------------------------
-        // Create date
-        // --------------------------------------
-
-        const now = new Date();
-
-        const yyyy = now.getFullYear();
-
-        const months = [
-            "Jan","Feb","Mar","Apr",
-            "May","Jun","Jul","Aug",
-            "Sep","Oct","Nov","Dec"
-        ];
-
-        const dd =
-            String(now.getDate()).padStart(2, "0");
-
-        const displayDate =
-            dd + "-" +
-            months[now.getMonth()] +
-            "-" +
-            yyyy;
-
-        // --------------------------------------
-        // Document ID
-        // --------------------------------------
-
-        const documentId =
-            displayDate + " | " + roNumber;
-
-        // --------------------------------------
-        // Check duplicate RO Number
-        // --------------------------------------
-
-    
-if (!currentUser) {
-
-    alert("User is not logged in.");
-
-    return;
-
-}
-
-
-const existing =
-    await db.collection("repairorders")
-        .where("leaderUid", "==", leaderUid)
-        .where("roNumber", "==", roNumber)
-        .get();
-        if (!existing.empty) {
-
-            alert("RO Number already exists.");
 
             return;
 
         }
 
-        // --------------------------------------
-        // Save Repair Order
-        // --------------------------------------
 
-        await db.collection("repairorders")
-        .doc(documentId)
-        .set({
+        const leaderUid =
+            currentUser.uid;
 
-            roNumber: roNumber,
 
-            documentId: documentId,
-
-            leaderUid: auth.currentUser.uid,
-
-            leaderName: leaderData.name,
-
-            region: leaderData.region,
-
-            advisorName: advisorName,
-
-            vehicleNumber: vehicleNumber,
-
-            itemCodes: selectedItems,
-
-            itemDetails: itemDetails,
-
-            // Total billing calculated at RO creation
-            billingAmount: billingAmount,
-
-            status: "Pending",
-
-            createdAt:
-                firebase.firestore.FieldValue
-                .serverTimestamp()
-
-        });
-
-        // --------------------------------------
-        // Success
-        // --------------------------------------
-
-        alert(
-            "Repair Order Saved Successfully"
+        console.log(
+            "Saving RO for Leader UID:",
+            leaderUid
         );
 
-        // Clear fields
 
-        document.getElementById("roNumber").value = "";
+        // ==================================
+        // CREATE DATE
+        // ==================================
 
-        document.getElementById("vehicleNumber").value = "";
+        const now =
+            new Date();
 
-        document.getElementById("advisorName").value = "";
-  
-        // Uncheck all items
+
+        const yyyy =
+            now.getFullYear();
+
+
+        const months = [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec"
+        ];
+
+
+        const dd =
+            String(
+                now.getDate()
+            ).padStart(
+                2,
+                "0"
+            );
+
+
+        const displayDate =
+            dd +
+            "-" +
+            months[now.getMonth()] +
+            "-" +
+            yyyy;
+
+
+        // ==================================
+        // GENERATE UNIQUE DOCUMENT ID
+        // ==================================
+        //
+        // If RO number exists:
+        //
+        // 24-Aug-2026 | RO123
+        //
+        // If RO number is empty:
+        //
+        // 24-Aug-2026 | NO-RO-xxxxxxxx
+        //
+        // This prevents duplicate document IDs.
+        // ==================================
+
+        let documentId;
+
+
+        if (roNumber) {
+
+            documentId =
+                displayDate +
+                " | " +
+                roNumber;
+
+        }
+
+        else {
+
+            documentId =
+                displayDate +
+                " | NO-RO-" +
+                Date.now();
+
+        }
+
+
+        console.log(
+            "Document ID:",
+            documentId
+        );
+
+
+        // ==================================
+        // DUPLICATE RO CHECK
+        // ==================================
+        //
+        // ONLY CHECK DUPLICATES IF USER
+        // ENTERED AN RO NUMBER.
+        //
+        // Empty RO numbers are allowed.
+        // ==================================
+
+        if (roNumber) {
+
+            const existing =
+                await db
+                    .collection(
+                        "repairorders"
+                    )
+                    .where(
+                        "leaderUid",
+                        "==",
+                        leaderUid
+                    )
+                    .where(
+                        "roNumber",
+                        "==",
+                        roNumber
+                    )
+                    .get();
+
+
+            if (!existing.empty) {
+
+                alert(
+                    "RO Number already exists."
+                );
+
+                return;
+
+            }
+
+        }
+
+
+        // ==================================
+        // SAVE REPAIR ORDER
+        // ==================================
+
+        await db
+            .collection(
+                "repairorders"
+            )
+            .doc(documentId)
+            .set({
+
+                // RO NUMBER CAN BE EMPTY
+                roNumber:
+                    roNumber || "",
+
+                documentId:
+                    documentId,
+
+                leaderUid:
+                    leaderUid,
+
+                leaderName:
+                    leaderData.name || "",
+
+                region:
+                    leaderData.region || "",
+
+                advisorName:
+                    advisorName,
+
+                vehicleNumber:
+                    vehicleNumber,
+
+                itemCodes:
+                    selectedItems,
+
+                itemDetails:
+                    itemDetails,
+
+                billingAmount:
+                    billingAmount,
+
+                status:
+                    "Pending",
+
+                createdAt:
+                    firebase.firestore
+                        .FieldValue
+                        .serverTimestamp()
+
+            });
+
+
+        // ==================================
+        // SUCCESS
+        // ==================================
+
+        alert(
+            "Repair Order Saved Successfully."
+        );
+
+
+        // ==================================
+        // CLEAR FORM
+        // ==================================
 
         document
-        .querySelectorAll(
-            'input[name="itemCode"]'
-        )
-        .forEach(checkbox => {
+            .getElementById(
+                "roNumber"
+            )
+            .value = "";
 
-            checkbox.checked = false;
 
-        });
+        document
+            .getElementById(
+                "vehicleNumber"
+            )
+            .value = "";
 
-        // Reset billing display
 
-        document.getElementById(
-            "totalBillingAmount"
-        ).textContent = "₹0.00";
+        document
+            .getElementById(
+                "advisorName"
+            )
+            .value = "";
+
+
+        // ==================================
+        // UNCHECK ITEMS
+        // ==================================
+
+        document
+            .querySelectorAll(
+                'input[name="itemCode"]'
+            )
+            .forEach(
+                checkbox => {
+
+                    checkbox.checked =
+                        false;
+
+                }
+            );
+
+
+        // ==================================
+        // RESET BILLING
+        // ==================================
+
+        document
+            .getElementById(
+                "totalBillingAmount"
+            )
+            .textContent =
+                "₹0.00";
 
     }
 
@@ -740,8 +1087,9 @@ const existing =
             error
         );
 
+
         alert(
-            "Unable to save Repair Order: " +
+            "Unable to save Repair Order:\n" +
             error.message
         );
 
@@ -749,11 +1097,73 @@ const existing =
 
     finally {
 
-        saveBtn.disabled = false;
+        isSaving =
+            false;
+
+
+        saveBtn.disabled =
+            false;
+
 
         saveBtn.innerHTML =
             "Save Repair Order";
 
     }
+
+}
+
+
+// ==========================================
+// LOGOUT
+// ==========================================
+
+function logout() {
+
+    console.log(
+        "Leader logout triggered."
+    );
+
+
+    auth.signOut()
+
+        .then(() => {
+
+            // --------------------------------
+            // Remove stored login
+            // --------------------------------
+
+            localStorage.removeItem(
+                "uid"
+            );
+
+
+            localStorage.removeItem(
+                "labourAppInstalled"
+            );
+
+
+            // --------------------------------
+            // Go to login
+            // --------------------------------
+
+            window.location.replace(
+                "../auth/loginindex.html"
+            );
+
+        })
+
+        .catch((error) => {
+
+            console.error(
+                "Logout error:",
+                error
+            );
+
+
+            alert(
+                "Unable to logout. Please try again."
+            );
+
+        });
 
 }

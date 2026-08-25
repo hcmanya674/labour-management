@@ -20,7 +20,6 @@ document.addEventListener("DOMContentLoaded", async function () {
 // ======================================================
 // CREATE LEADER MANAGEMENT CONTENT
 // ======================================================
-
 function loadLeaderPage() {
 
     const app = document.getElementById("app");
@@ -29,7 +28,6 @@ function loadLeaderPage() {
         console.error("App container not found.");
         return;
     }
-
 
     app.innerHTML = `
 
@@ -48,33 +46,23 @@ function loadLeaderPage() {
                 style="text-transform:uppercase"
             >
 
-
-            <label>Email</label>
-
-            <input
-                type="email"
-                id="leaderEmail"
-                placeholder="Enter Email"
-            >
-
-
-            <label>Initial Password</label>
-
-            <input
-                type="password"
-                id="leaderPassword"
-                placeholder="Enter Initial Password"
-            >
-
-
             <label>Phone Number</label>
 
             <input
                 type="text"
                 id="leaderPhone"
-                placeholder="Enter Phone Number"
+                placeholder="Enter 10-digit Phone Number"
+                maxlength="10"
+                inputmode="numeric"
             >
 
+            <label>Password</label>
+
+            <input
+                type="password"
+                id="leaderPassword"
+                placeholder="Enter Leader Password"
+            >
 
             <label>Region</label>
 
@@ -86,7 +74,6 @@ function loadLeaderPage() {
 
             </select>
 
-
             <br>
 
             <button
@@ -96,7 +83,6 @@ function loadLeaderPage() {
                 Create Leader
             </button>
 
-
             <div
                 id="leaderMessage"
                 style="color:red;font-weight:bold;margin-top:5px;"
@@ -104,28 +90,16 @@ function loadLeaderPage() {
 
         </div>
 
-
         <br>
-
-
-        <!-- ============================= -->
-        <!-- SEARCH -->
-        <!-- ============================= -->
 
         <input
             type="text"
             id="searchLeader"
-            placeholder="Search Name, Email, Phone or Region"
+            placeholder="Search Name, Phone or Region"
         >
 
-
         <br>
         <br>
-
-
-        <!-- ============================= -->
-        <!-- LEADER TABLE -->
-        <!-- ============================= -->
 
         <table id="leaderTable">
 
@@ -134,64 +108,34 @@ function loadLeaderPage() {
                 <tr>
 
                     <th>Name</th>
-
-                    <th>Email</th>
-
                     <th>Phone</th>
-
                     <th>Region</th>
-
                     <th>Status</th>
-
                     <th>Edit</th>
-
                     <th>Deactivate</th>
-
                     <th>Delete</th>
 
                 </tr>
 
             </thead>
 
-
-            <tbody>
-
-            </tbody>
+            <tbody></tbody>
 
         </table>
 
     `;
-
-
 }
 
 
-
 // ======================================================
-// CREATE LEADER
+// CREATE / UPDATE LEADER
 // ======================================================
 
 async function saveLeader() {
 
-    const name =
-        document.getElementById("leaderName").value.trim();
-
-    const email =
-        document.getElementById("leaderEmail").value.trim();
-
-    const password =
-        document.getElementById("leaderPassword").value.trim();
-
-    const phone =
-        document.getElementById("leaderPhone").value.trim();
-
-    const region =
-        document.getElementById("leaderRegion").value;
-
-
-    // ==============================================
-    // IF EDIT MODE
-    // ==============================================
+    // ==========================================
+    // EDIT MODE
+    // ==========================================
 
     if (editLeaderId) {
 
@@ -202,24 +146,118 @@ async function saveLeader() {
     }
 
 
-    // ==============================================
+    // ==========================================
+    // GET VALUES
+    // ==========================================
+
+    const name =
+        document.getElementById("leaderName")
+            .value
+            .trim()
+            .toUpperCase();
+
+    const phone =
+        document.getElementById("leaderPhone")
+            .value
+            .trim();
+
+    const password =
+        document.getElementById("leaderPassword")
+            .value
+            .trim();
+
+    const region =
+        document.getElementById("leaderRegion")
+            .value
+            .trim();
+
+
+    // ==========================================
+    // DEBUG
+    // ==========================================
+
+    console.log("========== CREATE LEADER ==========");
+    console.log("Name:", name);
+    console.log("Phone:", phone);
+    console.log(
+        "Password:",
+        password ? "ENTERED" : "EMPTY"
+    );
+    console.log("Region:", region);
+    console.log("==================================");
+
+
+    // ==========================================
     // VALIDATION
-    // ==============================================
+    // ==========================================
 
-    if (
-        !name ||
-        !email ||
-        !password ||
-        !phone ||
-        !region
-    ) {
+    if (!name) {
 
-        alert("Please fill all fields.");
+        alert("Please enter Leader Name.");
 
         return;
-
     }
 
+
+    if (!phone) {
+
+        alert("Please enter Phone Number.");
+
+        return;
+    }
+
+
+    if (!/^[0-9]{10}$/.test(phone)) {
+
+        alert(
+            "Phone Number must contain exactly 10 digits."
+        );
+
+        return;
+    }
+
+
+    if (!password) {
+
+        alert("Please enter Password.");
+
+        return;
+    }
+
+
+    if (password.length < 6) {
+
+        alert(
+            "Password must contain at least 6 characters."
+        );
+
+        return;
+    }
+
+
+    if (!region) {
+
+        alert("Please select Region.");
+
+        return;
+    }
+
+
+    // ==========================================
+    // DISABLE BUTTON
+    // ==========================================
+
+    const saveBtn =
+        document.getElementById("saveLeaderBtn");
+
+    saveBtn.disabled = true;
+
+    saveBtn.innerHTML = "Creating...";
+
+
+    // ==========================================
+    // SEND TO BACKEND
+    // ==========================================
 
     try {
 
@@ -238,11 +276,9 @@ async function saveLeader() {
 
                         name: name,
 
-                        email: email,
+                        phone: phone,
 
                         password: password,
-
-                        phone: phone,
 
                         region: region
 
@@ -252,33 +288,63 @@ async function saveLeader() {
             );
 
 
+        console.log(
+            "Backend status:",
+            response.status
+        );
+
+
         const result =
             await response.json();
 
 
+        console.log(
+            "Backend response:",
+            result
+        );
+
+
+        // ==========================================
+        // SUCCESS
+        // ==========================================
+
         if (result.success) {
 
-            alert("Leader Created Successfully!");
+            alert(
+                "Leader Created Successfully!"
+            );
 
 
             // Clear form
 
-            document.getElementById("leaderName").value = "";
+            document.getElementById(
+                "leaderName"
+            ).value = "";
 
-            document.getElementById("leaderEmail").value = "";
+            document.getElementById(
+                "leaderPhone"
+            ).value = "";
 
-            document.getElementById("leaderPassword").value = "";
+            document.getElementById(
+                "leaderPassword"
+            ).value = "";
 
-            document.getElementById("leaderPhone").value = "";
-
-            document.getElementById("leaderRegion").value = "";
+            document.getElementById(
+                "leaderRegion"
+            ).value = "";
 
 
             // Reload table
 
-            loadLeaders();
+            await loadLeaders();
 
         }
+
+
+        // ==========================================
+        // ERROR
+        // ==========================================
+
         else {
 
             alert(
@@ -289,6 +355,7 @@ async function saveLeader() {
         }
 
     }
+
     catch (error) {
 
         console.error(
@@ -296,14 +363,24 @@ async function saveLeader() {
             error
         );
 
-        alert("Server Error");
+        alert(
+            "Server Error:\n\n" +
+            error.message
+        );
+
+    }
+
+
+    finally {
+
+        saveBtn.disabled = false;
+
+        saveBtn.innerHTML =
+            "Create Leader";
 
     }
 
 }
-
-
-
 // ======================================================
 // UPDATE LEADER
 // ======================================================
@@ -355,8 +432,6 @@ async function updateLeader() {
 
         document.getElementById("leaderName").value = "";
 
-        document.getElementById("leaderEmail").value = "";
-
         document.getElementById("leaderPhone").value = "";
 
         document.getElementById("leaderPassword").value = "";
@@ -392,7 +467,6 @@ async function updateLeader() {
 }
 
 
-
 // ======================================================
 // LOAD ACTIVE REGIONS
 // ======================================================
@@ -402,7 +476,6 @@ async function loadRegions() {
     const regionSelect =
         document.getElementById("leaderRegion");
 
-
     if (!regionSelect) {
 
         console.error(
@@ -410,13 +483,15 @@ async function loadRegions() {
         );
 
         return;
-
     }
 
+    // Clear existing options
 
-    regionSelect.innerHTML =
-        `<option value="">Select Region</option>`;
-
+    regionSelect.innerHTML = `
+        <option value="">
+            Select Region
+        </option>
+    `;
 
     try {
 
@@ -429,23 +504,28 @@ async function loadRegions() {
 
         snapshot.forEach(function (doc) {
 
-            const region =
-                doc.data();
+            const region = doc.data();
 
+            // IMPORTANT:
+            // Use Firestore document ID
+            // instead of region.regionId
 
             regionSelect.innerHTML += `
 
-                <option value="${region.regionId}">
-
+                <option value="${doc.id}">
                     ${region.regionName}
-
                 </option>
 
             `;
 
         });
 
+        console.log(
+            "Regions loaded successfully."
+        );
+
     }
+
     catch (error) {
 
         console.error(
@@ -456,8 +536,6 @@ async function loadRegions() {
     }
 
 }
-
-
 
 // ======================================================
 // LOAD LEADERS
@@ -552,12 +630,6 @@ async function loadLeaders() {
                     <td>
                         ${leader.name || ""}
                     </td>
-
-
-                    <td>
-                        ${leader.email || ""}
-                    </td>
-
 
                     <td>
                         ${leader.phone || ""}
@@ -696,13 +768,6 @@ async function editLeader(uid) {
             "leaderName"
         ).value =
             leader.name || "";
-
-
-        document.getElementById(
-            "leaderEmail"
-        ).value =
-            leader.email || "";
-
 
         document.getElementById(
             "leaderPhone"
@@ -863,21 +928,16 @@ function attachSearch() {
                     row.cells[0];
 
 
-                const emailCell =
+                const phoneCell =
                     row.cells[1];
 
 
-                const phoneCell =
-                    row.cells[2];
-
-
                 const regionCell =
-                    row.cells[3];
+                    row.cells[2];
 
 
                 if (
                     !nameCell ||
-                    !emailCell ||
                     !phoneCell ||
                     !regionCell
                 ) {
@@ -894,11 +954,6 @@ function attachSearch() {
                 const name =
                     nameCell.textContent;
 
-
-                const email =
-                    emailCell.textContent;
-
-
                 const phone =
                     phoneCell.textContent;
 
@@ -914,11 +969,6 @@ function attachSearch() {
                 nameCell.textContent =
                     name;
 
-
-                emailCell.textContent =
-                    email;
-
-
                 phoneCell.textContent =
                     phone;
 
@@ -933,12 +983,6 @@ function attachSearch() {
 
                 const nameMatch =
                     name
-                        .toLowerCase()
-                        .includes(filter);
-
-
-                const emailMatch =
-                    email
                         .toLowerCase()
                         .includes(filter);
 
@@ -975,7 +1019,6 @@ function attachSearch() {
 
                 if (
                     nameMatch ||
-                    emailMatch ||
                     phoneMatch ||
                     regionMatch
                 ) {
@@ -1010,29 +1053,6 @@ function attachSearch() {
 
                         nameCell.innerHTML =
                             name.replace(
-                                regex,
-                                function (match) {
-
-                                    return `
-                                        <span
-                                            style="background:yellow;"
-                                        >
-                                            ${match}
-                                        </span>
-                                    `;
-
-                                }
-                            );
-
-                    }
-
-
-                    // Highlight email
-
-                    if (emailMatch) {
-
-                        emailCell.innerHTML =
-                            email.replace(
                                 regex,
                                 function (match) {
 
