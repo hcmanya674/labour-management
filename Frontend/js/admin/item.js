@@ -1,5 +1,6 @@
 // =====================================================
 // ITEM CODE MANAGEMENT
+// ITEM CODE TYPE: NUMBER
 // =====================================================
 
 
@@ -9,21 +10,28 @@
 
 loadItems();
 
+
 function initializePage() {
+
     loadItems();
+
 }
 
 
 // =====================================================
 // GENERATE NEXT ITEM CODE
 //
-// Format:
-// ITEM001
-// ITEM002
-// ITEM003
+// New format:
+//
+// 1
+// 2
+// 3
+// 4
+// 5
 // ...
-// ITEM010
-// ITEM011
+//
+// Firestore field:
+// itemCode: 1
 // =====================================================
 
 async function generateNextItemCode() {
@@ -31,117 +39,53 @@ async function generateNextItemCode() {
     try {
 
         const snapshot =
-            await db.collection("itemcodes").get();
+            await db
+                .collection(
+                    "itemcodes"
+                )
+                .get();
+
 
         let highestNumber = 0;
 
 
         snapshot.forEach(doc => {
 
-            const data = doc.data();
+            const data =
+                doc.data();
 
 
-            // -------------------------------------------------
-            // FIRST: CHECK itemCode FIELD
-            // -------------------------------------------------
+            // =============================================
+            // ITEM CODE MUST BE NUMBER
+            // =============================================
 
-            let code =
-                String(data.itemCode || "")
-                    .trim()
-                    .toUpperCase();
-
-
-            // -------------------------------------------------
-            // IF OLD DATABASE HAS NUMBER
-            //
-            // Example:
-            // itemCode: 5
-            //
-            // Treat it as ITEM005
-            // -------------------------------------------------
-
-            if (/^\d+$/.test(code)) {
-
-                const number =
-                    parseInt(code, 10);
-
-                if (number > highestNumber) {
-                    highestNumber = number;
-                }
-
-            }
+            const itemCode =
+                Number(
+                    data.itemCode
+                );
 
 
-            // -------------------------------------------------
-            // NORMAL FORMAT
-            //
-            // ITEM005
-            // ITEM013
-            // ITEM100
-            // -------------------------------------------------
+            if (
+                Number.isInteger(
+                    itemCode
+                ) &&
+                itemCode > highestNumber
+            ) {
 
-            const match =
-                code.match(/^ITEM\s*(\d+)$/);
-
-            if (match) {
-
-                const number =
-                    parseInt(match[1], 10);
-
-                if (number > highestNumber) {
-                    highestNumber = number;
-                }
-
-            }
-
-
-            // -------------------------------------------------
-            // ALSO CHECK DOCUMENT ID
-            // -------------------------------------------------
-
-            const docId =
-                String(doc.id || "")
-                    .trim()
-                    .toUpperCase();
-
-
-            const docMatch =
-                docId.match(/^ITEM\s*(\d+)$/);
-
-            if (docMatch) {
-
-                const number =
-                    parseInt(docMatch[1], 10);
-
-                if (number > highestNumber) {
-                    highestNumber = number;
-                }
+                highestNumber =
+                    itemCode;
 
             }
 
         });
 
 
-        // -------------------------------------------------
-        // NEXT NUMBER
-        // -------------------------------------------------
-
-        const nextNumber =
-            highestNumber + 1;
-
-
-        // -------------------------------------------------
-        // CREATE CODE
-        //
-        // 1   -> ITEM001
-        // 9   -> ITEM009
-        // 10  -> ITEM010
-        // 100 -> ITEM100
-        // -------------------------------------------------
+        // =============================================
+        // NEXT ITEM CODE
+        // =============================================
 
         const nextCode =
-            "ITEM" +
-            String(nextNumber).padStart(3, "0");
+            highestNumber + 1;
 
 
         console.log(
@@ -153,6 +97,7 @@ async function generateNextItemCode() {
         return nextCode;
 
     }
+
     catch (error) {
 
         console.error(
@@ -180,10 +125,12 @@ async function saveItem() {
         // =================================================
 
         const description =
-            document.getElementById("itemDescription")
-                .value
-                .trim()
-                .toUpperCase();
+            document.getElementById(
+                "itemDescription"
+            )
+            .value
+            .trim()
+            .toUpperCase();
 
 
         // =================================================
@@ -191,9 +138,11 @@ async function saveItem() {
         // =================================================
 
         const billingInput =
-            document.getElementById("itemBillingAmount")
-                .value
-                .trim();
+            document.getElementById(
+                "itemBillingAmount"
+            )
+            .value
+            .trim();
 
 
         // =================================================
@@ -201,22 +150,27 @@ async function saveItem() {
         // =================================================
 
         const incentiveInput =
-            document.getElementById("itemIncentiveAmount")
-                .value
-                .trim();
+            document.getElementById(
+                "itemIncentiveAmount"
+            )
+            .value
+            .trim();
 
 
         // =================================================
         // DESCRIPTION VALIDATION
         // =================================================
 
-        if (description === "") {
+        if (
+            description === ""
+        ) {
 
             alert(
                 "Please enter Item Description."
             );
 
             return;
+
         }
 
 
@@ -224,18 +178,23 @@ async function saveItem() {
         // BILLING VALIDATION
         // =================================================
 
-        if (billingInput === "") {
+        if (
+            billingInput === ""
+        ) {
 
             alert(
                 "Please enter Billing Amount."
             );
 
             return;
+
         }
 
 
         const billingAmount =
-            Number(billingInput);
+            Number(
+                billingInput
+            );
 
 
         if (
@@ -248,26 +207,33 @@ async function saveItem() {
             );
 
             return;
+
         }
 
 
         // =================================================
         // INCENTIVE
-        //
         // EMPTY = 0
         // =================================================
 
-        let incentiveAmount = 0;
+        let incentiveAmount =
+            0;
 
 
-        if (incentiveInput !== "") {
+        if (
+            incentiveInput !== ""
+        ) {
 
             incentiveAmount =
-                Number(incentiveInput);
+                Number(
+                    incentiveInput
+                );
 
 
             if (
-                isNaN(incentiveAmount) ||
+                isNaN(
+                    incentiveAmount
+                ) ||
                 incentiveAmount < 0
             ) {
 
@@ -276,6 +242,7 @@ async function saveItem() {
                 );
 
                 return;
+
             }
 
         }
@@ -295,6 +262,7 @@ async function saveItem() {
             );
 
             return;
+
         }
 
 
@@ -303,10 +271,15 @@ async function saveItem() {
         // =================================================
 
         const snapshot =
-            await db.collection("itemcodes").get();
+            await db
+                .collection(
+                    "itemcodes"
+                )
+                .get();
 
 
-        let duplicateDescription = false;
+        let duplicateDescription =
+            false;
 
 
         snapshot.forEach(doc => {
@@ -328,20 +301,24 @@ async function saveItem() {
                 description
             ) {
 
-                duplicateDescription = true;
+                duplicateDescription =
+                    true;
 
             }
 
         });
 
 
-        if (duplicateDescription) {
+        if (
+            duplicateDescription
+        ) {
 
             alert(
                 "Item Description already exists."
             );
 
             return;
+
         }
 
 
@@ -363,19 +340,29 @@ async function saveItem() {
         // EXTRA DUPLICATE SAFETY CHECK
         // =================================================
 
-        const codeDoc =
-            await db.collection("itemcodes")
-                .doc(code)
+        const codeSnapshot =
+            await db
+                .collection(
+                    "itemcodes"
+                )
+                .where(
+                    "itemCode",
+                    "==",
+                    code
+                )
                 .get();
 
 
-        if (codeDoc.exists) {
+        if (
+            !codeSnapshot.empty
+        ) {
 
             alert(
                 "Generated Item Code already exists.\n\nPlease try again."
             );
 
             return;
+
         }
 
 
@@ -383,13 +370,22 @@ async function saveItem() {
         // SAVE TO FIRESTORE
         // =================================================
 
-        await db.collection("itemcodes")
-            .doc(code)
+        await db
+            .collection(
+                "itemcodes"
+            )
+            .doc(
+                String(code)
+            )
             .set({
 
-                // IMPORTANT:
-                // Store as STRING
-                itemCode: code,
+                // =========================================
+                // IMPORTANT
+                // FIRESTORE NUMBER
+                // =========================================
+
+                itemCode:
+                    code,
 
                 description:
                     description,
@@ -397,7 +393,6 @@ async function saveItem() {
                 billingAmount:
                     billingAmount,
 
-                // Empty incentive = 0
                 incentiveAmount:
                     incentiveAmount,
 
@@ -441,8 +436,8 @@ async function saveItem() {
             "itemIncentiveAmount"
         ).value = "";
 
-
     }
+
     catch (error) {
 
         console.error(
@@ -468,7 +463,9 @@ async function saveItem() {
 function loadItems() {
 
     const table =
-        document.getElementById("itemTable");
+        document.getElementById(
+            "itemTable"
+        );
 
 
     if (!table) {
@@ -478,369 +475,419 @@ function loadItems() {
         );
 
         return;
+
     }
 
 
-    db.collection("itemcodes")
-        .onSnapshot((snapshot) => {
+    db.collection(
+        "itemcodes"
+    )
+    .onSnapshot(
+        (snapshot) => {
 
+            table.innerHTML = `
 
-        table.innerHTML = `
+                <tr>
 
-        <tr>
+                    <th>Item Code</th>
 
-            <th>Item Code</th>
+                    <th>Description</th>
 
-            <th>Description</th>
+                    <th>Billing Amount</th>
 
-            <th>Billing Amount</th>
+                    <th>Incentive Amount</th>
 
-            <th>Incentive Amount</th>
+                    <th>Status</th>
 
-            <th>Status</th>
+                    <th>Edit</th>
 
-            <th>Edit</th>
+                    <th>Edit Billing</th>
 
-            <th>Edit Billing</th>
+                    <th>Edit Incentive</th>
 
-            <th>Edit Incentive</th>
+                    <th>Action</th>
 
-            <th>Action</th>
+                    <th>Delete</th>
 
-            <th>Delete</th>
+                </tr>
 
-        </tr>
+            `;
 
-        `;
 
+            // =============================================
+            // SORT ITEMS NUMERICALLY
+            // =============================================
 
-        snapshot.forEach((doc) => {
+            const items =
+                [];
 
-            const data =
-                doc.data();
 
+            snapshot.forEach(doc => {
 
-            const row =
-                table.insertRow();
+                const data =
+                    doc.data();
 
 
-            // =================================================
-            // ITEM CODE
-            // =================================================
-
-            const codeCell =
-                row.insertCell(0);
-
-
-            /*
-             * New records:
-             * data.itemCode = "ITEM005"
-             *
-             * Old records:
-             * data.itemCode = 5
-             *
-             * Convert old numeric records for display.
-             */
-
-            let displayCode =
-                String(
-                    data.itemCode ?? ""
-                )
-                .trim()
-                .toUpperCase();
-
-
-            if (/^\d+$/.test(displayCode)) {
-
-                displayCode =
-                    "ITEM" +
-                    displayCode.padStart(3, "0");
-
-            }
-
-
-            if (
-                /^ITEM\s+\d+$/.test(displayCode)
-            ) {
-
-                const number =
-                    displayCode
-                        .replace(/\D/g, "");
-
-
-                displayCode =
-                    "ITEM" +
-                    number.padStart(3, "0");
-
-            }
-
-
-            // If itemCode field is missing,
-            // use document ID.
-
-            if (displayCode === "") {
-
-                displayCode =
-                    String(doc.id)
-                        .trim()
-                        .toUpperCase();
-
-            }
-
-
-            codeCell.textContent =
-                displayCode;
-
-
-            // =================================================
-            // DESCRIPTION
-            // =================================================
-
-            row.insertCell(1)
-                .textContent =
-                data.description || "";
-
-
-            // =================================================
-            // BILLING AMOUNT
-            // =================================================
-
-            row.insertCell(2)
-                .textContent =
-                "₹" +
-                Number(
-                    data.billingAmount || 0
-                ).toLocaleString("en-IN");
-
-
-            // =================================================
-            // INCENTIVE AMOUNT
-            // =================================================
-
-            row.insertCell(3)
-                .textContent =
-                "₹" +
-                Number(
-                    data.incentiveAmount || 0
-                ).toLocaleString("en-IN");
-
-
-            // =================================================
-            // STATUS
-            // =================================================
-
-            row.insertCell(4)
-                .textContent =
-                data.active
-                    ? "Active"
-                    : "Inactive";
-
-
-            // =================================================
-            // EDIT DESCRIPTION
-            // =================================================
-
-            const editCell =
-                row.insertCell(5);
-
-
-            const editBtn =
-                document.createElement("button");
-
-
-            editBtn.textContent =
-                "Edit";
-
-
-            editBtn.onclick =
-                function () {
-
-                    editItem(
-                        doc.id,
-                        data.description
+                const itemCode =
+                    Number(
+                        data.itemCode
                     );
 
-                };
 
+                if (
+                    !Number.isInteger(
+                        itemCode
+                    )
+                ) {
 
-            editCell.appendChild(
-                editBtn
-            );
-
-
-            // =================================================
-            // EDIT BILLING
-            // =================================================
-
-            const billingCell =
-                row.insertCell(6);
-
-
-            const billingBtn =
-                document.createElement("button");
-
-
-            billingBtn.textContent =
-                "Edit Billing";
-
-
-            billingBtn.onclick =
-                function () {
-
-                    editBilling(
+                    console.warn(
+                        "Skipping invalid itemCode:",
                         doc.id,
-                        data.billingAmount || 0
+                        data.itemCode
                     );
 
-                };
+                    return;
+
+                }
 
 
-            billingCell.appendChild(
-                billingBtn
+                items.push({
+
+                    docId:
+                        doc.id,
+
+                    data:
+                        data,
+
+                    itemCode:
+                        itemCode
+
+                });
+
+            });
+
+
+            items.sort(
+                (a, b) =>
+                    a.itemCode -
+                    b.itemCode
             );
 
 
-            // =================================================
-            // EDIT INCENTIVE
-            // =================================================
+            // =============================================
+            // CREATE ROWS
+            // =============================================
 
-            const incentiveCell =
-                row.insertCell(7);
+            items.forEach(
+                item => {
 
-
-            const incentiveBtn =
-                document.createElement("button");
-
-
-            incentiveBtn.textContent =
-                "Edit Incentive";
+                    const docId =
+                        item.docId;
 
 
-            incentiveBtn.onclick =
-                function () {
+                    const data =
+                        item.data;
 
-                    editIncentive(
-                        doc.id,
-                        data.incentiveAmount || 0,
-                        data.billingAmount || 0
+
+                    const itemCode =
+                        item.itemCode;
+
+
+                    const row =
+                        table.insertRow();
+
+
+                    // =================================================
+                    // ITEM CODE
+                    // =================================================
+
+                    row.insertCell(0)
+                        .textContent =
+                        itemCode;
+
+
+                    // =================================================
+                    // DESCRIPTION
+                    // =================================================
+
+                    row.insertCell(1)
+                        .textContent =
+                        data.description || "";
+
+
+                    // =================================================
+                    // BILLING AMOUNT
+                    // =================================================
+
+                    row.insertCell(2)
+                        .textContent =
+                        "₹" +
+                        Number(
+                            data.billingAmount || 0
+                        )
+                        .toLocaleString(
+                            "en-IN"
+                        );
+
+
+                    // =================================================
+                    // INCENTIVE AMOUNT
+                    // =================================================
+
+                    row.insertCell(3)
+                        .textContent =
+                        "₹" +
+                        Number(
+                            data.incentiveAmount || 0
+                        )
+                        .toLocaleString(
+                            "en-IN"
+                        );
+
+
+                    // =================================================
+                    // STATUS
+                    // =================================================
+
+                    row.insertCell(4)
+                        .textContent =
+                        data.active
+                            ? "Active"
+                            : "Inactive";
+
+
+                    // =================================================
+                    // EDIT DESCRIPTION
+                    // =================================================
+
+                    const editCell =
+                        row.insertCell(5);
+
+
+                    const editBtn =
+                        document.createElement(
+                            "button"
+                        );
+
+
+                    editBtn.textContent =
+                        "Edit";
+
+
+                    editBtn.onclick =
+                        function () {
+
+                            editItem(
+                                docId,
+                                data.description
+                            );
+
+                        };
+
+
+                    editCell.appendChild(
+                        editBtn
                     );
 
-                };
+
+                    // =================================================
+                    // EDIT BILLING
+                    // =================================================
+
+                    const billingCell =
+                        row.insertCell(6);
 
 
-            incentiveCell.appendChild(
-                incentiveBtn
-            );
+                    const billingBtn =
+                        document.createElement(
+                            "button"
+                        );
 
 
-            // =================================================
-            // ACTION
-            // =================================================
-
-            const actionCell =
-                row.insertCell(8);
+                    billingBtn.textContent =
+                        "Edit Billing";
 
 
-            const actionBtn =
-                document.createElement("button");
+                    billingBtn.onclick =
+                        function () {
+
+                            editBilling(
+                                docId,
+                                data.billingAmount || 0
+                            );
+
+                        };
 
 
-            if (data.active) {
-
-                actionBtn.textContent =
-                    "Deactivate";
-
-
-                actionBtn.style.background =
-                    "#12a10d";
-
-
-                actionBtn.style.color =
-                    "white";
-
-
-                actionBtn.onclick =
-                    function () {
-
-                        deleteItem(doc.id);
-
-                    };
-
-            }
-            else {
-
-                actionBtn.textContent =
-                    "Activate";
-
-
-                actionBtn.style.background =
-                    "#e53935";
-
-
-                actionBtn.style.color =
-                    "white";
-
-
-                actionBtn.onclick =
-                    function () {
-
-                        activateItem(doc.id);
-
-                    };
-
-            }
-
-
-            actionCell.appendChild(
-                actionBtn
-            );
-
-
-            // =================================================
-            // DELETE
-            // =================================================
-
-            const deleteCell =
-                row.insertCell(9);
-
-
-            const deleteBtn =
-                document.createElement("button");
-
-
-            deleteBtn.textContent =
-                "Delete";
-
-
-            deleteBtn.style.background =
-                "#d32f2f";
-
-
-            deleteBtn.style.color =
-                "white";
-
-
-            deleteBtn.onclick =
-                function () {
-
-                    deleteItemCode(
-                        doc.id,
-                        displayCode
+                    billingCell.appendChild(
+                        billingBtn
                     );
 
-                };
+
+                    // =================================================
+                    // EDIT INCENTIVE
+                    // =================================================
+
+                    const incentiveCell =
+                        row.insertCell(7);
 
 
-            deleteCell.appendChild(
-                deleteBtn
+                    const incentiveBtn =
+                        document.createElement(
+                            "button"
+                        );
+
+
+                    incentiveBtn.textContent =
+                        "Edit Incentive";
+
+
+                    incentiveBtn.onclick =
+                        function () {
+
+                            editIncentive(
+                                docId,
+                                data.incentiveAmount || 0,
+                                data.billingAmount || 0
+                            );
+
+                        };
+
+
+                    incentiveCell.appendChild(
+                        incentiveBtn
+                    );
+
+
+                    // =================================================
+                    // ACTION
+                    // =================================================
+
+                    const actionCell =
+                        row.insertCell(8);
+
+
+                    const actionBtn =
+                        document.createElement(
+                            "button"
+                        );
+
+
+                    if (
+                        data.active
+                    ) {
+
+                        actionBtn.textContent =
+                            "Deactivate";
+
+
+                        actionBtn.style.background =
+                            "#12a10d";
+
+
+                        actionBtn.style.color =
+                            "white";
+
+
+                        actionBtn.onclick =
+                            function () {
+
+                                deleteItem(
+                                    docId
+                                );
+
+                            };
+
+                    }
+
+                    else {
+
+                        actionBtn.textContent =
+                            "Activate";
+
+
+                        actionBtn.style.background =
+                            "#e53935";
+
+
+                        actionBtn.style.color =
+                            "white";
+
+
+                        actionBtn.onclick =
+                            function () {
+
+                                activateItem(
+                                    docId
+                                );
+
+                            };
+
+                    }
+
+
+                    actionCell.appendChild(
+                        actionBtn
+                    );
+
+
+                    // =================================================
+                    // DELETE
+                    // =================================================
+
+                    const deleteCell =
+                        row.insertCell(9);
+
+
+                    const deleteBtn =
+                        document.createElement(
+                            "button"
+                        );
+
+
+                    deleteBtn.textContent =
+                        "Delete";
+
+
+                    deleteBtn.style.background =
+                        "#d32f2f";
+
+
+                    deleteBtn.style.color =
+                        "white";
+
+
+                    deleteBtn.onclick =
+                        function () {
+
+                            deleteItemCode(
+                                docId,
+                                itemCode
+                            );
+
+                        };
+
+
+                    deleteCell.appendChild(
+                        deleteBtn
+                    );
+
+                }
             );
 
-        });
 
+            attachSearch();
 
-        attachSearch();
+        },
+        (error) => {
 
-    });
+            console.error(
+                "Error loading items:",
+                error
+            );
+
+        }
+    );
 
 }
 
@@ -849,7 +896,9 @@ function loadItems() {
 // DEACTIVATE
 // =====================================================
 
-function deleteItem(id) {
+async function deleteItem(
+    id
+) {
 
     if (
         !confirm(
@@ -862,13 +911,35 @@ function deleteItem(id) {
     }
 
 
-    db.collection("itemcodes")
-        .doc(id)
-        .update({
+    try {
 
-            active: false
+        await db
+            .collection(
+                "itemcodes"
+            )
+            .doc(id)
+            .update({
 
-        });
+                active:
+                    false
+
+            });
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Deactivate error:",
+            error
+        );
+
+        alert(
+            "Unable to deactivate item.\n\n" +
+            error.message
+        );
+
+    }
 
 }
 
@@ -877,7 +948,9 @@ function deleteItem(id) {
 // ACTIVATE
 // =====================================================
 
-function activateItem(id) {
+async function activateItem(
+    id
+) {
 
     if (
         !confirm(
@@ -890,13 +963,35 @@ function activateItem(id) {
     }
 
 
-    db.collection("itemcodes")
-        .doc(id)
-        .update({
+    try {
 
-            active: true
+        await db
+            .collection(
+                "itemcodes"
+            )
+            .doc(id)
+            .update({
 
-        });
+                active:
+                    true
+
+            });
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Activate error:",
+            error
+        );
+
+        alert(
+            "Unable to activate item.\n\n" +
+            error.message
+        );
+
+    }
 
 }
 
@@ -950,11 +1045,15 @@ async function editItem(
     // =================================================
 
     const snapshot =
-        await db.collection("itemcodes")
+        await db
+            .collection(
+                "itemcodes"
+            )
             .get();
 
 
-    let duplicate = false;
+    let duplicate =
+        false;
 
 
     snapshot.forEach(doc => {
@@ -965,17 +1064,20 @@ async function editItem(
 
             const existing =
                 String(
-                    doc.data().description || ""
+                    doc.data()
+                        .description || ""
                 )
                 .trim()
                 .toUpperCase();
 
 
             if (
-                existing === description
+                existing ===
+                description
             ) {
 
-                duplicate = true;
+                duplicate =
+                    true;
 
             }
 
@@ -984,7 +1086,9 @@ async function editItem(
     });
 
 
-    if (duplicate) {
+    if (
+        duplicate
+    ) {
 
         alert(
             "Item Description already exists."
@@ -997,7 +1101,10 @@ async function editItem(
 
     try {
 
-        await db.collection("itemcodes")
+        await db
+            .collection(
+                "itemcodes"
+            )
             .doc(id)
             .update({
 
@@ -1012,9 +1119,12 @@ async function editItem(
         );
 
     }
+
     catch (error) {
 
-        console.error(error);
+        console.error(
+            error
+        );
 
         alert(
             "Unable to update description.\n\n" +
@@ -1058,7 +1168,9 @@ async function editBilling(
 
 
     if (
-        isNaN(billing) ||
+        isNaN(
+            billing
+        ) ||
         billing < 0
     ) {
 
@@ -1073,7 +1185,10 @@ async function editBilling(
 
     try {
 
-        await db.collection("itemcodes")
+        await db
+            .collection(
+                "itemcodes"
+            )
             .doc(id)
             .update({
 
@@ -1088,9 +1203,12 @@ async function editBilling(
         );
 
     }
+
     catch (error) {
 
-        console.error(error);
+        console.error(
+            error
+        );
 
         alert(
             "Unable to update billing amount.\n\n" +
@@ -1120,7 +1238,6 @@ async function editIncentive(
         );
 
 
-    // Cancel
     if (
         newIncentive === null
     ) {
@@ -1134,11 +1251,8 @@ async function editIncentive(
         newIncentive.trim();
 
 
-    // =================================================
-    // EMPTY = ZERO
-    // =================================================
-
-    let incentive = 0;
+    let incentive =
+        0;
 
 
     if (
@@ -1152,7 +1266,9 @@ async function editIncentive(
 
 
         if (
-            isNaN(incentive) ||
+            isNaN(
+                incentive
+            ) ||
             incentive < 0
         ) {
 
@@ -1167,10 +1283,6 @@ async function editIncentive(
     }
 
 
-    // =================================================
-    // CHECK BILLING
-    // =================================================
-
     const billing =
         Number(
             currentBilling
@@ -1178,7 +1290,8 @@ async function editIncentive(
 
 
     if (
-        incentive > billing
+        incentive >
+        billing
     ) {
 
         alert(
@@ -1192,7 +1305,10 @@ async function editIncentive(
 
     try {
 
-        await db.collection("itemcodes")
+        await db
+            .collection(
+                "itemcodes"
+            )
             .doc(id)
             .update({
 
@@ -1207,6 +1323,7 @@ async function editIncentive(
         );
 
     }
+
     catch (error) {
 
         console.error(
@@ -1255,7 +1372,6 @@ function attachSearch() {
         "keyup",
         function () {
 
-
             const filter =
                 this.value
                     .toLowerCase()
@@ -1268,7 +1384,8 @@ function attachSearch() {
                 );
 
 
-            let matchFound = false;
+            let matchFound =
+                false;
 
 
             rows.forEach(row => {
@@ -1292,13 +1409,17 @@ function attachSearch() {
                 const codeMatch =
                     codeText
                         .toLowerCase()
-                        .includes(filter);
+                        .includes(
+                            filter
+                        );
 
 
                 const descMatch =
                     descText
                         .toLowerCase()
-                        .includes(filter);
+                        .includes(
+                            filter
+                        );
 
 
                 if (
@@ -1321,9 +1442,11 @@ function attachSearch() {
                     row.style.display =
                         "";
 
-                    matchFound = true;
+                    matchFound =
+                        true;
 
                 }
+
                 else {
 
                     row.style.display =
@@ -1361,16 +1484,39 @@ function attachSearch() {
 // =====================================================
 // DELETE ITEM CODE
 // =====================================================
+// itemCode passed here is NUMBER
+// =====================================================
 
 async function deleteItemCode(
     itemId,
     itemCode
 ) {
 
+    const numericItemCode =
+        Number(
+            itemCode
+        );
+
+
+    if (
+        !Number.isInteger(
+            numericItemCode
+        )
+    ) {
+
+        alert(
+            "Invalid Item Code."
+        );
+
+        return;
+
+    }
+
+
     const confirmation =
         confirm(
 
-            `Are you sure you want to delete item "${itemCode}"?\n\n` +
+            `Are you sure you want to delete item "${numericItemCode}"?\n\n` +
 
             `Any active assignments for this item will also be removed.\n\n` +
 
@@ -1379,7 +1525,9 @@ async function deleteItemCode(
         );
 
 
-    if (!confirmation) {
+    if (
+        !confirmation
+    ) {
 
         return;
 
@@ -1390,18 +1538,22 @@ async function deleteItemCode(
 
         // =================================================
         // DELETE ASSIGNMENTS
+        //
+        // IMPORTANT:
+        // Firestore query uses NUMBER
         // =================================================
 
         const assignments =
-            await db.collection(
-                "leaderItemAssignments"
-            )
-            .where(
-                "itemCode",
-                "==",
-                itemCode
-            )
-            .get();
+            await db
+                .collection(
+                    "leaderItemAssignments"
+                )
+                .where(
+                    "itemCode",
+                    "==",
+                    numericItemCode
+                )
+                .get();
 
 
         const batch =
@@ -1424,10 +1576,13 @@ async function deleteItemCode(
         // =================================================
 
         const itemRef =
-            db.collection(
-                "itemcodes"
-            )
-            .doc(itemId);
+            db
+                .collection(
+                    "itemcodes"
+                )
+                .doc(
+                    itemId
+                );
 
 
         batch.delete(
@@ -1443,10 +1598,11 @@ async function deleteItemCode(
 
 
         alert(
-            `Item Code "${itemCode}" deleted successfully.`
+            `Item Code "${numericItemCode}" deleted successfully.`
         );
 
     }
+
     catch (error) {
 
         console.error(

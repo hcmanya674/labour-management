@@ -1,11 +1,10 @@
 // =====================================================
 // ADMIN - ASSIGN ITEMS TO LEADER
+// ITEM CODE TYPE: NUMBER
 // =====================================================
 
 let adminData = {};
-
 let leaders = {};
-
 let itemMap = {};
 
 
@@ -17,32 +16,36 @@ auth.onAuthStateChanged(async (user) => {
 
     if (!user) {
 
-        location =
-            "../../pages/auth/loginindex.html";
+        window.location.replace(
+            "../../pages/auth/loginindex.html"
+        );
 
         return;
-
     }
-
 
     try {
 
-        // ---------------------------------------------
-        // Load logged-in user
-        // ---------------------------------------------
+        console.log("Admin UID:", user.uid);
+
+
+        // =================================================
+        // LOAD ADMIN PROFILE
+        // =================================================
 
         const adminDoc =
-            await db.collection("users")
+            await db
+                .collection("users")
                 .doc(user.uid)
                 .get();
 
 
         if (!adminDoc.exists) {
 
-            alert("User record not found.");
+            alert(
+                "Admin user profile not found."
+            );
 
             return;
-
         }
 
 
@@ -56,40 +59,46 @@ auth.onAuthStateChanged(async (user) => {
         );
 
 
-        // ---------------------------------------------
-        // Check role
-        // ---------------------------------------------
+        // =================================================
+        // CHECK ADMIN ROLE
+        // =================================================
 
-        if (
-            adminData.role !== "admin"
-        ) {
+        if (adminData.role !== "admin") {
 
             alert(
                 "Access denied. Admin only."
             );
 
-            return;
+            await auth.signOut();
 
+            return;
         }
 
 
-        // ---------------------------------------------
-        // Load leaders
-        // ---------------------------------------------
+        // =================================================
+        // LOAD LEADERS
+        // =================================================
 
         await loadLeaders();
 
 
-        // ---------------------------------------------
-        // Load items
-        // ---------------------------------------------
+        // =================================================
+        // LOAD ACTIVE ITEMS
+        // =================================================
 
         await loadItems();
-         // ---------------------------------------------
-         // Load assignment overview
-        // ---------------------------------------------
+
+
+        // =================================================
+        // LOAD ASSIGNMENT OVERVIEW
+        // =================================================
+
         await loadAssignmentOverview();
 
+
+        console.log(
+            "Admin assignment page loaded successfully."
+        );
 
     }
 
@@ -101,7 +110,8 @@ auth.onAuthStateChanged(async (user) => {
         );
 
         alert(
-            "Unable to load assignment page."
+            "Unable to load assignment page.\n\n" +
+            error.message
         );
 
     }
@@ -121,88 +131,85 @@ async function loadLeaders() {
         );
 
 
-    try {
+    if (!select) {
 
-        const snapshot =
-            await db.collection("users")
-                .where(
-                    "role",
-                    "==",
-                    "leader"
-                )
-                .get();
+        throw new Error(
+            "leaderSelect element not found."
+        );
+
+    }
 
 
-        select.innerHTML = `
-
-            <option value="">
-                Select Leader
-            </option>
-
-        `;
+    console.log(
+        "Loading leaders..."
+    );
 
 
-        leaders = {};
+    const snapshot =
+        await db
+            .collection("users")
+            .where(
+                "role",
+                "==",
+                "leader"
+            )
+            .get();
 
 
-        snapshot.forEach(doc => {
-
-            const leader =
-                doc.data();
-
-
-            // Store leader data
-
-            leaders[doc.id] =
-                leader;
+    select.innerHTML = `
+        <option value="">
+            Select Leader
+        </option>
+    `;
 
 
-            const option =
-                document.createElement(
-                    "option"
-                );
+    leaders = {};
 
 
-            option.value =
-                doc.id;
+    snapshot.forEach(doc => {
+
+        const leader =
+            doc.data();
 
 
-            option.textContent =
-                `${leader.name || "Unknown"} - ${leader.region || "No Region"}`;
+        leaders[doc.id] =
+            leader;
 
 
-            select.appendChild(
-                option
+        const option =
+            document.createElement(
+                "option"
             );
 
-        });
+
+        option.value =
+            doc.id;
 
 
-        console.log(
-            "Leaders loaded:",
-            leaders
+        option.textContent =
+            `${leader.name || "Unknown"} - ${
+                leader.region || "No Region"
+            }`;
+
+
+        select.appendChild(
+            option
         );
 
-    }
+    });
 
-    catch (error) {
 
-        console.error(
-            "Error loading leaders:",
-            error
-        );
-
-        alert(
-            "Unable to load leaders."
-        );
-
-    }
+    console.log(
+        "Leaders loaded:",
+        leaders
+    );
 
 }
 
 
 // =====================================================
 // LOAD ACTIVE ITEM CODES
+// ITEM CODE = NUMBER
 // =====================================================
 
 async function loadItems() {
@@ -213,66 +220,85 @@ async function loadItems() {
         );
 
 
-    try {
+    if (!container) {
 
-        const snapshot =
-            await db.collection("itemcodes")
-                .where(
-                    "active",
-                    "==",
-                    true
-                )
-                .get();
-
-
-        itemMap = {};
-
-
-        snapshot.forEach(doc => {
-
-            const item =
-                doc.data();
-
-
-            const itemCode =
-                item.itemCode || doc.id;
-
-
-            itemMap[itemCode] = {
-
-                description:
-                    item.description || "-",
-
-                billingAmount:
-                    Number(
-                        item.billingAmount
-                    ) || 0
-
-            };
-
-        });
-
-
-        console.log(
-            "Items loaded:",
-            itemMap
-        );
-
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "Error loading items:",
-            error
-        );
-
-        alert(
-            "Unable to load item codes."
+        throw new Error(
+            "itemContainer element not found."
         );
 
     }
+
+
+    console.log(
+        "Loading active item codes..."
+    );
+
+
+    const snapshot =
+        await db
+            .collection("itemcodes")
+            .where(
+                "active",
+                "==",
+                true
+            )
+            .get();
+
+
+    itemMap = {};
+
+
+    snapshot.forEach(doc => {
+
+        const item =
+            doc.data();
+
+
+        // ==============================================
+        // ITEM CODE MUST BE NUMBER
+        // ==============================================
+
+        const itemCode =
+            Number(item.itemCode);
+
+
+        if (
+            !Number.isInteger(itemCode)
+        ) {
+
+            console.warn(
+                "Invalid itemCode found:",
+                doc.id,
+                item.itemCode
+            );
+
+            return;
+
+        }
+
+
+        itemMap[itemCode] = {
+
+            itemCode:
+                itemCode,
+
+            description:
+                item.description || "",
+
+            billingAmount:
+                Number(
+                    item.billingAmount
+                ) || 0
+
+        };
+
+    });
+
+
+    console.log(
+        "Items loaded:",
+        itemMap
+    );
 
 }
 
@@ -288,9 +314,6 @@ async function loadLeaderAssignments() {
             "leaderSelect"
         ).value;
 
-    // Refresh active items from Firestore
-    await loadItems();
-
 
     const container =
         document.getElementById(
@@ -304,92 +327,141 @@ async function loadLeaderAssignments() {
         );
 
 
+    const itemCount =
+        document.getElementById(
+            "itemCount"
+        );
+
+
+    const status =
+        document.getElementById(
+            "assignmentStatus"
+        );
+
+
     if (!leaderUid) {
 
-    container.innerHTML = `
-        <div class="empty-message">
-            Select a leader to view available items.
-        </div>
-    `;
+        container.innerHTML = `
+            <div class="empty-message">
+                Select a leader to view available items.
+            </div>
+        `;
 
-    saveBtn.disabled = true;
 
-    document.getElementById("itemCount").textContent =
-        "0 Items";
+        saveBtn.disabled = true;
 
-    return;
-}
+
+        if (itemCount) {
+
+            itemCount.textContent =
+                "0 Items";
+
+        }
+
+
+        if (status) {
+
+            status.textContent =
+                "";
+
+        }
+
+
+        return;
+
+    }
 
 
     try {
 
-        // ---------------------------------------------
-        // Get existing assignments
-        // ---------------------------------------------
+        // =================================================
+        // GET ACTIVE ASSIGNMENTS
+        // =================================================
 
         const assignmentSnapshot =
-            await db.collection(
-                "leaderItemAssignments"
-            )
-            .where(
-                "leaderUid",
-                "==",
-                leaderUid
-            )
-            .where(
-                "active",
-                "==",
-                true
-            )
-            .get();
+            await db
+                .collection(
+                    "leaderItemAssignments"
+                )
+                .where(
+                    "leaderUid",
+                    "==",
+                    leaderUid
+                )
+                .where(
+                    "active",
+                    "==",
+                    true
+                )
+                .get();
 
 
         const assignedItems = [];
 
 
-        assignmentSnapshot.forEach(
-            doc => {
+        assignmentSnapshot.forEach(doc => {
 
-                const data =
-                    doc.data();
+            const data =
+                doc.data();
 
 
-                assignedItems.push(
-                    data.itemCode
-                );
+            if (
+                data.itemCode !== undefined &&
+                data.itemCode !== null
+            ) {
+
+                const itemCode =
+                    Number(
+                        data.itemCode
+                    );
+
+
+                if (
+                    Number.isInteger(
+                        itemCode
+                    )
+                ) {
+
+                    assignedItems.push(
+                        itemCode
+                    );
+
+                }
 
             }
-        );
+
+        });
 
 
         console.log(
-            "Assigned Items:",
+            "Assigned items:",
             assignedItems
         );
 
 
-        // ---------------------------------------------
-        // Display items
-        // ---------------------------------------------
+        // =================================================
+        // DISPLAY ITEMS
+        // =================================================
 
         container.innerHTML = "";
 
 
         const itemCodes =
-            Object.keys(itemMap)
-                .sort();
+            Object.keys(
+                itemMap
+            )
+            .map(Number)
+            .sort(
+                (a, b) => a - b
+            );
 
 
-        if (
-            itemCodes.length === 0
-        ) {
+        if (itemCodes.length === 0) {
 
             container.innerHTML = `
-
                 <p>
                     No active items available.
                 </p>
-
             `;
 
             saveBtn.disabled = true;
@@ -399,78 +471,75 @@ async function loadLeaderAssignments() {
         }
 
 
-        itemCodes.forEach(
-            itemCode => {
+        itemCodes.forEach(itemCode => {
 
-                const item =
-                    itemMap[itemCode];
-
-
-                const wrapper =
-                    document.createElement(
-                        "div"
-                    );
+            const item =
+                itemMap[itemCode];
 
 
-                wrapper.className =
-                    "item-option";
+            const wrapper =
+                document.createElement(
+                    "div"
+                );
 
 
-                const checked =
-                    assignedItems.includes(
-                        itemCode
-                    )
+            wrapper.className =
+                "item-option";
+
+
+            const checked =
+                assignedItems.includes(
+                    itemCode
+                )
                     ? "checked"
                     : "";
 
-                wrapper.innerHTML = `
 
-                    <label>
+            wrapper.innerHTML = `
 
-                        <input
-                            type="checkbox"
-                            name="assignedItem"
-                            value="${itemCode}"
-                            ${checked}
-                        >
+                <label>
 
-                        <div class="item-info">
+                    <input
+                        type="checkbox"
+                        name="assignedItem"
+                        value="${itemCode}"
+                        ${checked}
+                    >
 
-                            <div class="item-details">
+                    <div class="item-info">
 
-                                <span class="item-code">
-                                    ${itemCode}
-                                </span>
+                        <div class="item-details">
 
-                                <span class="item-description">
-                                    ${item.description}
-                                </span>
+                            <span class="item-code">
+                                ${itemCode}
+                            </span>
 
-                            </div>
-
-                            <span class="item-price">
-                                ₹${item.billingAmount.toLocaleString("en-IN")}
+                            <span class="item-description">
+                                ${item.description}
                             </span>
 
                         </div>
 
-                    </label>
+                        <span class="item-price">
+                            ₹${item.billingAmount.toLocaleString("en-IN")}
+                        </span>
 
-                `;
+                    </div>
+
+                </label>
+
+            `;
 
 
-                container.appendChild(
-                    wrapper
-                );
+            container.appendChild(
+                wrapper
+            );
 
-            }
-        );
+        });
 
 
         saveBtn.disabled = false;
 
-        const itemCount =
-            document.getElementById("itemCount");
 
         if (itemCount) {
 
@@ -478,11 +547,20 @@ async function loadLeaderAssignments() {
                 `${itemCodes.length} Items`;
 
         }
-        document.getElementById(
-            "assignmentStatus"
-        ).textContent =
-            `${assignedItems.length} item(s) currently assigned.`;
 
+
+        if (status) {
+
+            status.textContent =
+                `${assignedItems.length} item(s) currently assigned.`;
+
+        }
+
+
+        console.log(
+            "Items displayed:",
+            itemCodes.length
+        );
 
     }
 
@@ -493,58 +571,108 @@ async function loadLeaderAssignments() {
             error
         );
 
+
         alert(
-            "Unable to load leader assignments."
+            "Unable to load leader assignments.\n\n" +
+            error.message
         );
 
     }
 
 }
 
+
 // =====================================================
 // SAVE ASSIGNMENTS
+// ITEM CODE SAVED AS NUMBER
 // =====================================================
 
 async function saveAssignments() {
 
     const leaderUid =
-        document.getElementById("leaderSelect").value;
+        document.getElementById(
+            "leaderSelect"
+        ).value;
+
 
     const saveBtn =
-        document.getElementById("saveAssignmentBtn");
+        document.getElementById(
+            "saveAssignmentBtn"
+        );
+
 
     if (!leaderUid) {
 
-        alert("Please select a leader.");
+        alert(
+            "Please select a leader."
+        );
+
         return;
 
     }
+
+
+    // =================================================
+    // GET SELECTED ITEMS
+    // =================================================
 
     const selectedItems =
         Array.from(
             document.querySelectorAll(
                 'input[name="assignedItem"]:checked'
             )
-        ).map(
-            checkbox => checkbox.value
+        )
+        .map(
+            checkbox =>
+                Number(
+                    checkbox.value
+                )
+        )
+        .filter(
+            Number.isInteger
         );
 
+
     console.log(
-        "Selected Items:",
+        "Selected item codes:",
         selectedItems
     );
 
+
     saveBtn.disabled = true;
-    saveBtn.textContent = "Saving...";
+
+    saveBtn.textContent =
+        "Saving...";
+
 
     try {
+
+        // =================================================
+        // CHECK ADMIN
+        // =================================================
+
+        const currentUser =
+            auth.currentUser;
+
+
+        if (!currentUser) {
+
+            throw new Error(
+                "Admin is not logged in."
+            );
+
+        }
+
 
         // =================================================
         // GET EXISTING ASSIGNMENTS
         // =================================================
 
         const existingSnapshot =
-            await db.collection("leaderItemAssignments")
+            await db
+                .collection(
+                    "leaderItemAssignments"
+                )
                 .where(
                     "leaderUid",
                     "==",
@@ -557,11 +685,12 @@ async function saveAssignments() {
         // CREATE BATCH
         // =================================================
 
-        const batch = db.batch();
+        const batch =
+            db.batch();
 
 
         // =================================================
-        // DISABLE ALL OLD ASSIGNMENTS
+        // DISABLE OLD ASSIGNMENTS
         // =================================================
 
         existingSnapshot.forEach(doc => {
@@ -577,19 +706,28 @@ async function saveAssignments() {
 
 
         // =================================================
-        // CREATE / REACTIVATE SELECTED ASSIGNMENTS
+        // CREATE / REACTIVATE SELECTED ITEMS
         // =================================================
 
         selectedItems.forEach(itemCode => {
 
+            // =============================================
+            // DOCUMENT ID MAY CONTAIN STRING
+            // BUT itemCode FIELD IS NUMBER
+            // =============================================
+
             const assignmentId =
                 `${leaderUid}_${itemCode}`;
 
+
             const ref =
-                db.collection(
-                    "leaderItemAssignments"
-                )
-                .doc(assignmentId);
+                db
+                    .collection(
+                        "leaderItemAssignments"
+                    )
+                    .doc(
+                        assignmentId
+                    );
 
 
             batch.set(
@@ -606,7 +744,7 @@ async function saveAssignments() {
                         true,
 
                     assignedBy:
-                        auth.currentUser.uid,
+                        currentUser.uid,
 
                     assignedAt:
                         firebase.firestore
@@ -634,47 +772,18 @@ async function saveAssignments() {
         );
 
 
-        // =================================================
-        // SUCCESS MESSAGE
-        // =================================================
-
         alert(
             "Item assignments saved successfully."
         );
 
 
         // =================================================
-        // IMPORTANT:
-        // REFRESH SELECTED LEADER ASSIGNMENTS
+        // REFRESH
         // =================================================
 
         await loadLeaderAssignments();
 
-
-        // =================================================
-        // IMPORTANT:
-        // REFRESH ASSIGNMENT OVERVIEW
-        // =================================================
-
         await loadAssignmentOverview();
-
-
-        // =================================================
-        // UPDATE STATUS
-        // =================================================
-
-        const status =
-            document.getElementById(
-                "assignmentStatus"
-            );
-
-        if (status) {
-
-            status.textContent =
-                `${selectedItems.length} item(s) currently assigned.`;
-
-        }
-
 
     }
 
@@ -685,8 +794,9 @@ async function saveAssignments() {
             error
         );
 
+
         alert(
-            "Unable to save assignments:\n" +
+            "Unable to save assignments.\n\n" +
             error.message
         );
 
@@ -694,10 +804,343 @@ async function saveAssignments() {
 
     finally {
 
-        saveBtn.disabled = false;
+        saveBtn.disabled =
+            false;
 
         saveBtn.textContent =
             "Save Assignment";
+
+    }
+
+}
+
+
+// =====================================================
+// LOAD ASSIGNMENT OVERVIEW
+// =====================================================
+
+async function loadAssignmentOverview() {
+
+    const overview =
+        document.getElementById(
+            "assignmentOverview"
+        );
+
+
+    const summary =
+        document.getElementById(
+            "assignmentOverviewSummary"
+        );
+
+
+    if (!overview) {
+
+        console.error(
+            "assignmentOverview element not found."
+        );
+
+        return;
+
+    }
+
+
+    overview.innerHTML = `
+        <div class="assignment-loading">
+            Loading assignments...
+        </div>
+    `;
+
+
+    try {
+
+        const snapshot =
+            await db
+                .collection(
+                    "leaderItemAssignments"
+                )
+                .where(
+                    "active",
+                    "==",
+                    true
+                )
+                .get();
+
+
+        const assignmentsByLeader = {};
+
+
+        snapshot.forEach(doc => {
+
+            const data =
+                doc.data();
+
+
+            const leaderUid =
+                data.leaderUid;
+
+
+            if (!leaderUid) {
+
+                return;
+
+            }
+
+
+            const itemCode =
+                Number(
+                    data.itemCode
+                );
+
+
+            if (
+                !Number.isInteger(
+                    itemCode
+                )
+            ) {
+
+                return;
+
+            }
+
+
+            if (
+                !assignmentsByLeader[
+                    leaderUid
+                ]
+            ) {
+
+                assignmentsByLeader[
+                    leaderUid
+                ] = [];
+
+            }
+
+
+            assignmentsByLeader[
+                leaderUid
+            ].push(
+                itemCode
+            );
+
+        });
+
+
+        overview.innerHTML = "";
+
+
+        const leaderIds =
+            Object.keys(
+                assignmentsByLeader
+            );
+
+
+        if (leaderIds.length === 0) {
+
+            overview.innerHTML = `
+                <div class="empty-message">
+                    No active item assignments found.
+                </div>
+            `;
+
+
+            if (summary) {
+
+                summary.textContent =
+                    "0 leaders have items assigned.";
+
+            }
+
+            return;
+
+        }
+
+
+        if (summary) {
+
+            summary.textContent =
+                `${leaderIds.length} leader(s) • ` +
+                `${snapshot.size} active assignment(s)`;
+
+        }
+
+
+        leaderIds.sort(
+            (a, b) => {
+
+                const nameA =
+                    (
+                        leaders[a]?.name ||
+                        "Unknown"
+                    )
+                    .toLowerCase();
+
+
+                const nameB =
+                    (
+                        leaders[b]?.name ||
+                        "Unknown"
+                    )
+                    .toLowerCase();
+
+
+                return nameA.localeCompare(
+                    nameB
+                );
+
+            }
+        );
+
+
+        leaderIds.forEach(
+            leaderUid => {
+
+                const leader =
+                    leaders[
+                        leaderUid
+                    ] || {};
+
+
+                const assignedItems =
+                    assignmentsByLeader[
+                        leaderUid
+                    ] || [];
+
+
+                assignedItems.sort(
+                    (a, b) => a - b
+                );
+
+
+                const card =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                card.className =
+                    "leader-assignment-card";
+
+
+                let itemsHTML = "";
+
+
+                assignedItems.forEach(
+                    itemCode => {
+
+                        const item =
+                            itemMap[
+                                itemCode
+                            ] || {};
+
+
+                        itemsHTML += `
+
+                            <div class="assigned-item">
+
+                                <span class="assigned-item-code">
+                                    ${itemCode}
+                                </span>
+
+                                <span class="assigned-item-description">
+                                    ${
+                                        item.description ||
+                                        "Unknown item"
+                                    }
+                                </span>
+
+                            </div>
+
+                        `;
+
+                    }
+                );
+
+
+                card.innerHTML = `
+
+                    <div class="leader-assignment-header">
+
+                        <div>
+
+                            <h3 class="leader-name">
+                                👤 ${
+                                    leader.name ||
+                                    "Unknown Leader"
+                                }
+                            </h3>
+
+                            <div class="leader-region">
+                                📍 ${
+                                    leader.region ||
+                                    "No Region"
+                                }
+                            </div>
+
+                        </div>
+
+                        <span class="assigned-count">
+
+                            ${
+                                assignedItems.length
+                            }
+
+                            ${
+                                assignedItems.length === 1
+                                    ? "Item"
+                                    : "Items"
+                            }
+
+                        </span>
+
+                    </div>
+
+
+                    <div class="assigned-items-list">
+
+                        ${
+                            itemsHTML ||
+                            `
+                            <div class="no-assignment">
+                                No active items assigned.
+                            </div>
+                            `
+                        }
+
+                    </div>
+
+                `;
+
+
+                overview.appendChild(
+                    card
+                );
+
+            }
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Error loading assignment overview:",
+            error
+        );
+
+
+        overview.innerHTML = `
+            <div class="empty-message">
+                Unable to load assignment overview.
+            </div>
+        `;
+
+
+        if (summary) {
+
+            summary.textContent =
+                "Unable to load assignments.";
+
+        }
 
     }
 
@@ -725,8 +1168,14 @@ function logout() {
     auth.signOut()
         .then(() => {
 
-            window.location.href =
-                "../../pages/auth/loginindex.html";
+            localStorage.removeItem(
+                "uid"
+            );
+
+
+            window.location.replace(
+                "../../pages/auth/loginindex.html"
+            );
 
         })
         .catch(error => {
@@ -737,406 +1186,5 @@ function logout() {
             );
 
         });
-
-}
-
-// =====================================================
-// LOAD ASSIGNMENT OVERVIEW
-// =====================================================
-
-async function loadAssignmentOverview() {
-
-    const overview =
-        document.getElementById(
-            "assignmentOverview"
-        );
-
-    const summary =
-        document.getElementById(
-            "assignmentOverviewSummary"
-        );
-
-
-    if (!overview) {
-
-        console.error(
-            "Assignment overview container not found."
-        );
-
-        return;
-
-    }
-
-
-    overview.innerHTML = `
-        <div class="assignment-loading">
-            Loading assignments...
-        </div>
-    `;
-
-
-    try {
-
-        // =================================================
-        // GET ACTIVE ASSIGNMENTS
-        // =================================================
-
-        const snapshot =
-            await db
-                .collection("leaderItemAssignments")
-                .where(
-                    "active",
-                    "==",
-                    true
-                )
-                .get();
-
-
-        // =================================================
-        // GROUP ITEMS BY LEADER
-        // =================================================
-
-        const assignmentsByLeader = {};
-
-
-        snapshot.forEach(
-            doc => {
-
-                const data =
-                    doc.data();
-
-
-                const leaderUid =
-                    data.leaderUid;
-
-
-                const itemCode =
-                    data.itemCode;
-
-
-                if (!leaderUid) {
-
-                    return;
-
-                }
-
-
-                if (
-                    !assignmentsByLeader[
-                        leaderUid
-                    ]
-                ) {
-
-                    assignmentsByLeader[
-                        leaderUid
-                    ] = [];
-
-                }
-
-
-                assignmentsByLeader[
-                    leaderUid
-                ].push(itemCode);
-
-            }
-        );
-
-
-        // =================================================
-        // CLEAR OVERVIEW
-        // =================================================
-
-        overview.innerHTML = "";
-
-
-        // =================================================
-        // NO ACTIVE ASSIGNMENTS
-        // =================================================
-
-        const leaderIds =
-            Object.keys(
-                assignmentsByLeader
-            );
-
-
-        if (
-            leaderIds.length === 0
-        ) {
-
-            overview.innerHTML = `
-
-                <div class="empty-message">
-
-                    No active item assignments found.
-
-                </div>
-
-            `;
-
-
-            if (summary) {
-
-                summary.textContent =
-                    "0 leaders have items assigned.";
-
-            }
-
-
-            return;
-
-        }
-
-
-        // =================================================
-        // SUMMARY
-        // =================================================
-
-        const totalAssignments =
-            snapshot.size;
-
-
-        if (summary) {
-
-            summary.textContent =
-                `${leaderIds.length} leader(s) • ` +
-                `${totalAssignments} active assignment(s)`;
-
-        }
-
-
-        // =================================================
-        // SORT LEADERS
-        // =================================================
-
-        leaderIds.sort(
-            (a, b) => {
-
-                const leaderA =
-                    leaders[a] || {};
-
-                const leaderB =
-                    leaders[b] || {};
-
-
-                const nameA =
-                    (
-                        leaderA.name ||
-                        "Unknown"
-                    )
-                    .toLowerCase();
-
-
-                const nameB =
-                    (
-                        leaderB.name ||
-                        "Unknown"
-                    )
-                    .toLowerCase();
-
-
-                return nameA.localeCompare(
-                    nameB
-                );
-
-            }
-        );
-
-
-        // =================================================
-        // CREATE LEADER CARDS
-        // =================================================
-
-        leaderIds.forEach(
-            leaderUid => {
-
-                const leader =
-                    leaders[
-                        leaderUid
-                    ] || {};
-
-
-                const assignedItems =
-                    assignmentsByLeader[
-                        leaderUid
-                    ] || [];
-
-
-                assignedItems.sort();
-
-
-                // -----------------------------------------
-                // LEADER CARD
-                // -----------------------------------------
-
-                const card =
-                    document.createElement(
-                        "div"
-                    );
-
-
-                card.className =
-                    "leader-assignment-card";
-
-
-                // -----------------------------------------
-                // ITEM HTML
-                // -----------------------------------------
-
-                let itemsHTML = "";
-
-
-                assignedItems.forEach(
-                    itemCode => {
-
-                        const item =
-                            itemMap[
-                                itemCode
-                            ] || {};
-
-
-                        const description =
-                            item.description ||
-                            "Unknown item";
-
-
-                        itemsHTML += `
-
-                            <div
-                                class="assigned-item"
-                            >
-
-                                <span
-                                    class="assigned-item-code"
-                                >
-                                    ${itemCode}
-                                </span>
-
-                                <span
-                                    class="assigned-item-description"
-                                >
-                                    ${description}
-                                </span>
-
-                            </div>
-
-                        `;
-
-                    }
-                );
-
-
-                // -----------------------------------------
-                // CARD HTML
-                // -----------------------------------------
-
-                card.innerHTML = `
-
-                    <div
-                        class="leader-assignment-header"
-                    >
-
-                        <div>
-
-                            <h3
-                                class="leader-name"
-                            >
-                                👤 ${
-                                    leader.name ||
-                                    "Unknown Leader"
-                                }
-                            </h3>
-
-
-                            <div
-                                class="leader-region"
-                            >
-                                📍 ${
-                                    leader.region ||
-                                    "No Region"
-                                }
-                            </div>
-
-                        </div>
-
-
-                        <span
-                            class="assigned-count"
-                        >
-                            ${
-                                assignedItems.length
-                            }
-                            ${
-                                assignedItems.length === 1
-                                ? "Item"
-                                : "Items"
-                            }
-                        </span>
-
-                    </div>
-
-
-                    <div
-                        class="assigned-items-list"
-                    >
-
-                        ${
-                            itemsHTML ||
-                            `
-                            <div
-                                class="no-assignment"
-                            >
-                                No active items assigned.
-                            </div>
-                            `
-                        }
-
-                    </div>
-
-                `;
-
-
-                overview.appendChild(
-                    card
-                );
-
-            }
-        );
-
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "Error loading assignment overview:",
-            error
-        );
-
-
-        overview.innerHTML = `
-
-            <div class="empty-message">
-
-                Unable to load assignment overview.
-
-            </div>
-
-        `;
-
-
-        if (summary) {
-
-            summary.textContent =
-                "Unable to load assignments.";
-
-        }
-
-    }
-
-}
-function goToAdminDashboard() {
-
-    window.location.href =
-        "admin.html";
 
 }
