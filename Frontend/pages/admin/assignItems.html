@@ -662,7 +662,41 @@ body {
                     Select the items that should be assigned
                     to this leader.
                 </p>
+<!-- =====================================================
+     ITEM SEARCH
+===================================================== -->
 
+<div class="item-search-container">
+
+    <input
+        type="text"
+        id="assignmentItemSearch"
+        placeholder="Search Item Code or Description..."
+        autocomplete="off"
+    >
+
+    <button
+        type="button"
+        id="assignmentSearchBtn"
+        onclick="searchAssignedItems()"
+    >
+        Search
+    </button>
+
+    <button
+        type="button"
+        id="assignmentClearBtn"
+        onclick="clearAssignedItemSearch()"
+    >
+        Clear
+    </button>
+
+</div>
+
+<p
+    id="assignmentSearchMessage"
+    class="assignment-search-message"
+></p>
             </div>
             <span
                 id="itemCount"

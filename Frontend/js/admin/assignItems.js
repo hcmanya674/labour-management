@@ -1188,3 +1188,198 @@ function logout() {
         });
 
 }
+
+// =====================================================
+// SEARCH ITEMS IN ASSIGN ITEMS PAGE
+// =====================================================
+
+function searchAssignedItems() {
+
+    const searchInput =
+        document.getElementById(
+            "assignmentItemSearch"
+        );
+
+    const container =
+        document.getElementById(
+            "itemContainer"
+        );
+
+    const message =
+        document.getElementById(
+            "assignmentSearchMessage"
+        );
+
+
+    if (!searchInput || !container) {
+
+        return;
+
+    }
+
+
+    const searchText =
+        searchInput.value
+            .trim()
+            .toLowerCase();
+
+
+    const items =
+        container.querySelectorAll(
+            ".item-option"
+        );
+
+
+    let matchFound = false;
+
+
+    items.forEach(item => {
+
+        const itemText =
+            item.textContent
+                .toLowerCase();
+
+
+        if (
+            searchText === "" ||
+            itemText.includes(searchText)
+        ) {
+
+            item.style.display =
+                "";
+
+            matchFound = true;
+
+        }
+
+        else {
+
+            item.style.display =
+                "none";
+
+        }
+
+    });
+
+
+    // =================================================
+    // SEARCH MESSAGE
+    // =================================================
+
+    if (message) {
+
+        if (
+            searchText !== "" &&
+            !matchFound
+        ) {
+
+            message.textContent =
+                "No matching item found.";
+
+            message.style.color =
+                "#d32f2f";
+
+        }
+
+        else {
+
+            message.textContent =
+                "";
+
+        }
+
+    }
+
+}
+
+
+// =====================================================
+// CLEAR SEARCH
+// =====================================================
+
+function clearAssignedItemSearch() {
+
+    const searchInput =
+        document.getElementById(
+            "assignmentItemSearch"
+        );
+
+
+    const message =
+        document.getElementById(
+            "assignmentSearchMessage"
+        );
+
+
+    if (searchInput) {
+
+        searchInput.value =
+            "";
+
+    }
+
+
+    const container =
+        document.getElementById(
+            "itemContainer"
+        );
+
+
+    if (container) {
+
+        const items =
+            container.querySelectorAll(
+                ".item-option"
+            );
+
+
+        items.forEach(item => {
+
+            item.style.display =
+                "";
+
+        });
+
+    }
+
+
+    if (message) {
+
+        message.textContent =
+            "";
+
+    }
+
+}
+// =====================================================
+// SEARCH WHILE TYPING
+// =====================================================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const searchInput =
+            document.getElementById(
+                "assignmentItemSearch"
+            );
+
+
+        if (!searchInput) {
+
+            return;
+
+        }
+
+
+        searchInput.addEventListener(
+            "input",
+            function () {
+
+                searchAssignedItems();
+
+            }
+        );
+
+    }
+);

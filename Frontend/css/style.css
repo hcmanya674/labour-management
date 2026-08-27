@@ -4850,3 +4850,99 @@ input[type="checkbox"] {
     }
 
 }
+/* =====================================================
+   ASSIGN ITEMS SEARCH
+===================================================== */
+
+.item-search-container {
+
+    display: flex;
+
+    gap: 10px;
+
+    margin: 15px 0;
+
+    width: 100%;
+
+}
+
+
+.item-search-container input {
+
+    flex: 1;
+
+    padding: 12px 14px;
+
+    border: 1px solid #b0bec5;
+
+    border-radius: 8px;
+
+    font-size: 15px;
+
+    outline: none;
+
+}
+
+
+.item-search-container input:focus {
+
+    border-color: #0D47A1;
+
+    box-shadow:
+        0 0 0 2px
+        rgba(13, 71, 161, 0.12);
+
+}
+
+
+.item-search-container button {
+
+    padding: 12px 18px;
+
+    border: none;
+
+    border-radius: 8px;
+
+    background: #0D47A1;
+
+    color: white;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+}
+
+
+.item-search-container button:hover {
+
+    background: #1565C0;
+
+}
+
+
+#assignmentClearBtn {
+
+    background: #78909C;
+
+}
+
+
+#assignmentClearBtn:hover {
+
+    background: #546E7A;
+
+}
+
+
+.assignment-search-message {
+
+    margin: 5px 0 10px;
+
+    font-size: 14px;
+
+    font-weight: 500;
+
+}
