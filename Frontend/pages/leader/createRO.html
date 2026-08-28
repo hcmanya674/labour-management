@@ -145,25 +145,79 @@
                 maxlength="30"
             >
 
+<!-- =====================================
+     ITEM CODES
+====================================== -->
 
-            <!-- =====================================
-                 ITEM CODES
-            ====================================== -->
+<label>
+    Item Codes
+</label>
 
-            <label>
-                Item Codes
-            </label>
+<div class="item-selection-box">
 
-            <div
-                id="itemCodeContainer"
-                class="item-code-container"
+    <!-- =================================
+         SEARCH AREA
+    ================================== -->
+
+    <div class="item-search-area">
+
+        <input
+            type="text"
+            id="itemSearchInput"
+            placeholder="Search item code or description"
+            autocomplete="off"
+        >
+
+        <div class="item-search-buttons">
+
+            <button
+                type="button"
+                id="itemSearchBtn"
+                onclick="searchItems()"
             >
-                Loading items...
-            </div>
+                Search
+            </button>
 
-            <small>
-                Select one or more item codes.
-            </small>
+            <button
+                type="button"
+                id="itemClearBtn"
+                onclick="clearItemSearch()"
+            >
+                Clear
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================
+         SEARCH MESSAGE
+    ================================== -->
+
+    <div
+        id="itemSearchMessage"
+        class="item-search-message"
+    ></div>
+
+
+    <!-- =================================
+         ITEM LIST
+    ================================== -->
+
+    <div
+        id="itemCodeContainer"
+        class="item-code-container"
+    >
+        Loading items...
+    </div>
+
+</div>
+
+
+<small>
+    Select one or more item codes.
+</small>
 
 
             <br>

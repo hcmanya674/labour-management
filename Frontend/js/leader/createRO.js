@@ -1,15 +1,26 @@
-// ==========================================
+// =====================================================
 // CREATE REPAIR ORDER
-// ITEM CODE TYPE: NUMBER
-// ==========================================
+// =====================================================
+
+// =====================================================
+// GLOBAL VARIABLES
+// =====================================================
 
 let leaderData = {};
+
 let isSaving = false;
 
+// Stores all assigned items
+let itemMap = {};
 
-// ==========================================
-// LOAD LOGGED-IN LEADER
-// ==========================================
+// Stores currently selected item codes
+// IMPORTANT: Set prevents duplicate item codes
+let selectedItemCodes = new Set();
+
+
+// =====================================================
+// PAGE LOAD
+// =====================================================
 
 document.addEventListener(
     "DOMContentLoaded",
@@ -18,9 +29,9 @@ document.addEventListener(
         auth.onAuthStateChanged(
             async (user) => {
 
-                // --------------------------------------
+                // ==========================================
                 // USER NOT LOGGED IN
-                // --------------------------------------
+                // ==========================================
 
                 if (!user) {
 
@@ -34,9 +45,15 @@ document.addEventListener(
 
                 try {
 
-                    // ----------------------------------
-                    // GET LEADER DATA
-                    // ----------------------------------
+                    console.log(
+                        "Logged-in UID:",
+                        user.uid
+                    );
+
+
+                    // ======================================
+                    // LOAD LEADER DATA
+                    // ======================================
 
                     const leaderDoc =
                         await db
@@ -61,23 +78,19 @@ document.addEventListener(
 
 
                     console.log(
-                        "Logged-in Leader:",
+                        "Leader Data:",
                         leaderData
                     );
 
 
-                    // ----------------------------------
+                    // ======================================
                     // CHECK ROLE
-                    // ----------------------------------
+                    // ======================================
 
                     if (
                         leaderData.role &&
                         leaderData.role !== "leader"
                     ) {
-
-                        console.error(
-                            "Logged-in user is not a leader."
-                        );
 
                         alert(
                             "Access denied. Leader only."
@@ -88,9 +101,9 @@ document.addEventListener(
                     }
 
 
-                    // ----------------------------------
+                    // ======================================
                     // DISPLAY LEADER NAME
-                    // ----------------------------------
+                    // ======================================
 
                     const leaderName =
                         document.getElementById(
@@ -106,18 +119,19 @@ document.addEventListener(
                     }
 
 
-                    // ----------------------------------
+                    // ======================================
                     // LOAD REGION
-                    // ----------------------------------
+                    // ======================================
 
                     await loadRegion();
 
 
-                    // ----------------------------------
+                    // ======================================
                     // LOAD ASSIGNED ITEMS
-                    // ----------------------------------
+                    // ======================================
 
                     await loadItems();
+
 
                 }
 
@@ -127,6 +141,7 @@ document.addEventListener(
                         "Error loading leader:",
                         error
                     );
+
 
                     alert(
                         "Unable to load leader information."
@@ -141,17 +156,11 @@ document.addEventListener(
 );
 
 
-// ==========================================
+// =====================================================
 // LOAD LEADER REGION
-// ==========================================
+// =====================================================
 
 async function loadRegion() {
-
-    console.log(
-        "Leader Region ID:",
-        leaderData.region
-    );
-
 
     const regionInput =
         document.getElementById(
@@ -160,11 +169,6 @@ async function loadRegion() {
 
 
     if (!leaderData.region) {
-
-        console.warn(
-            "Leader region is missing."
-        );
-
 
         if (regionInput) {
 
@@ -191,18 +195,11 @@ async function loadRegion() {
                 .get();
 
 
-        console.log(
-            "Region Exists:",
-            regionDoc.exists
-        );
-
+        // ==========================================
+        // REGION DOCUMENT NOT FOUND
+        // ==========================================
 
         if (!regionDoc.exists) {
-
-            console.warn(
-                "Region document not found. Using stored region value."
-            );
-
 
             if (regionInput) {
 
@@ -218,12 +215,6 @@ async function loadRegion() {
 
         const regionData =
             regionDoc.data();
-
-
-        console.log(
-            "Region Data:",
-            regionData
-        );
 
 
         if (regionInput) {
@@ -257,10 +248,9 @@ async function loadRegion() {
 }
 
 
-// ========================================================
-// LOAD ONLY ITEMS ASSIGNED TO THIS LEADER
-// ITEM CODE TYPE: NUMBER
-// ========================================================
+// =====================================================
+// LOAD ITEMS ASSIGNED TO CURRENT LEADER
+// =====================================================
 
 async function loadItems() {
 
@@ -291,7 +281,7 @@ async function loadItems() {
     try {
 
         // ==========================================
-        // CURRENT LOGGED-IN LEADER
+        // CURRENT USER
         // ==========================================
 
         const currentUser =
@@ -301,7 +291,7 @@ async function loadItems() {
         if (!currentUser) {
 
             container.innerHTML = `
-                <p style="color:red;">
+                <p style="color:#d32f2f;">
                     User is not logged in.
                 </p>
             `;
@@ -342,17 +332,6 @@ async function loadItems() {
                 )
                 .get();
 
-
-        console.log(
-            "Active assignments found:",
-            assignmentSnapshot.size
-        );
-
-
-        // ==========================================
-        // GET ASSIGNED ITEM CODES
-        // AS NUMBERS
-        // ==========================================
 
         const assignedItemCodes = [];
 
@@ -429,7 +408,7 @@ async function loadItems() {
 
 
         // ==========================================
-        // LOAD ACTIVE ITEMS
+        // GET ACTIVE ITEM MASTER DATA
         // ==========================================
 
         const itemSnapshot =
@@ -443,24 +422,16 @@ async function loadItems() {
                 .get();
 
 
-        console.log(
-            "Active item codes found:",
-            itemSnapshot.size
-        );
+        // ==========================================
+        // CLEAR ITEM MAP
+        // ==========================================
+
+        itemMap = {};
 
 
         // ==========================================
-        // CLEAR CONTAINER
-        // ==========================================
-
-        container.innerHTML = "";
-
-
-        let assignedCount = 0;
-
-
-        // ==========================================
-        // DISPLAY ONLY ASSIGNED ITEMS
+        // BUILD ITEM MAP
+        // ONLY ASSIGNED ITEMS
         // ==========================================
 
         itemSnapshot.forEach(
@@ -469,10 +440,6 @@ async function loadItems() {
                 const data =
                     doc.data();
 
-
-                // ==================================
-                // ITEM CODE = NUMBER
-                // ==================================
 
                 const itemCode =
                     Number(
@@ -486,29 +453,12 @@ async function loadItems() {
                     )
                 ) {
 
-                    console.warn(
-                        "Invalid item code:",
-                        data.itemCode
-                    );
-
                     return;
 
                 }
 
 
-                console.log(
-                    "Checking item:",
-                    itemCode,
-                    "Assigned:",
-                    assignedItemCodes.includes(
-                        itemCode
-                    )
-                );
-
-
-                // ==================================
-                // ONLY DISPLAY ASSIGNED ITEM
-                // ==================================
+                // Only keep assigned items
 
                 if (
                     !assignedItemCodes.includes(
@@ -521,203 +471,37 @@ async function loadItems() {
                 }
 
 
-                assignedCount++;
+                itemMap[itemCode] = {
 
+                    itemCode:
+                        itemCode,
 
-                const description =
-                    data.description || "";
+                    description:
+                        data.description || "",
 
+                    billingAmount:
+                        Number(
+                            data.billingAmount
+                        ) || 0
 
-                const cost =
-                    Number(
-                        data.billingAmount
-                    ) || 0;
-
-
-                // ==================================
-                // CREATE ITEM ELEMENT
-                // ==================================
-
-                const itemDiv =
-                    document.createElement(
-                        "div"
-                    );
-
-
-                itemDiv.className =
-                    "item-option";
-
-
-                // ==================================
-                // LABEL
-                // ==================================
-
-                const label =
-                    document.createElement(
-                        "label"
-                    );
-
-
-                label.className =
-                    "item-checkbox";
-
-
-                // ==================================
-                // CHECKBOX
-                // ==================================
-
-                const checkbox =
-                    document.createElement(
-                        "input"
-                    );
-
-
-                checkbox.type =
-                    "checkbox";
-
-
-                checkbox.name =
-                    "itemCode";
-
-
-                // Browser value is string,
-                // but Firestore value will be NUMBER.
-
-                checkbox.value =
-                    String(
-                        itemCode
-                    );
-
-
-                checkbox.dataset.cost =
-                    String(
-                        cost
-                    );
-
-
-                checkbox.dataset.description =
-                    description;
-
-
-                checkbox.addEventListener(
-                    "change",
-                    calculateBillingAmount
-                );
-
-
-                // ==================================
-                // DISPLAY TEXT
-                // ==================================
-
-                const span =
-                    document.createElement(
-                        "span"
-                    );
-
-
-                span.textContent =
-                    `${itemCode} - ${description}`;
-
-
-                // ==================================
-                // COST
-                // ==================================
-
-                const strong =
-                    document.createElement(
-                        "strong"
-                    );
-
-
-                strong.textContent =
-                    ` ₹${cost.toLocaleString(
-                        "en-IN"
-                    )}`;
-
-
-                span.appendChild(
-                    strong
-                );
-
-
-                // ==================================
-                // BUILD ITEM
-                // ==================================
-
-                label.appendChild(
-                    checkbox
-                );
-
-
-                label.appendChild(
-                    span
-                );
-
-
-                itemDiv.appendChild(
-                    label
-                );
-
-
-                container.appendChild(
-                    itemDiv
-                );
+                };
 
             }
         );
 
 
-        // ==========================================
-        // SORT DISPLAYED ITEMS NUMERICALLY
-        // ==========================================
-
-        const itemElements =
-            Array.from(
-                container.querySelectorAll(
-                    ".item-option"
-                )
-            );
-
-
-        itemElements.sort(
-            (a, b) => {
-
-                const codeA =
-                    Number(
-                        a.querySelector(
-                            'input[name="itemCode"]'
-                        ).value
-                    );
-
-
-                const codeB =
-                    Number(
-                        b.querySelector(
-                            'input[name="itemCode"]'
-                        ).value
-                    );
-
-
-                return codeA - codeB;
-
-            }
-        );
-
-
-        itemElements.forEach(
-            element =>
-                container.appendChild(
-                    element
-                )
+        console.log(
+            "Assigned items loaded:",
+            itemMap
         );
 
 
         // ==========================================
-        // ASSIGNED ITEMS NOT FOUND
+        // NO MATCHING ACTIVE ITEMS
         // ==========================================
 
         if (
-            assignedCount === 0
+            Object.keys(itemMap).length === 0
         ) {
 
             container.innerHTML = `
@@ -735,16 +519,6 @@ async function loadItems() {
                 </div>
             `;
 
-
-            console.error(
-                "Assignments exist, but matching active itemcodes were not found.",
-                {
-                    assignedItemCodes:
-                        assignedItemCodes
-                }
-            );
-
-
             updateBillingAmount();
 
             return;
@@ -753,15 +527,29 @@ async function loadItems() {
 
 
         // ==========================================
+        // CLEAR PREVIOUS SELECTIONS
+        // ==========================================
+
+        selectedItemCodes.clear();
+
+
+        // ==========================================
+        // DISPLAY ALL ITEMS
+        // ==========================================
+
+        renderItems();
+
+
+        // ==========================================
         // INITIAL BILLING
         // ==========================================
 
-        calculateBillingAmount();
+        updateBillingAmount();
 
 
         console.log(
-            "Assigned items displayed:",
-            assignedCount
+            "Total assigned items:",
+            Object.keys(itemMap).length
         );
 
     }
@@ -775,12 +563,14 @@ async function loadItems() {
 
 
         container.innerHTML = `
-            <p style="color:red;">
+            <p style="color:#d32f2f;">
                 Unable to load assigned items.
             </p>
 
             <p>
-                ${error.message || ""}
+                ${escapeHTML(
+                    error.message || ""
+                )}
             </p>
         `;
 
@@ -789,50 +579,565 @@ async function loadItems() {
 }
 
 
-// ==========================================
-// CALCULATE TOTAL BILLING AMOUNT
-// ==========================================
+// =====================================================
+// RENDER ITEMS
+// =====================================================
 
-function calculateBillingAmount() {
+function renderItems(
+    filteredCodes = null
+) {
 
-    const selectedItems =
-        document.querySelectorAll(
-            'input[name="itemCode"]:checked'
+    const container =
+        document.getElementById(
+            "itemCodeContainer"
         );
 
 
-    let total = 0;
+    if (!container) {
+
+        return;
+
+    }
 
 
-    selectedItems.forEach(
-        checkbox => {
+    // ==========================================
+    // GET ITEM CODES
+    // ==========================================
 
-            const cost =
-                Number(
-                    checkbox.dataset.cost
-                ) || 0;
+    let itemCodes;
 
 
-            total += cost;
+    if (
+        Array.isArray(filteredCodes)
+    ) {
 
-        }
+        itemCodes =
+            [...filteredCodes];
+
+    }
+
+    else {
+
+        itemCodes =
+            Object.keys(itemMap)
+                .map(Number);
+
+    }
+
+
+    // ==========================================
+    // SORT NUMERICALLY
+    // ==========================================
+
+    itemCodes.sort(
+        (a, b) =>
+            a - b
     );
 
 
-    updateBillingAmount(
-        total
+    // ==========================================
+    // NO RESULTS
+    // ==========================================
+
+    if (
+        itemCodes.length === 0
+    ) {
+
+        container.innerHTML = `
+            <div class="empty-message">
+                No matching items found.
+            </div>
+        `;
+
+        return;
+
+    }
+
+
+    // ==========================================
+    // CLEAR CONTAINER
+    // ==========================================
+
+    container.innerHTML = "";
+
+
+    // ==========================================
+    // CREATE ITEM CARDS
+    // ==========================================
+
+    itemCodes.forEach(
+        itemCode => {
+
+            const item =
+                itemMap[itemCode];
+
+
+            if (!item) {
+
+                return;
+
+            }
+
+
+            // ======================================
+            // OUTER ITEM
+            // ======================================
+
+            const itemDiv =
+                document.createElement(
+                    "div"
+                );
+
+
+            itemDiv.className =
+                "item-option";
+
+
+            // ======================================
+            // LABEL
+            // ======================================
+
+            const label =
+                document.createElement(
+                    "label"
+                );
+
+
+            label.className =
+                "item-checkbox";
+
+
+            // ======================================
+            // CHECKBOX
+            // ======================================
+
+            const checkbox =
+                document.createElement(
+                    "input"
+                );
+
+
+            checkbox.type =
+                "checkbox";
+
+
+            checkbox.name =
+                "itemCode";
+
+
+            checkbox.value =
+                String(
+                    itemCode
+                );
+
+
+            // ======================================
+            // RESTORE CHECKED STATE
+            // ======================================
+
+            checkbox.checked =
+                selectedItemCodes.has(
+                    itemCode
+                );
+
+
+            // ======================================
+            // STORE ITEM DATA
+            // ======================================
+
+            checkbox.dataset.cost =
+                String(
+                    item.billingAmount
+                );
+
+
+            checkbox.dataset.description =
+                item.description;
+
+
+            // ======================================
+            // CHECKBOX CHANGE
+            // ======================================
+
+            checkbox.addEventListener(
+                "change",
+                function () {
+
+                    if (
+                        checkbox.checked
+                    ) {
+
+                        selectedItemCodes.add(
+                            itemCode
+                        );
+
+                    }
+
+                    else {
+
+                        selectedItemCodes.delete(
+                            itemCode
+                        );
+
+                    }
+
+
+                    console.log(
+                        "Selected items:",
+                        Array.from(
+                            selectedItemCodes
+                        )
+                    );
+
+
+                    updateBillingAmount();
+
+                }
+            );
+
+
+            // ======================================
+            // TEXT
+            // ======================================
+
+            const span =
+                document.createElement(
+                    "span"
+                );
+
+
+            span.className =
+                "item-text";
+
+
+            span.textContent =
+                `${itemCode} - ${item.description}`;
+
+
+            // ======================================
+            // PRICE
+            // ======================================
+
+            const strong =
+                document.createElement(
+                    "strong"
+                );
+
+
+            strong.textContent =
+                ` ₹${Number(
+                    item.billingAmount
+                ).toLocaleString(
+                    "en-IN"
+                )}`;
+
+
+            span.appendChild(
+                strong
+            );
+
+
+            // ======================================
+            // BUILD ELEMENT
+            // ======================================
+
+            label.appendChild(
+                checkbox
+            );
+
+
+            label.appendChild(
+                span
+            );
+
+
+            itemDiv.appendChild(
+                label
+            );
+
+
+            container.appendChild(
+                itemDiv
+            );
+
+        }
     );
 
 }
 
 
-// ==========================================
-// UPDATE BILLING DISPLAY
-// ==========================================
+// =====================================================
+// SEARCH ITEMS
+// =====================================================
+// =====================================================
+// SEARCH ITEMS
+// FILTER WHILE TYPING
+// =====================================================
 
-function updateBillingAmount(
-    total = 0
-) {
+function searchItems() {
+
+    const searchInput =
+        document.getElementById(
+            "itemSearchInput"
+        );
+
+    const message =
+        document.getElementById(
+            "itemSearchMessage"
+        );
+
+
+    if (!searchInput) {
+
+        return;
+
+    }
+
+
+    const searchText =
+        searchInput.value
+            .trim()
+            .toLowerCase();
+
+
+    // ==========================================
+    // EMPTY SEARCH
+    // SHOW ALL ASSIGNED ITEMS
+    // ==========================================
+
+    if (
+        searchText === ""
+    ) {
+
+        renderItems();
+
+
+        if (message) {
+
+            message.textContent =
+                "";
+
+        }
+
+        return;
+
+    }
+
+
+    // ==========================================
+    // FILTER ITEM CODE + DESCRIPTION
+    // ==========================================
+
+    const matchingCodes =
+        Object.keys(itemMap)
+            .map(Number)
+            .filter(
+                itemCode => {
+
+                    const item =
+                        itemMap[itemCode];
+
+
+                    const code =
+                        String(
+                            itemCode
+                        ).toLowerCase();
+
+
+                    const description =
+                        String(
+                            item.description || ""
+                        ).toLowerCase();
+
+
+                    return (
+                        code.includes(
+                            searchText
+                        ) ||
+                        description.includes(
+                            searchText
+                        )
+                    );
+
+                }
+            );
+
+
+    // ==========================================
+    // DISPLAY FILTERED ITEMS
+    // ==========================================
+
+    renderItems(
+        matchingCodes
+    );
+
+
+    // ==========================================
+    // SEARCH MESSAGE
+    // ==========================================
+
+    if (message) {
+
+        if (
+            matchingCodes.length === 0
+        ) {
+
+            message.textContent =
+                `No item found for "${searchInput.value.trim()}".`;
+
+            message.style.color =
+                "#d32f2f";
+
+        }
+
+        else {
+
+            message.textContent =
+                `${matchingCodes.length} matching item(s) found.`;
+
+            message.style.color =
+                "#0D47A1";
+
+        }
+
+    }
+
+}
+// =====================================================
+// FILTER ITEMS WHILE TYPING
+// =====================================================
+
+document.addEventListener(
+    "input",
+    function (event) {
+
+        if (
+            event.target &&
+            event.target.id === "itemSearchInput"
+        ) {
+
+            searchItems();
+
+        }
+
+    }
+);
+// =====================================================
+// CLEAR SEARCH
+// =====================================================
+
+function clearItemSearch() {
+
+    const searchInput =
+        document.getElementById(
+            "itemSearchInput"
+        );
+
+
+    const message =
+        document.getElementById(
+            "itemSearchMessage"
+        );
+
+
+    if (searchInput) {
+
+        searchInput.value =
+            "";
+
+    }
+
+
+    // ==========================================
+    // SHOW ALL ITEMS
+    // ==========================================
+
+    renderItems();
+
+
+    // ==========================================
+    // CLEAR MESSAGE
+    // ==========================================
+
+    if (message) {
+
+        message.textContent =
+            "";
+
+    }
+
+}
+
+
+// =====================================================
+// ENTER KEY SEARCH
+// =====================================================
+
+document.addEventListener(
+    "keydown",
+    function (event) {
+
+        const searchInput =
+            document.getElementById(
+                "itemSearchInput"
+            );
+
+
+        if (
+            searchInput &&
+            event.target === searchInput &&
+            event.key === "Enter"
+        ) {
+
+            event.preventDefault();
+
+            searchItems();
+
+        }
+
+    }
+);
+
+
+// =====================================================
+// CALCULATE BILLING
+// =====================================================
+
+function calculateBillingAmount() {
+
+    updateBillingAmount();
+
+}
+
+
+// =====================================================
+// UPDATE BILLING DISPLAY
+// =====================================================
+
+function updateBillingAmount() {
+
+    let total = 0;
+
+
+    selectedItemCodes.forEach(
+        itemCode => {
+
+            const item =
+                itemMap[itemCode];
+
+
+            if (item) {
+
+                total +=
+                    Number(
+                        item.billingAmount
+                    ) || 0;
+
+            }
+
+        }
+    );
+
 
     const totalElement =
         document.getElementById(
@@ -849,41 +1154,36 @@ function updateBillingAmount(
 
     totalElement.textContent =
         "₹" +
-        Number(total)
-            .toLocaleString(
-                "en-IN",
-                {
-                    minimumFractionDigits:
-                        2,
+        total.toLocaleString(
+            "en-IN",
+            {
+                minimumFractionDigits:
+                    2,
 
-                    maximumFractionDigits:
-                        2
-                }
-            );
+                maximumFractionDigits:
+                    2
+            }
+        );
 
 }
 
 
-// ==========================================
+// =====================================================
 // GET SELECTED ITEMS
-// RETURNS CHECKBOX ELEMENTS
-// ==========================================
+// =====================================================
 
 function getSelectedItems() {
 
     return Array.from(
-        document.querySelectorAll(
-            'input[name="itemCode"]:checked'
-        )
+        selectedItemCodes
     );
 
 }
 
 
-// ==========================================
+// =====================================================
 // VERIFY ITEMS ARE STILL ASSIGNED
-// ITEM CODE = NUMBER
-// ==========================================
+// =====================================================
 
 async function verifyAssignedItems(
     leaderUid,
@@ -950,15 +1250,17 @@ async function verifyAssignedItems(
         );
 
 
-        // ======================================
-        // CHECK EVERY SELECTED ITEM
-        // ======================================
+        // ==========================================
+        // CHECK SELECTED ITEMS
+        // ==========================================
 
         const invalidItems =
             selectedItems.filter(
                 itemCode =>
                     !assignedCodes.has(
-                        Number(itemCode)
+                        Number(
+                            itemCode
+                        )
                     )
             );
 
@@ -997,15 +1299,15 @@ async function verifyAssignedItems(
 }
 
 
-// ==========================================
+// =====================================================
 // SAVE REPAIR ORDER
-// ==========================================
+// =====================================================
 
 async function saveRO() {
 
-    // --------------------------------------
+    // ==========================================
     // PREVENT DOUBLE CLICK
-    // --------------------------------------
+    // ==========================================
 
     if (isSaving) {
 
@@ -1020,9 +1322,9 @@ async function saveRO() {
         );
 
 
-    // ======================================
+    // ==========================================
     // GET FORM ELEMENTS
-    // ======================================
+    // ==========================================
 
     const roNumberInput =
         document.getElementById(
@@ -1042,10 +1344,6 @@ async function saveRO() {
         );
 
 
-    // ======================================
-    // SAFETY CHECK
-    // ======================================
-
     if (
         !roNumberInput ||
         !vehicleNumberInput ||
@@ -1061,9 +1359,9 @@ async function saveRO() {
     }
 
 
-    // ======================================
+    // ==========================================
     // GET VALUES
-    // ======================================
+    // ==========================================
 
     const roNumber =
         roNumberInput.value
@@ -1083,30 +1381,18 @@ async function saveRO() {
             .toUpperCase();
 
 
-    // ======================================
-    // GET SELECTED ITEMS
-    // ======================================
-
-    const selectedCheckboxes =
-        getSelectedItems();
-
-
-    // ======================================
-    // IMPORTANT:
-    // CONVERT CHECKBOX STRING TO NUMBER
-    // ======================================
+    // ==========================================
+    // GET SELECTED ITEM CODES
+    // ==========================================
 
     const selectedItems =
-        selectedCheckboxes
-            .map(
-                checkbox =>
-                    Number(
-                        checkbox.value
-                    )
-            )
-            .filter(
-                Number.isInteger
-            );
+        Array.from(
+            selectedItemCodes
+        )
+        .map(Number)
+        .filter(
+            Number.isInteger
+        );
 
 
     console.log(
@@ -1115,29 +1401,29 @@ async function saveRO() {
     );
 
 
-    // ======================================
+    // ==========================================
     // ITEM DETAILS
-    // ITEM CODE = NUMBER
-    // ======================================
+    // ==========================================
 
     const itemDetails =
-        selectedCheckboxes.map(
-            checkbox => {
+        selectedItems.map(
+            itemCode => {
+
+                const item =
+                    itemMap[itemCode];
+
 
                 return {
 
                     itemCode:
-                        Number(
-                            checkbox.value
-                        ),
+                        itemCode,
 
                     description:
-                        checkbox.dataset
-                            .description || "",
+                        item?.description || "",
 
                     billingAmount:
                         Number(
-                            checkbox.dataset.cost
+                            item?.billingAmount
                         ) || 0
 
                 };
@@ -1146,40 +1432,36 @@ async function saveRO() {
         );
 
 
-    console.log(
-        "Selected Item Details:",
-        itemDetails
-    );
-
-
-    // ======================================
+    // ==========================================
     // CALCULATE BILLING
-    // ======================================
+    // ==========================================
 
     let billingAmount = 0;
 
 
-    selectedCheckboxes.forEach(
-        checkbox => {
+    selectedItems.forEach(
+        itemCode => {
 
-            billingAmount +=
-                Number(
-                    checkbox.dataset.cost
-                ) || 0;
+            const item =
+                itemMap[itemCode];
+
+
+            if (item) {
+
+                billingAmount +=
+                    Number(
+                        item.billingAmount
+                    ) || 0;
+
+            }
 
         }
     );
 
 
-    console.log(
-        "Billing Amount:",
-        billingAmount
-    );
-
-
-    // ======================================
+    // ==========================================
     // VALIDATION
-    // ======================================
+    // ==========================================
 
     if (!vehicleNumber) {
 
@@ -1261,9 +1543,9 @@ async function saveRO() {
     }
 
 
-    // ======================================
-    // DISABLE SAVE BUTTON
-    // ======================================
+    // ==========================================
+    // START SAVING
+    // ==========================================
 
     isSaving = true;
 
@@ -1281,9 +1563,9 @@ async function saveRO() {
 
     try {
 
-        // ==================================
-        // VERIFY LOGGED-IN USER
-        // ==================================
+        // ======================================
+        // CURRENT USER
+        // ======================================
 
         const currentUser =
             auth.currentUser;
@@ -1302,15 +1584,9 @@ async function saveRO() {
             currentUser.uid;
 
 
-        console.log(
-            "Saving RO for Leader UID:",
-            leaderUid
-        );
-
-
-        // ==================================
-        // VERIFY LEADER ROLE
-        // ==================================
+        // ======================================
+        // CHECK ROLE
+        // ======================================
 
         if (
             leaderData.role &&
@@ -1324,9 +1600,9 @@ async function saveRO() {
         }
 
 
-        // ==================================
-        // VERIFY SELECTED ITEMS
-        // ==================================
+        // ======================================
+        // VERIFY ITEMS
+        // ======================================
 
         const itemsAreAssigned =
             await verifyAssignedItems(
@@ -1348,9 +1624,9 @@ async function saveRO() {
         }
 
 
-        // ==================================
+        // ======================================
         // CREATE DATE
-        // ==================================
+        // ======================================
 
         const now =
             new Date();
@@ -1397,9 +1673,9 @@ async function saveRO() {
             yyyy;
 
 
-        // ==================================
-        // GENERATE DOCUMENT ID
-        // ==================================
+        // ======================================
+        // DOCUMENT ID
+        // ======================================
 
         let documentId;
 
@@ -1427,15 +1703,9 @@ async function saveRO() {
         }
 
 
-        console.log(
-            "Document ID:",
-            documentId
-        );
-
-
-        // ==================================
+        // ======================================
         // DUPLICATE RO CHECK
-        // ==================================
+        // ======================================
 
         if (roNumber) {
 
@@ -1470,9 +1740,9 @@ async function saveRO() {
         }
 
 
-        // ==================================
+        // ======================================
         // SAVE REPAIR ORDER
-        // ==================================
+        // ======================================
 
         await db
             .collection(
@@ -1483,9 +1753,7 @@ async function saveRO() {
             )
             .set({
 
-                // --------------------------------
                 // BASIC INFORMATION
-                // --------------------------------
 
                 roNumber:
                     roNumber || "",
@@ -1509,10 +1777,7 @@ async function saveRO() {
                     vehicleNumber,
 
 
-                // --------------------------------
                 // ITEM INFORMATION
-                // IMPORTANT: NUMBERS
-                // --------------------------------
 
                 itemCodes:
                     selectedItems,
@@ -1521,25 +1786,19 @@ async function saveRO() {
                     itemDetails,
 
 
-                // --------------------------------
                 // BILLING
-                // --------------------------------
 
                 billingAmount:
                     billingAmount,
 
 
-                // --------------------------------
                 // STATUS
-                // --------------------------------
 
                 status:
                     "Pending",
 
 
-                // --------------------------------
                 // CREATED TIME
-                // --------------------------------
 
                 createdAt:
                     firebase.firestore
@@ -1554,52 +1813,78 @@ async function saveRO() {
         );
 
 
-        // ==================================
+        // ==========================================
         // SUCCESS
-        // ==================================
+        // ==========================================
 
         alert(
             "Repair Order Saved Successfully."
         );
 
 
-        // ==================================
+        // ==========================================
         // CLEAR FORM
-        // ==================================
+        // ==========================================
 
         roNumberInput.value =
             "";
 
-
         vehicleNumberInput.value =
             "";
-
 
         advisorNameInput.value =
             "";
 
 
-        // ==================================
-        // UNCHECK ITEMS
-        // ==================================
+        // ==========================================
+        // CLEAR SELECTED ITEMS
+        // ==========================================
 
-        document
-            .querySelectorAll(
-                'input[name="itemCode"]'
-            )
-            .forEach(
-                checkbox => {
+        selectedItemCodes.clear();
 
-                    checkbox.checked =
-                        false;
 
-                }
+        // ==========================================
+        // CLEAR SEARCH
+        // ==========================================
+
+        const searchInput =
+            document.getElementById(
+                "itemSearchInput"
             );
 
 
-        // ==================================
+        const searchMessage =
+            document.getElementById(
+                "itemSearchMessage"
+            );
+
+
+        if (searchInput) {
+
+            searchInput.value =
+                "";
+
+        }
+
+
+        if (searchMessage) {
+
+            searchMessage.textContent =
+                "";
+
+        }
+
+
+        // ==========================================
+        // RE-RENDER ITEMS
+        // ==========================================
+
+        renderItems();
+
+
+        // ==========================================
         // RESET BILLING
-        // ==================================
+        // ==========================================
 
         updateBillingAmount(
             0
@@ -1646,9 +1931,9 @@ async function saveRO() {
 }
 
 
-// ==========================================
+// =====================================================
 // LOGOUT
-// ==========================================
+// =====================================================
 
 function logout() {
 
@@ -1690,5 +1975,50 @@ function logout() {
             );
 
         });
+
+}
+
+
+// =====================================================
+// HOME / DASHBOARD
+// =====================================================
+
+function showDashboard() {
+
+    window.location.href =
+        "leader.html";
+
+}
+
+
+// =====================================================
+// ESCAPE HTML
+// =====================================================
+
+function escapeHTML(value) {
+
+    return String(
+        value || ""
+    )
+    .replace(
+        /&/g,
+        "&amp;"
+    )
+    .replace(
+        /</g,
+        "&lt;"
+    )
+    .replace(
+        />/g,
+        "&gt;"
+    )
+    .replace(
+        /"/g,
+        "&quot;"
+    )
+    .replace(
+        /'/g,
+        "&#039;"
+    );
 
 }

@@ -4849,9 +4849,8 @@ input[type="checkbox"] {
         border-radius: 12px;
     }
 
-}
-/* =====================================================
-   ASSIGN ITEMS SEARCH
+}/* =====================================================
+   ITEM SEARCH
 ===================================================== */
 
 .item-search-container {
@@ -4860,22 +4859,27 @@ input[type="checkbox"] {
 
     gap: 10px;
 
-    margin: 15px 0;
+    margin-top: 16px;
 
     width: 100%;
 
 }
 
-
-.item-search-container input {
+#assignmentItemSearch {
 
     flex: 1;
 
-    padding: 12px 14px;
+    height: 46px;
 
-    border: 1px solid #b0bec5;
+    padding: 0 14px;
 
-    border-radius: 8px;
+    border: 1px solid #90CAF9;
+
+    border-radius: 9px;
+
+    background: #FFFFFF;
+
+    color: #222;
 
     font-size: 15px;
 
@@ -4883,29 +4887,30 @@ input[type="checkbox"] {
 
 }
 
+#assignmentItemSearch:focus {
 
-.item-search-container input:focus {
-
-    border-color: #0D47A1;
+    border-color: #1565C0;
 
     box-shadow:
-        0 0 0 2px
-        rgba(13, 71, 161, 0.12);
+        0 0 0 2px rgba(21, 101, 192, 0.12);
 
 }
 
+#assignmentSearchBtn {
 
-.item-search-container button {
+    min-width: 85px;
 
-    padding: 12px 18px;
+    height: 46px;
+
+    padding: 0 15px;
 
     border: none;
 
-    border-radius: 8px;
+    border-radius: 9px;
 
     background: #0D47A1;
 
-    color: white;
+    color: #FFFFFF;
 
     font-size: 14px;
 
@@ -4915,34 +4920,910 @@ input[type="checkbox"] {
 
 }
 
-
-.item-search-container button:hover {
+#assignmentSearchBtn:hover {
 
     background: #1565C0;
 
 }
 
-
 #assignmentClearBtn {
 
-    background: #78909C;
+    min-width: 70px;
 
-}
+    height: 46px;
 
+    padding: 0 14px;
 
-#assignmentClearBtn:hover {
+    border: 1px solid #90CAF9;
 
-    background: #546E7A;
+    border-radius: 9px;
 
-}
+    background: #FFFFFF;
 
-
-.assignment-search-message {
-
-    margin: 5px 0 10px;
+    color: #0D47A1;
 
     font-size: 14px;
 
-    font-weight: 500;
+    font-weight: 600;
+
+    cursor: pointer;
+
+}
+
+#assignmentClearBtn:hover {
+
+    background: #E3F2FD;
+
+}
+
+.assignment-search-message {
+
+    min-height: 20px;
+
+    margin: 8px 0 0;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+}
+
+
+/* =====================================================
+   MOBILE SEARCH
+===================================================== */
+
+@media (max-width: 600px) {
+
+    .item-search-container {
+
+        flex-direction: column;
+
+        gap: 8px;
+
+    }
+
+    #assignmentItemSearch {
+
+        width: 100%;
+
+        height: 50px;
+
+        font-size: 16px;
+
+    }
+
+    #assignmentSearchBtn,
+    #assignmentClearBtn {
+
+        width: 100%;
+
+        height: 48px;
+
+    }
+
+}
+/* =====================================================
+   CREATE RO - ITEM SELECTION BOX
+===================================================== */
+
+.item-selection-box {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #90caf9;
+    border-radius: 12px;
+    background: #ffffff;
+    overflow: hidden;
+}
+
+
+/* =====================================================
+   SEARCH AREA
+===================================================== */
+
+.item-search-area {
+    padding: 12px;
+    background: #f5f9ff;
+    border-bottom: 1px solid #90caf9;
+}
+
+
+/* =====================================================
+   SEARCH INPUT
+===================================================== */
+
+.item-search-area input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 13px 14px;
+    border: 1px solid #90caf9;
+    border-radius: 8px;
+    background: #ffffff;
+    font-size: 16px;
+    outline: none;
+}
+
+
+.item-search-area input:focus {
+    border-color: #0d47a1;
+    box-shadow: 0 0 0 2px #e3f2fd;
+}
+
+
+/* =====================================================
+   SEARCH BUTTONS
+===================================================== */
+
+.item-search-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+
+.item-search-buttons button {
+    flex: 1;
+    min-height: 44px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+
+/* SEARCH */
+
+#itemSearchBtn {
+    background: #0d47a1;
+    color: #ffffff;
+    border: 1px solid #0d47a1;
+}
+
+
+#itemSearchBtn:hover {
+    background: #1565c0;
+}
+
+
+/* CLEAR */
+
+#itemClearBtn {
+    background: #ffffff;
+    color: #0d47a1;
+    border: 1px solid #90caf9;
+}
+
+
+#itemClearBtn:hover {
+    background: #e3f2fd;
+}
+
+
+/* =====================================================
+   SEARCH MESSAGE
+===================================================== */
+
+.item-search-message {
+    padding: 0 12px;
+    font-size: 14px;
+    font-weight: 600;
+    min-height: 0;
+}
+
+
+/* =====================================================
+   ITEM LIST
+===================================================== */
+
+.item-code-container {
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+
+/* =====================================================
+   ITEM CARD
+===================================================== */
+
+.item-option {
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+    border: 1px solid #90caf9;
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+
+.item-option:last-child {
+    margin-bottom: 0;
+}
+
+
+/* =====================================================
+   ITEM LABEL
+===================================================== */
+
+.item-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 18px;
+    cursor: pointer;
+}
+
+
+/* =====================================================
+   CHECKBOX
+===================================================== */
+
+.item-checkbox input[type="checkbox"] {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    accent-color: #0d47a1;
+    cursor: pointer;
+}
+
+
+/* =====================================================
+   ITEM TEXT
+===================================================== */
+
+.item-text {
+    flex: 1;
+    font-size: 16px;
+    color: #333333;
+    line-height: 1.5;
+}
+
+
+.item-text strong {
+    color: #111111;
+    margin-left: 4px;
+}
+
+
+/* =====================================================
+   SELECTED ITEM
+===================================================== */
+
+.item-option:has(
+    input[type="checkbox"]:checked
+) {
+    background: #e3f2fd;
+    border-color: #0d47a1;
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 600px) {
+
+    .item-code-container {
+        max-height: 350px;
+    }
+
+
+    .item-checkbox {
+        padding: 16px 12px;
+        gap: 12px;
+    }
+
+
+    .item-checkbox input[type="checkbox"] {
+        width: 25px;
+        height: 25px;
+    }
+
+
+    .item-text {
+        font-size: 15px;
+    }
+
+
+    .item-search-area input {
+        font-size: 16px;
+        min-height: 46px;
+    }
+
+
+    .item-search-buttons button {
+        min-height: 46px;
+        font-size: 15px;
+    }
+
+}
+/* =====================================================
+   MOBILE UI - ASSIGN ITEMS TO LEADER
+   ===================================================== */
+
+@media (max-width: 600px) {
+
+    /* ================================================
+       PAGE
+       ================================================ */
+
+    .assignment-page {
+
+        width: 100%;
+
+        max-width: none;
+
+        margin: 0;
+
+        padding:
+            20px
+            14px
+            35px;
+
+    }
+
+
+    /* ================================================
+       HEADER
+       ================================================ */
+
+    .assignment-header {
+
+        margin-bottom: 18px;
+
+    }
+
+
+    .home-btn {
+
+        min-height: 46px;
+
+        padding:
+            11px
+            18px;
+
+        font-size: 16px;
+
+        border-radius: 9px;
+
+    }
+
+
+    .page-title {
+
+        margin-top: 8px;
+
+        margin-bottom: 0;
+
+        font-size: 25px;
+
+        line-height: 1.25;
+
+        font-weight: 700;
+
+    }
+
+
+    /* ================================================
+       CARDS
+       ================================================ */
+
+    .assignment-card {
+
+        width: 100%;
+
+        padding: 20px 18px;
+
+        margin-bottom: 18px;
+
+        border-radius: 14px;
+
+        box-shadow:
+            0 3px 12px
+            rgba(0, 0, 0, 0.08);
+
+    }
+
+
+    .assignment-card h3 {
+
+        font-size: 20px;
+
+        margin-top: 0;
+
+        margin-bottom: 12px;
+
+    }
+
+
+    /* ================================================
+       SUBTITLE
+       ================================================ */
+
+    .items-subtitle {
+
+        font-size: 14px;
+
+        line-height: 1.45;
+
+        margin-top: 4px;
+
+        margin-bottom: 14px;
+
+        color: #555;
+
+    }
+
+
+    /* ================================================
+       LEADER SELECT
+       ================================================ */
+
+    .leader-select {
+
+        width: 100%;
+
+        height: 54px;
+
+        min-height: 54px;
+
+        padding:
+            0
+            14px;
+
+        font-size: 16px;
+
+        border-radius: 9px;
+
+    }
+
+
+    /* ================================================
+       ITEMS HEADER
+       ================================================ */
+
+    .items-header {
+
+        display: flex;
+
+        align-items: flex-start;
+
+        justify-content: space-between;
+
+        gap: 10px;
+
+        margin-bottom: 14px;
+
+    }
+
+
+    .items-header h3 {
+
+        font-size: 20px;
+
+        line-height: 1.25;
+
+    }
+
+
+    .item-count {
+
+        flex-shrink: 0;
+
+        padding:
+            7px
+            11px;
+
+        font-size: 13px;
+
+        border-radius: 20px;
+
+    }
+
+
+    /* ================================================
+       SEARCH AREA
+       ================================================ */
+
+    .item-search-container {
+
+        display: flex;
+
+        align-items: stretch;
+
+        gap: 8px;
+
+        width: 100%;
+
+        margin-top: 10px;
+
+    }
+
+
+    .item-search-container input {
+
+        flex: 1;
+
+        min-width: 0;
+
+        height: 46px;
+
+        padding:
+            0
+            12px;
+
+        font-size: 15px;
+
+        border:
+            1px solid
+            #B8CDE0;
+
+        border-radius: 8px;
+
+        outline: none;
+
+    }
+
+
+    .item-search-container input:focus {
+
+        border-color: #1565C0;
+
+        box-shadow:
+            0 0 0 2px
+            rgba(21, 101, 192, 0.10);
+
+    }
+
+
+    /* ================================================
+       SEARCH BUTTON
+       ================================================ */
+
+    #assignmentSearchBtn {
+
+        height: 46px;
+
+        min-width: 72px;
+
+        padding:
+            0
+            12px;
+
+        border: none;
+
+        border-radius: 8px;
+
+        background: #0D47A1;
+
+        color: white;
+
+        font-size: 14px;
+
+        font-weight: 700;
+
+        cursor: pointer;
+
+    }
+
+
+    #assignmentSearchBtn:active {
+
+        background: #1565C0;
+
+        transform: scale(0.98);
+
+    }
+
+
+    /* ================================================
+       CLEAR BUTTON
+       ================================================ */
+
+    #assignmentClearBtn {
+
+        height: 46px;
+
+        min-width: 62px;
+
+        padding:
+            0
+            10px;
+
+        border: none;
+
+        border-radius: 8px;
+
+        background: #78909C;
+
+        color: white;
+
+        font-size: 14px;
+
+        font-weight: 700;
+
+        cursor: pointer;
+
+    }
+
+
+    #assignmentClearBtn:active {
+
+        background: #607D8B;
+
+        transform: scale(0.98);
+
+    }
+
+
+    /* ================================================
+       SEARCH MESSAGE
+       ================================================ */
+
+    .assignment-search-message {
+
+        margin:
+            8px
+            2px
+            4px;
+
+        font-size: 13px;
+
+        line-height: 1.4;
+
+    }
+
+
+    /* ================================================
+       ITEM CONTAINER
+       ================================================ */
+
+    #itemContainer {
+
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 10px;
+
+        width: 100%;
+
+        margin-top: 10px;
+
+    }
+
+
+    /* ================================================
+       ITEM CARD
+       ================================================ */
+
+    .item-option {
+
+        width: 100%;
+
+        border:
+            1px solid
+            #D6E4F0;
+
+        border-radius: 10px;
+
+        background: #FAFCFF;
+
+    }
+
+
+    .item-option label {
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 13px;
+
+        width: 100%;
+
+        min-height: 58px;
+
+        padding:
+            12px
+            13px;
+
+    }
+
+
+    /* ================================================
+       CHECKBOX
+       ================================================ */
+
+    .item-option input[type="checkbox"] {
+
+        width: 23px;
+
+        height: 23px;
+
+        min-width: 23px;
+
+        flex-shrink: 0;
+
+        accent-color: #0D47A1;
+
+    }
+
+
+    /* ================================================
+       ITEM INFORMATION
+       ================================================ */
+
+    .item-info {
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: space-between;
+
+        gap: 10px;
+
+        width: 100%;
+
+    }
+
+
+    .item-details {
+
+        min-width: 0;
+
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 4px;
+
+    }
+
+
+    .item-code {
+
+        font-size: 17px;
+
+        font-weight: 700;
+
+        line-height: 1.2;
+
+        color: #0D47A1;
+
+    }
+
+
+    .item-description {
+
+        font-size: 14px;
+
+        line-height: 1.35;
+
+        color: #555;
+
+        word-break: break-word;
+
+    }
+
+
+    .item-price {
+
+        flex-shrink: 0;
+
+        font-size: 15px;
+
+        font-weight: 700;
+
+        white-space: nowrap;
+
+    }
+
+
+    /* ================================================
+       EMPTY MESSAGE
+       ================================================ */
+
+    .empty-message {
+
+        width: 100%;
+
+        padding:
+            18px
+            12px;
+
+        min-height: 52px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        text-align: center;
+
+        border-radius: 9px;
+
+        font-size: 14px;
+
+        line-height: 1.4;
+
+    }
+
+
+    /* ================================================
+       SAVE BUTTON
+       ================================================ */
+
+    .save-btn {
+
+        width: 100%;
+
+        min-height: 55px;
+
+        margin-top: 18px;
+
+        border-radius: 9px;
+
+        font-size: 17px;
+
+        font-weight: 700;
+
+    }
+
+
+    /* ================================================
+       STATUS
+       ================================================ */
+
+    #assignmentStatus {
+
+        margin:
+            10px
+            0
+            0;
+
+        font-size: 14px;
+
+        line-height: 1.4;
+
+    }
+
+
+    /* ================================================
+       ASSIGNMENT OVERVIEW
+       ================================================ */
+
+    .assignment-overview-card h2 {
+
+        font-size: 21px;
+
+        line-height: 1.3;
+
+    }
+
+
+    .assignment-overview-summary {
+
+        font-size: 14px;
+
+        line-height: 1.4;
+
+        padding: 10px 12px;
+
+        border-radius: 8px;
+
+    }
+
+
+    .assignment-overview {
+
+        margin-top: 12px;
+
+    }
 
 }

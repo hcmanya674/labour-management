@@ -1,24 +1,95 @@
-// firebase.js (CORRECT VERSION FOR YOUR PROJECT)
+// =====================================================
+// firebase.js
+// LABOUR MANAGEMENT SYSTEM
+// =====================================================
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDs1kyGN2-Vyp7MDJvrLHJLzhFliblT6R4",
-  authDomain: "labour-management-28ed0.firebaseapp.com",
-  projectId: "labour-management-28ed0",
-  storageBucket: "labour-management-28ed0.appspot.com",
-  messagingSenderId: "707231581452",
-  appId: "1:707231581452:web:242f583a8a9828137f3529"
+
+    apiKey: "AIzaSyDs1kyGN2-Vyp7MDJvrLHJLzhFliblT6R4",
+
+    authDomain: "labour-management-28ed0.firebaseapp.com",
+
+    projectId: "labour-management-28ed0",
+
+    storageBucket: "labour-management-28ed0.appspot.com",
+
+    messagingSenderId: "707231581452",
+
+    appId: "1:707231581452:web:242f583a8a9828137f3529"
+
 };
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
 
-// Firebase Authentication
+// =====================================================
+// INITIALIZE FIREBASE
+// =====================================================
+
+if (!firebase.apps.length) {
+
+    firebase.initializeApp(firebaseConfig);
+
+}
+
+
+// =====================================================
+// FIREBASE AUTHENTICATION
+// =====================================================
+
 const auth = firebase.auth();
-// Cloud Firestore
+
+
+// =====================================================
+// FIRESTORE
+// =====================================================
+
 const db = firebase.firestore();
 
-// users to stay logged in even after closing the browser
-auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-.catch((error) => {
-    console.error(error);
+
+// =====================================================
+// FIRESTORE CONNECTION FIX
+// =====================================================
+// This helps when WebChannel connections fail,
+// especially on localhost / some networks.
+// =====================================================
+
+try {
+
+    db.settings({
+
+        experimentalForceLongPolling: true,
+
+        useFetchStreams: false
+
+    });
+
+    console.log(
+        "Firestore long-polling enabled."
+    );
+
+}
+
+catch (error) {
+
+    console.warn(
+        "Firestore settings already initialized:",
+        error
+    );
+
+}
+
+
+// =====================================================
+// AUTH PERSISTENCE
+// =====================================================
+
+auth.setPersistence(
+    firebase.auth.Auth.Persistence.LOCAL
+)
+.catch(error => {
+
+    console.error(
+        "Auth persistence error:",
+        error
+    );
+
 });
