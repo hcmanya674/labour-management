@@ -17,13 +17,12 @@ loadAdminLayout("Region Management", `
 
     <label>Region ID</label>
 
-    <input
-        type="text"
-        id="regionId"
-        maxlength="5"
-        placeholder="Enter Region ID"
-        oninput="this.value=this.value.toUpperCase()"
-    >
+<input
+    type="text"
+    id="regionId"
+    placeholder="Auto Generated"
+    readonly
+>
 
     <label>Region Name</label>
 
@@ -88,47 +87,22 @@ loadAdminLayout("Region Management", `
 function initializePage() {
     loadRegions();
 }
-
 // =====================================================
 // SAVE REGION
 // =====================================================
 
 async function saveRegion() {
 
-    const id =
-        document.getElementById("regionId")
-        .value
-        .trim()
-        .toUpperCase();
-
     const name =
         document.getElementById("regionName")
-        .value
-        .trim()
-        .toUpperCase();
+            .value
+            .trim()
+            .toUpperCase();
 
 
-    // Empty validation
-
-    if (!id && !name) {
-
-        alert(
-            "Please enter Region ID and Region Name."
-        );
-
-        return;
-
-    }
-
-    if (!id) {
-
-        alert(
-            "Please enter Region ID."
-        );
-
-        return;
-
-    }
+    // ==========================================
+    // VALIDATION
+    // ==========================================
 
     if (!name) {
 
@@ -141,20 +115,9 @@ async function saveRegion() {
     }
 
 
-    // Region ID validation
-
-    if (!/^[A-Z0-9]+$/.test(id)) {
-
-        alert(
-            "Region ID can contain only letters and numbers."
-        );
-
-        return;
-
-    }
-
-
-    // Region name length
+    // ==========================================
+    // REGION NAME LENGTH
+    // ==========================================
 
     if (name.length > 30) {
 
@@ -167,10 +130,13 @@ async function saveRegion() {
     }
 
 
-    // Region name validation
+    // ==========================================
+    // REGION NAME VALIDATION
+    // ==========================================
 
     const nameRegex =
         /^[A-Za-z ]+$/;
+
 
     if (!nameRegex.test(name)) {
 
@@ -185,35 +151,19 @@ async function saveRegion() {
 
     try {
 
-        // Check ID
-
-        const idDoc =
-            await db.collection("regions")
-            .doc(id)
-            .get();
-
-
-        if (idDoc.exists) {
-
-            alert(
-                "Region ID already exists."
-            );
-
-            return;
-
-        }
-
-
-        // Check name
+        // ==========================================
+        // CHECK DUPLICATE REGION NAME
+        // ==========================================
 
         const duplicate =
-            await db.collection("regions")
-            .where(
-                "regionName",
-                "==",
-                name
-            )
-            .get();
+            await db
+                .collection("regions")
+                .where(
+                    "regionName",
+                    "==",
+                    name
+                )
+                .get();
 
 
         if (!duplicate.empty) {
@@ -227,40 +177,110 @@ async function saveRegion() {
         }
 
 
-        // Save
+        // ==========================================
+        // GET ALL EXISTING REGIONS
+        // ==========================================
 
-        await db.collection("regions")
-            .doc(id)
+        const snapshot =
+            await db
+                .collection("regions")
+                .get();
+
+
+        // ==========================================
+        // FIND HIGHEST REGION ID
+        // ==========================================
+
+        let highestId = 0;
+
+
+        snapshot.forEach(
+            (doc) => {
+
+                const data =
+                    doc.data();
+
+
+                const currentId =
+                    Number(
+                        data.regionId
+                    );
+
+
+                if (
+                    Number.isInteger(currentId) &&
+                    currentId > highestId
+                ) {
+
+                    highestId =
+                        currentId;
+
+                }
+
+            }
+        );
+
+
+        // ==========================================
+        // GENERATE NEXT INTEGER ID
+        // ==========================================
+
+        const newRegionId =
+            highestId + 1;
+
+
+        // ==========================================
+        // SAVE REGION
+        // ==========================================
+
+        await db
+            .collection("regions")
+            .doc(
+                String(newRegionId)
+            )
             .set({
 
-                regionId: id,
+                regionId:
+                    newRegionId,
 
-                regionName: name,
+                regionName:
+                    name,
 
-                active: true,
+                active:
+                    true,
 
                 createdAt:
                     firebase.firestore
-                    .FieldValue
-                    .serverTimestamp()
+                        .FieldValue
+                        .serverTimestamp()
 
             });
 
 
-        alert(
-            "Region Added Successfully."
-        );
-
+        // ==========================================
+        // SHOW GENERATED ID
+        // ==========================================
 
         document.getElementById(
             "regionId"
-        ).value = "";
+        ).value =
+            newRegionId;
 
+
+        alert(
+            "Region Added Successfully.\n\n" +
+            "Region ID: " +
+            newRegionId
+        );
+
+
+        // ==========================================
+        // CLEAR REGION NAME
+        // ==========================================
 
         document.getElementById(
             "regionName"
         ).value = "";
-
 
     }
 
@@ -271,6 +291,7 @@ async function saveRegion() {
             error
         );
 
+
         alert(
             "Unable to save region:\n\n" +
             error.message
@@ -279,8 +300,6 @@ async function saveRegion() {
     }
 
 }
-
-
 // =====================================================
 // LOAD REGIONS
 // =====================================================

@@ -605,15 +605,32 @@ function loadItems() {
                         .textContent =
                         itemCode;
 
+// =================================================
+// DESCRIPTION
+// =================================================
 
-                    // =================================================
-                    // DESCRIPTION
-                    // =================================================
+const descriptionCell =
+    row.insertCell(1);
 
-                    row.insertCell(1)
-                        .textContent =
-                        data.description || "";
 
+if (data.deleted === true) {
+
+    descriptionCell.textContent =
+        `ITEM ${itemCode} IS DELETED AND NOT AVAILABLE`;
+
+    descriptionCell.style.color =
+        "#d32f2f";
+
+    descriptionCell.style.fontWeight =
+        "700";
+
+}
+else {
+
+    descriptionCell.textContent =
+        data.description || "";
+
+}
 
                     // =================================================
                     // BILLING AMOUNT
@@ -644,17 +661,34 @@ function loadItems() {
                             "en-IN"
                         );
 
+// =================================================
+// STATUS
+// =================================================
 
-                    // =================================================
-                    // STATUS
-                    // =================================================
+const statusCell =
+    row.insertCell(4);
 
-                    row.insertCell(4)
-                        .textContent =
-                        data.active
-                            ? "Active"
-                            : "Inactive";
 
+if (data.deleted === true) {
+
+    statusCell.textContent =
+        "Deleted";
+
+    statusCell.style.color =
+        "#d32f2f";
+
+    statusCell.style.fontWeight =
+        "700";
+
+}
+else {
+
+    statusCell.textContent =
+        data.active
+            ? "Active"
+            : "Inactive";
+
+}
 
                     // =================================================
                     // EDIT DESCRIPTION
@@ -669,9 +703,13 @@ function loadItems() {
                             "button"
                         );
 
-
                     editBtn.textContent =
-                        "Edit";
+                        data.deleted
+                            ? "Unavailable"
+                            : "Edit";
+
+                    editBtn.disabled =
+                        data.deleted === true;
 
 
                     editBtn.onclick =
@@ -703,9 +741,13 @@ function loadItems() {
                             "button"
                         );
 
-
                     billingBtn.textContent =
-                        "Edit Billing";
+                        data.deleted
+                            ? "Unavailable"
+                            : "Edit Billing";
+
+                    billingBtn.disabled =
+                        data.deleted === true;
 
 
                     billingBtn.onclick =
@@ -739,7 +781,12 @@ function loadItems() {
 
 
                     incentiveBtn.textContent =
-                        "Edit Incentive";
+                    data.deleted
+                        ? "Unavailable"
+                        : "Edit Incentive";
+
+                    incentiveBtn.disabled =
+                        data.deleted === true;
 
 
                     incentiveBtn.onclick =
@@ -757,8 +804,6 @@ function loadItems() {
                     incentiveCell.appendChild(
                         incentiveBtn
                     );
-
-
                     // =================================================
                     // ACTION
                     // =================================================
@@ -773,17 +818,38 @@ function loadItems() {
                         );
 
 
-                    if (
-                        data.active
-                    ) {
+                    // =================================================
+                    // DELETED ITEM
+                    // =================================================
+
+                    if (data.deleted === true) {
+
+                        actionBtn.textContent =
+                            "Deleted";
+
+                        actionBtn.style.background =
+                            "#9e9e9e";
+
+                        actionBtn.style.color =
+                            "white";
+
+                        actionBtn.disabled =
+                            true;
+
+                    }
+
+
+                    // =================================================
+                    // ACTIVE ITEM
+                    // =================================================
+
+                    else if (data.active) {
 
                         actionBtn.textContent =
                             "Deactivate";
 
-
                         actionBtn.style.background =
                             "#12a10d";
-
 
                         actionBtn.style.color =
                             "white";
@@ -800,15 +866,18 @@ function loadItems() {
 
                     }
 
+
+                    // =================================================
+                    // INACTIVE ITEM
+                    // =================================================
+
                     else {
 
                         actionBtn.textContent =
                             "Activate";
 
-
                         actionBtn.style.background =
                             "#e53935";
-
 
                         actionBtn.style.color =
                             "white";
@@ -830,14 +899,27 @@ function loadItems() {
                         actionBtn
                     );
 
-
                     // =================================================
                     // DELETE
                     // =================================================
 
-                    const deleteCell =
-                        row.insertCell(9);
+                    const  deleteCell =
+                    row.insertCell(9);
 
+
+                if (data.deleted === true) {
+
+                    deleteCell.textContent =
+                        "Not Available";
+
+                    deleteCell.style.color =
+                        "#888";
+
+                    deleteCell.style.fontWeight =
+                        "600";
+
+                }
+                else {
 
                     const deleteBtn =
                         document.createElement(
@@ -857,6 +939,7 @@ function loadItems() {
                         "white";
 
 
+
                     deleteBtn.onclick =
                         function () {
 
@@ -873,7 +956,7 @@ function loadItems() {
                     );
 
                 }
-            );
+         } );
 
 
             attachSearch();
@@ -1479,12 +1562,13 @@ function attachSearch() {
     );
 
 }
-
-
 // =====================================================
 // DELETE ITEM CODE
 // =====================================================
-// itemCode passed here is NUMBER
+// IMPORTANT:
+// Item Code is NEVER physically deleted.
+// The document is kept so the number is never reused.
+// The item is marked as deleted/not available.
 // =====================================================
 
 async function deleteItemCode(
@@ -1493,15 +1577,11 @@ async function deleteItemCode(
 ) {
 
     const numericItemCode =
-        Number(
-            itemCode
-        );
+        Number(itemCode);
 
 
     if (
-        !Number.isInteger(
-            numericItemCode
-        )
+        !Number.isInteger(numericItemCode)
     ) {
 
         alert(
@@ -1516,18 +1596,20 @@ async function deleteItemCode(
     const confirmation =
         confirm(
 
-            `Are you sure you want to delete item "${numericItemCode}"?\n\n` +
+            `Are you sure you want to delete Item Code "${numericItemCode}"?\n\n` +
 
-            `Any active assignments for this item will also be removed.\n\n` +
+            `The item will be marked as "Deleted - Not Available".\n\n` +
 
-            `This action cannot be undone.`
+            `The Item Code ${numericItemCode} will NOT be reused.\n\n` +
+
+            `Existing Repair Orders will NOT be deleted.\n\n` +
+
+            `Continue?`
 
         );
 
 
-    if (
-        !confirmation
-    ) {
+    if (!confirmation) {
 
         return;
 
@@ -1537,10 +1619,7 @@ async function deleteItemCode(
     try {
 
         // =================================================
-        // DELETE ASSIGNMENTS
-        //
-        // IMPORTANT:
-        // Firestore query uses NUMBER
+        // REMOVE ACTIVE ASSIGNMENTS
         // =================================================
 
         const assignments =
@@ -1572,7 +1651,18 @@ async function deleteItemCode(
 
 
         // =================================================
-        // DELETE ITEM
+        // DO NOT DELETE ITEM DOCUMENT
+        // =================================================
+        //
+        // Instead mark it as deleted.
+        //
+        // This preserves:
+        //
+        // Item Code
+        // Description
+        // Billing
+        // Incentive
+        //
         // =================================================
 
         const itemRef =
@@ -1585,8 +1675,20 @@ async function deleteItemCode(
                 );
 
 
-        batch.delete(
-            itemRef
+        batch.update(
+            itemRef,
+            {
+
+                active: false,
+
+                deleted: true,
+
+                deletedAt:
+                    firebase.firestore
+                        .FieldValue
+                        .serverTimestamp()
+
+            }
         );
 
 
@@ -1598,7 +1700,7 @@ async function deleteItemCode(
 
 
         alert(
-            `Item Code "${numericItemCode}" deleted successfully.`
+            `Item Code ${numericItemCode} has been deleted and marked as "Not Available".`
         );
 
     }
