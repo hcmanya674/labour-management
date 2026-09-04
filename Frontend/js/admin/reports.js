@@ -1,179 +1,946 @@
-// =====================================================
+// ======================================================
 // LABOUR MANAGEMENT SYSTEM
-// REPORTS.JS
-// =====================================================
+// reports.js
+// ======================================================
 //
-// Handles:
-//
-// 1. Region Loading
-// 2. Repair Order Report
-// 3. Advisor Wise Work Summary
-// 4. Advisor Item & Amount Report
-// 5. Repair Order PDF Export
-// 6. Advisor Item & Amount PDF Export
+// Features:
+// 1. Region loading
+// 2. Date filtering
+// 3. Specific region filtering
+// 4. All-region filtering
+// 5. Repair Order Report
+// 6. Work Done = Item Code + Description
+// 7. Billing Amount
+// 8. Advisor-wise Work Summary
+// 9. Advisor Item & Amount Report
+// 10. Incentive + Net Billing
+// 11. Repair Order PDF
+// 12. Advisor Item & Amount PDF
 //
 // IMPORTANT:
-// Item Code is stored as NUMBER in Firestore:
-//
-// itemCode: 1
-// itemCode: 2
-// itemCode: 3
-//
-// But Firestore document ID is STRING:
-//
-// itemcodes/"1"
-// itemcodes/"2"
-// itemcodes/"3"
-//
-// Therefore always use:
-//
-// .doc(String(itemCode))
-//
-// =====================================================
+// Region filtering supports:
+// - Region Firestore document ID
+// - regionId
+// - regionName
+// - Different capitalization / spaces
+// ======================================================
 
 
-// =====================================================
+// ======================================================
+// GLOBAL REGION DATA
+// ======================================================
+
+let regionData = [];
+
+let regionsLoadedPromise = null;
+
+
+// ======================================================
 // INITIALIZE PAGE
-// =====================================================
+// ======================================================
 
 initializePage();
 
 
 function initializePage() {
 
-    loadRegions();
+    regionsLoadedPromise = loadRegions();
 
 }
 
 
-// =====================================================
-// LOAD ACTIVE REGIONS
-// =====================================================
+// ======================================================
+// NORMALIZE TEXT
+// ======================================================
 
-function loadRegions() {
+function normalizeText(value) {
 
-    db.collection("regions")
-        .where("active", "==", true)
-        .get()
+    if (
+        value === null ||
+        value === undefined
+    ) {
+        return "";
+    }
 
-        .then((snapshot) => {
+    return String(value)
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, " ");
 
-            let html =
-                `<option value="">All Regions</option>`;
-
-
-            snapshot.forEach((doc) => {
-
-                const region =
-                    doc.data();
-
-
-                html += `
-
-                    <option value="${region.regionId}">
-                        ${region.regionName}
-                    </option>
-
-                `;
-
-            });
+}
 
 
-            const regionSelect =
-                document.getElementById(
-                    "reportRegion"
-                );
+// ======================================================
+// LOAD REGIONS
+// ======================================================
+
+async function loadRegions() {
+
+    try {
+
+        const snapshot =
+            await db.collection("regions")
+                .where("active", "==", true)
+                .get();
 
 
-            if (regionSelect) {
+        regionData = [];
 
-                regionSelect.innerHTML =
-                    html;
 
-            }
+        let html =
+            `<option value="">All Regions</option>`;
 
-        })
 
-        .catch((error) => {
+        snapshot.forEach(doc => {
 
-            console.error(
-                "Error loading regions:",
-                error
+            const region =
+                doc.data();
+
+
+            const regionObject = {
+
+                docId:
+                    doc.id,
+
+                regionId:
+                    region.regionId || "",
+
+                regionName:
+                    region.regionName || doc.id
+
+            };
+
+
+            regionData.push(
+                regionObject
+            );
+
+
+            // --------------------------------------------------
+            // IMPORTANT:
+            // Use Firestore document ID as dropdown value.
+            // We will compare it against all possible region
+            // values stored inside Repair Orders.
+            // --------------------------------------------------
+
+            html += `
+
+                <option value="${escapeHtmlAttribute(doc.id)}">
+
+                    ${escapeHtml(
+                        regionObject.regionName
+                    )}
+
+                </option>
+
+            `;
+
+        });
+
+
+        const regionSelect =
+            document.getElementById(
+                "reportRegion"
+            );
+
+
+        if (regionSelect) {
+
+            regionSelect.innerHTML =
+                html;
+
+        }
+
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Error loading regions:",
+            error
+        );
+
+        const regionSelect =
+            document.getElementById(
+                "reportRegion"
+            );
+
+
+        if (regionSelect) {
+
+            regionSelect.innerHTML =
+                `<option value="">
+                    All Regions
+                </option>`;
+
+        }
+
+    }
+
+}
+
+
+// ======================================================
+// ESCAPE HTML
+// ======================================================
+
+function escapeHtml(value) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+
+        return "";
+
+    }
+
+
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+}
+
+
+// ======================================================
+// ESCAPE HTML ATTRIBUTE
+// ======================================================
+
+function escapeHtmlAttribute(value) {
+
+    return escapeHtml(value);
+
+}
+
+
+// ======================================================
+// GET REGION OBJECT
+// ======================================================
+
+function getSelectedRegionObject(
+    selectedRegion
+) {
+
+    if (!selectedRegion) {
+
+        return null;
+
+    }
+
+
+    const selected =
+        regionData.find(region => {
+
+            return (
+                normalizeText(region.docId) ===
+                    normalizeText(selectedRegion)
+
+                ||
+
+                normalizeText(region.regionId) ===
+                    normalizeText(selectedRegion)
+
+                ||
+
+                normalizeText(region.regionName) ===
+                    normalizeText(selectedRegion)
             );
 
         });
 
+
+    return selected || null;
+
 }
 
 
-/// =====================================================
-// GENERATE MAIN REPAIR ORDER REPORT
-// =====================================================
+// ======================================================
+// CHECK REGION MATCH
+// ======================================================
+//
+// This is the MAIN FIX.
+//
+// A Repair Order may contain:
+// ro.region = document ID
+// ro.region = regionId
+// ro.region = regionName
+//
+// We compare against all possible values.
+// ======================================================
+
+function repairOrderMatchesRegion(
+    repairOrder,
+    selectedRegion
+) {
+
+    // --------------------------------------------------
+    // All Regions
+    // --------------------------------------------------
+
+    if (
+        !selectedRegion ||
+        selectedRegion === ""
+    ) {
+
+        return true;
+
+    }
+
+
+    const selected =
+        getSelectedRegionObject(
+            selectedRegion
+        );
+
+
+    if (!selected) {
+
+        console.warn(
+            "Selected region not found:",
+            selectedRegion
+        );
+
+        return false;
+
+    }
+
+
+    const repairOrderRegion =
+        repairOrder.region;
+
+
+    if (
+        repairOrderRegion === null ||
+        repairOrderRegion === undefined
+    ) {
+
+        return false;
+
+    }
+
+
+    // --------------------------------------------------
+    // If region is stored as a string
+    // --------------------------------------------------
+
+    if (
+        typeof repairOrderRegion ===
+        "string" ||
+
+        typeof repairOrderRegion ===
+        "number"
+    ) {
+
+        const roRegion =
+            normalizeText(
+                repairOrderRegion
+            );
+
+
+        return (
+
+            roRegion ===
+                normalizeText(selected.docId)
+
+            ||
+
+            roRegion ===
+                normalizeText(selected.regionId)
+
+            ||
+
+            roRegion ===
+                normalizeText(selected.regionName)
+
+        );
+
+    }
+
+
+    // --------------------------------------------------
+    // If region was stored as an object
+    // --------------------------------------------------
+
+    if (
+        typeof repairOrderRegion ===
+        "object"
+    ) {
+
+        const possibleValues = [
+
+            repairOrderRegion.docId,
+
+            repairOrderRegion.regionId,
+
+            repairOrderRegion.regionName,
+
+            repairOrderRegion.id,
+
+            repairOrderRegion.name
+
+        ];
+
+
+        return possibleValues.some(value => {
+
+            return (
+
+                normalizeText(value) ===
+                    normalizeText(selected.docId)
+
+                ||
+
+                normalizeText(value) ===
+                    normalizeText(selected.regionId)
+
+                ||
+
+                normalizeText(value) ===
+                    normalizeText(selected.regionName)
+
+            );
+
+        });
+
+    }
+
+
+    return false;
+
+}
+
+
+// ======================================================
+// GET REGION DISPLAY NAME
+// ======================================================
+
+function getRegionDisplayName(
+    repairOrder
+) {
+
+    const value =
+        repairOrder.region;
+
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+
+        return "-";
+
+    }
+
+
+    // --------------------------------------------------
+    // Object region
+    // --------------------------------------------------
+
+    if (
+        typeof value ===
+        "object"
+    ) {
+
+        const possibleValues = [
+
+            value.regionName,
+
+            value.name,
+
+            value.regionId,
+
+            value.id,
+
+            value.docId
+
+        ];
+
+
+        for (
+            const regionValue
+            of possibleValues
+        ) {
+
+            if (!regionValue) {
+
+                continue;
+
+            }
+
+
+            const found =
+                regionData.find(region => {
+
+                    return (
+
+                        normalizeText(
+                            region.regionName
+                        ) ===
+                        normalizeText(
+                            regionValue
+                        )
+
+                        ||
+
+                        normalizeText(
+                            region.regionId
+                        ) ===
+                        normalizeText(
+                            regionValue
+                        )
+
+                        ||
+
+                        normalizeText(
+                            region.docId
+                        ) ===
+                        normalizeText(
+                            regionValue
+                        )
+
+                    );
+
+                });
+
+
+            if (found) {
+
+                return found.regionName;
+
+            }
+
+        }
+
+    }
+
+
+    // --------------------------------------------------
+    // String / Number region
+    // --------------------------------------------------
+
+    const found =
+        regionData.find(region => {
+
+            return (
+
+                normalizeText(
+                    region.docId
+                ) ===
+                normalizeText(value)
+
+                ||
+
+                normalizeText(
+                    region.regionId
+                ) ===
+                normalizeText(value)
+
+                ||
+
+                normalizeText(
+                    region.regionName
+                ) ===
+                normalizeText(value)
+
+            );
+
+        });
+
+
+    if (found) {
+
+        return found.regionName;
+
+    }
+
+
+    // If no region document matches,
+    // display the original value.
+
+    return String(value);
+
+}
+
+
+// ======================================================
+// GET CREATED DATE
+// ======================================================
+
+function getCreatedDate(
+    repairOrder
+) {
+
+    if (!repairOrder.createdAt) {
+
+        return null;
+
+    }
+
+
+    try {
+
+        // Firestore Timestamp
+
+        if (
+            typeof repairOrder.createdAt.toDate ===
+            "function"
+        ) {
+
+            return repairOrder.createdAt.toDate();
+
+        }
+
+
+        // JavaScript Date
+
+        if (
+            repairOrder.createdAt instanceof
+            Date
+        ) {
+
+            return repairOrder.createdAt;
+
+        }
+
+
+        // Timestamp object
+
+        if (
+            repairOrder.createdAt.seconds
+        ) {
+
+            return new Date(
+                repairOrder.createdAt.seconds *
+                1000
+            );
+
+        }
+
+
+        return new Date(
+            repairOrder.createdAt
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Invalid createdAt:",
+            error
+        );
+
+        return null;
+
+    }
+
+}
+
+
+// ======================================================
+// GET ITEM CODES FROM REPAIR ORDER
+// ======================================================
+
+function getRepairOrderItemCodes(
+    repairOrder
+) {
+
+    let items = [];
+
+
+    // --------------------------------------------------
+    // New records
+    // --------------------------------------------------
+
+    if (
+        Array.isArray(
+            repairOrder.itemCodes
+        )
+    ) {
+
+        items =
+            repairOrder.itemCodes;
+
+    }
+
+
+    // --------------------------------------------------
+    // Older records
+    // --------------------------------------------------
+
+    else if (
+        repairOrder.itemCodes !==
+        undefined &&
+
+        repairOrder.itemCodes !==
+        null &&
+
+        repairOrder.itemCodes !==
+        ""
+    ) {
+
+        items = [
+            repairOrder.itemCodes
+        ];
+
+    }
+
+
+    // --------------------------------------------------
+    // Very old records
+    // --------------------------------------------------
+
+    else if (
+        repairOrder.itemCode !==
+        undefined &&
+
+        repairOrder.itemCode !==
+        null &&
+
+        repairOrder.itemCode !==
+        ""
+    ) {
+
+        items = [
+            repairOrder.itemCode
+        ];
+
+    }
+
+
+    // --------------------------------------------------
+    // Convert everything to strings
+    // --------------------------------------------------
+
+    return items
+        .filter(
+            item =>
+                item !== null &&
+                item !== undefined &&
+                item !== ""
+        )
+        .map(
+            item =>
+                String(item).trim()
+        );
+
+}
+
+
+// ======================================================
+// LOAD ITEM INFORMATION
+// ======================================================
+
+async function loadItemInformation(
+    itemCodes
+) {
+
+    const result = [];
+
+
+    for (
+        const itemCode
+        of itemCodes
+    ) {
+
+        try {
+
+            const itemDoc =
+                await db.collection(
+                    "itemcodes"
+                )
+                .doc(
+                    String(itemCode)
+                )
+                .get();
+
+
+            if (
+                itemDoc.exists
+            ) {
+
+                const item =
+                    itemDoc.data();
+
+
+                result.push({
+
+                    itemCode:
+                        item.itemCode ||
+                        itemCode,
+
+                    description:
+                        item.description ||
+                        "-",
+
+                    billingAmount:
+                        Number(
+                            item.billingAmount
+                        ) || 0
+
+                });
+
+            }
+
+            else {
+
+                result.push({
+
+                    itemCode:
+                        itemCode,
+
+                    description:
+                        "-",
+
+                    billingAmount:
+                        0
+
+                });
+
+            }
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "Error loading item:",
+                itemCode,
+                error
+            );
+
+
+            result.push({
+
+                itemCode:
+                    itemCode,
+
+                description:
+                    "-",
+
+                billingAmount:
+                    0
+
+            });
+
+        }
+
+    }
+
+
+    return result;
+
+}
+
+
+// ======================================================
+// GENERATE REPAIR ORDER REPORT
+// ======================================================
 
 async function generateReport() {
 
     const fromDate =
-        document.getElementById("fromDate").value;
+        document.getElementById(
+            "fromDate"
+        ).value;
+
 
     const toDate =
-        document.getElementById("toDate").value;
+        document.getElementById(
+            "toDate"
+        ).value;
+
 
     const selectedRegion =
-        document.getElementById("reportRegion").value;
+        document.getElementById(
+            "reportRegion"
+        ).value;
+
 
     const btn =
-        document.getElementById("generateBtn");
+        document.getElementById(
+            "generateBtn"
+        );
+
 
     const exportBtn =
-        document.getElementById("exportBtn");
+        document.getElementById(
+            "exportBtn"
+        );
+
 
     const advisorExportBtn =
-        document.getElementById("advisorExportBtn");
+        document.getElementById(
+            "advisorExportBtn"
+        );
 
 
-    // =====================================================
-    // DISABLE BUTTONS
-    // =====================================================
-
-    if (advisorExportBtn) {
-        advisorExportBtn.disabled = true;
-    }
+    // --------------------------------------------------
+    // Disable buttons while generating
+    // --------------------------------------------------
 
     if (exportBtn) {
-        exportBtn.disabled = true;
+
+        exportBtn.disabled =
+            true;
+
     }
 
-    btn.disabled = true;
 
-    btn.innerHTML = `
-        <div class="spinner"></div>
-        Generating...
-    `;
+    if (advisorExportBtn) {
+
+        advisorExportBtn.disabled =
+            true;
+
+    }
 
 
-    // =====================================================
-    // DATE VALIDATION
-    // =====================================================
+    if (btn) {
 
-    if (!fromDate || !toDate) {
+        btn.disabled =
+            true;
+
+        btn.innerHTML = `
+            <div class="spinner"></div>
+            Generating...
+        `;
+
+    }
+
+
+    // --------------------------------------------------
+    // Validate dates
+    // --------------------------------------------------
+
+    if (
+        fromDate === "" ||
+        toDate === ""
+    ) {
 
         alert(
             "Please select From Date and To Date."
         );
 
-        btn.disabled = false;
-        btn.innerHTML = "Generate Report";
+
+        restoreGenerateButton();
 
         return;
+
     }
 
 
-    // =====================================================
-    // DATE RANGE
-    // =====================================================
+    // --------------------------------------------------
+    // Validate date order
+    // --------------------------------------------------
 
     const start =
         new Date(fromDate);
+
 
     start.setHours(
         0,
@@ -186,6 +953,7 @@ async function generateReport() {
     const end =
         new Date(toDate);
 
+
     end.setHours(
         23,
         59,
@@ -194,181 +962,90 @@ async function generateReport() {
     );
 
 
-    try {
+    if (
+        start > end
+    ) {
 
-        // =================================================
-        // LOAD ITEM CODE MASTER
-        //
-        // IMPORTANT:
-        // Match using item.itemCode
-        // NOT Firestore document ID
-        // =================================================
-
-        const itemSnapshot =
-            await db
-                .collection("itemcodes")
-                .get();
-
-
-        const itemMap = {};
-
-
-        itemSnapshot.forEach(doc => {
-
-            const item =
-                doc.data();
-
-
-            // ---------------------------------------------
-            // Normalize Item Code
-            // ---------------------------------------------
-
-            const code =
-                String(
-                    Number(item.itemCode)
-                );
-
-
-            if (
-                code !== "NaN"
-            ) {
-
-                itemMap[code] = {
-
-                    itemCode:
-                        Number(item.itemCode),
-
-                    description:
-                        item.description || "-",
-
-                    billingAmount:
-                        Number(
-                            item.billingAmount
-                        ) || 0,
-
-                    incentiveAmount:
-                        Number(
-                            item.incentiveAmount
-                        ) || 0,
-
-                    active:
-                        item.active !== false,
-
-                    deleted:
-                        item.deleted === true
-
-                };
-
-            }
-
-        });
-
-
-        console.log(
-            "ITEM CODE MASTER:",
-            itemMap
+        alert(
+            "From Date cannot be greater than To Date."
         );
 
 
-        // =================================================
-        // LOAD REGIONS
-        // =================================================
+        restoreGenerateButton();
 
-        const regionSnapshot =
-            await db
-                .collection("regions")
-                .get();
+        return;
+
+    }
 
 
-        const regionMap = {};
+    try {
 
-
-        regionSnapshot.forEach(doc => {
-
-            const region =
-                doc.data();
-
-
-            regionMap[doc.id] =
-                region.regionName || doc.id;
-
-        });
-
-
-        // =================================================
-        // LOAD REPAIR ORDERS
-        // =================================================
-
-        let query =
-            db.collection("repairorders");
-
-
-        // =================================================
-        // REGION FILTER
-        // =================================================
+        // --------------------------------------------------
+        // Wait for regions to finish loading
+        // --------------------------------------------------
 
         if (
-            selectedRegion !== ""
+            regionsLoadedPromise
         ) {
 
-            query =
-                query.where(
-                    "region",
-                    "==",
-                    selectedRegion
-                );
+            await regionsLoadedPromise;
 
         }
 
 
+        // --------------------------------------------------
+        // LOAD REPAIR ORDERS
+        //
+        // IMPORTANT:
+        // Do NOT use .where("region","==",...)
+        //
+        // because old records may contain:
+        // document ID / regionId / regionName.
+        // --------------------------------------------------
+
         const snapshot =
-            await query.get();
+            await db.collection(
+                "repairorders"
+            ).get();
 
-
-        // =================================================
-        // REPORT VARIABLES
-        // =================================================
 
         let html = "";
 
-        let advisorSummary = {};
 
-        let allWorkTypes =
+        const advisorSummary = {};
+
+
+        const allWorkTypes =
             new Set();
 
 
-        // =================================================
-        // PROCESS EACH REPAIR ORDER
-        // =================================================
+        // --------------------------------------------------
+        // PROCESS REPAIR ORDERS
+        // --------------------------------------------------
 
         for (
-            const doc of snapshot.docs
+            const doc
+            of snapshot.docs
         ) {
 
             const ro =
                 doc.data();
 
 
-            // =================================================
-            // CREATED DATE
-            // =================================================
+            // --------------------------------------------------
+            // Date
+            // --------------------------------------------------
 
-            if (
-                !ro.createdAt
-            ) {
+            const createdDate =
+                getCreatedDate(ro);
+
+
+            if (!createdDate) {
 
                 continue;
 
             }
 
-
-            const createdDate =
-                ro.createdAt.toDate();
-
-
-            // =================================================
-            // DATE FILTER
-            // =================================================
 
             if (
                 createdDate < start ||
@@ -380,182 +1057,354 @@ async function generateReport() {
             }
 
 
-            // =================================================
-            // REGION NAME
-            // =================================================
+            // --------------------------------------------------
+            // REGION FILTER
+            // --------------------------------------------------
 
-            const regionName =
-                regionMap[ro.region] ||
-                ro.region ||
-                "-";
-
-
-            // =================================================
-            // GET ITEM CODES
-            // =================================================
-
-            let itemCodes = [];
-
-
-            // New format
             if (
-                Array.isArray(
-                    ro.itemCodes
+                !repairOrderMatchesRegion(
+                    ro,
+                    selectedRegion
                 )
             ) {
 
-                itemCodes =
-                    ro.itemCodes;
-
-            }
-
-            // Older format
-            else if (
-                ro.itemCodes !== undefined &&
-                ro.itemCodes !== null &&
-                ro.itemCodes !== ""
-            ) {
-
-                itemCodes = [
-                    ro.itemCodes
-                ];
-
-            }
-
-            // Very old format
-            else if (
-                ro.itemCode !== undefined &&
-                ro.itemCode !== null &&
-                ro.itemCode !== ""
-            ) {
-
-                itemCodes = [
-                    ro.itemCode
-                ];
+                continue;
 
             }
 
 
-            console.log(
-                "RO:",
-                ro.roNumber,
-                "Item Codes:",
-                itemCodes
+            // --------------------------------------------------
+            // REGION NAME
+            // --------------------------------------------------
+
+            const regionName =
+                getRegionDisplayName(ro);
+
+
+            // --------------------------------------------------
+// GET ITEM CODES / WORK DONE
+// --------------------------------------------------
+
+let itemCodes = [];
+
+// New format: itemCodes is an array
+if (Array.isArray(ro.itemCodes)) {
+
+    itemCodes = ro.itemCodes;
+
+}
+
+// Single itemCodes value
+else if (
+    ro.itemCodes !== undefined &&
+    ro.itemCodes !== null &&
+    ro.itemCodes !== ""
+) {
+
+    itemCodes = [
+        ro.itemCodes
+    ];
+
+}
+
+// Old format: itemCode
+else if (
+    ro.itemCode !== undefined &&
+    ro.itemCode !== null &&
+    ro.itemCode !== ""
+) {
+
+    itemCodes = [
+        ro.itemCode
+    ];
+
+}
+
+// Another possible old format: workDone
+else if (Array.isArray(ro.workDone)) {
+
+    itemCodes = ro.workDone;
+
+}
+
+else if (
+    ro.workDone !== undefined &&
+    ro.workDone !== null &&
+    ro.workDone !== ""
+) {
+
+    itemCodes = [
+        ro.workDone
+    ];
+
+}
+
+console.log(
+    "RO:",
+    doc.id,
+    "ITEM CODES:",
+    itemCodes
+);
+
+            // --------------------------------------------------
+// LOAD ITEM INFORMATION
+// --------------------------------------------------
+
+const itemInformation = [];
+
+for (const rawCode of itemCodes) {
+
+    if (
+        rawCode === null ||
+        rawCode === undefined ||
+        rawCode === ""
+    ) {
+        continue;
+    }
+
+    const code =
+        String(rawCode).trim();
+
+    let itemData = null;
+
+    // ==================================================
+    // FIRST: TRY DOCUMENT ID
+    // ==================================================
+
+    try {
+
+        const itemDoc =
+            await db
+                .collection("itemcodes")
+                .doc(code)
+                .get();
+
+        if (itemDoc.exists) {
+
+            itemData =
+                itemDoc.data();
+
+        }
+
+    }
+
+    catch (error) {
+
+        console.warn(
+            "Document ID lookup failed:",
+            code,
+            error
+        );
+
+    }
+
+
+    // ==================================================
+    // SECOND: SEARCH itemCode AS STRING
+    // ==================================================
+
+    if (!itemData) {
+
+        try {
+
+            const stringSnapshot =
+                await db
+                    .collection("itemcodes")
+                    .where(
+                        "itemCode",
+                        "==",
+                        code
+                    )
+                    .limit(1)
+                    .get();
+
+            if (!stringSnapshot.empty) {
+
+                itemData =
+                    stringSnapshot
+                        .docs[0]
+                        .data();
+
+            }
+
+        }
+
+        catch (error) {
+
+            console.warn(
+                "String itemCode lookup failed:",
+                code,
+                error
             );
 
+        }
 
-            // =================================================
+    }
+
+
+    // ==================================================
+    // THIRD: SEARCH itemCode AS NUMBER
+    // ==================================================
+
+    if (!itemData && !isNaN(Number(code))) {
+
+        try {
+
+            const numberSnapshot =
+                await db
+                    .collection("itemcodes")
+                    .where(
+                        "itemCode",
+                        "==",
+                        Number(code)
+                    )
+                    .limit(1)
+                    .get();
+
+            if (!numberSnapshot.empty) {
+
+                itemData =
+                    numberSnapshot
+                        .docs[0]
+                        .data();
+
+            }
+
+        }
+
+        catch (error) {
+
+            console.warn(
+                "Number itemCode lookup failed:",
+                code,
+                error
+            );
+
+        }
+
+    }
+
+
+    // ==================================================
+    // ITEM FOUND
+    // ==================================================
+
+    if (itemData) {
+
+        const actualItemCode =
+            itemData.itemCode !== undefined
+                ? itemData.itemCode
+                : code;
+
+        const description =
+            itemData.description ||
+            itemData.workDescription ||
+            itemData.workDone ||
+            "-";
+
+        const billingAmount =
+            Number(
+                itemData.billingAmount
+            ) || 0;
+
+
+        itemInformation.push({
+
+            itemCode:
+                String(actualItemCode),
+
+            description:
+                String(description),
+
+            billingAmount:
+                billingAmount
+
+        });
+
+
+        console.log(
+            "ITEM FOUND:",
+            code,
+            description
+        );
+
+    }
+
+
+    // ==================================================
+    // ITEM NOT FOUND
+    // ==================================================
+
+    else {
+
+        console.warn(
+            "ITEM DESCRIPTION NOT FOUND FOR:",
+            code
+        );
+
+
+        // Keep the code visible but clearly indicate
+        // that the item master does not contain it.
+
+        itemInformation.push({
+
+            itemCode:
+                code,
+
+            description:
+                "Description Not Found",
+
+            billingAmount:
+                0
+
+        });
+
+    }
+
+}
+
+            // --------------------------------------------------
             // BILLING
-            // =================================================
+            // --------------------------------------------------
 
-            let billingAmount =
-                0;
-
-
-            // =================================================
-            // WORK DESCRIPTIONS
-            // =================================================
-
-            let workDescriptions =
-                [];
+            let billingAmount = 0;
 
 
-            // =================================================
-            // PROCESS EACH ITEM CODE
-            // =================================================
+            const workDescriptions = [];
 
-            itemCodes.forEach(
-                rawItemCode => {
 
-                    // -----------------------------------------
-                    // Normalize Item Code
-                    // -----------------------------------------
+            itemInformation.forEach(
+                item => {
 
-                    const numericCode =
+                    billingAmount +=
                         Number(
-                            rawItemCode
-                        );
+                            item.billingAmount
+                        ) || 0;
 
 
-                    const codeKey =
-                        String(
-                            numericCode
-                        );
+                    workDescriptions.push(
 
+                        `${escapeHtml(
+                            item.itemCode
+                        )} - ${escapeHtml(
+                            item.description
+                        )}`
 
-                    console.log(
-                        "Looking for Item Code:",
-                        rawItemCode,
-                        "Normalized:",
-                        codeKey
                     );
-
-
-                    // -----------------------------------------
-                    // FIND ITEM MASTER
-                    // -----------------------------------------
-
-                    const item =
-                        itemMap[codeKey];
-
-
-                    // -----------------------------------------
-                    // ITEM FOUND
-                    // -----------------------------------------
-
-                    if (item) {
-
-                        // Billing
-                        billingAmount +=
-                            Number(
-                                item.billingAmount
-                            ) || 0;
-
-
-                        // Description
-                        workDescriptions.push(
-                            `${item.itemCode} - ${item.description}`
-                        );
-
-
-                    }
-
-                    // -----------------------------------------
-                    // ITEM NOT FOUND
-                    // -----------------------------------------
-
-                    else {
-
-                        console.warn(
-                            "Item Code not found in itemcodes:",
-                            rawItemCode
-                        );
-
-
-                        // Keep code visible
-                        workDescriptions.push(
-                            `${rawItemCode} - Item Description Not Found`
-                        );
-
-                    }
 
                 }
             );
 
 
-            // =================================================
-            // WORK DONE DISPLAY
-            // =================================================
+            // --------------------------------------------------
+            // WORK DONE
+            // --------------------------------------------------
 
-            let workDone =
-                "-";
-
-
-            if (
+            const workDone =
                 workDescriptions.length > 0
-            ) {
 
-                workDone =
+                    ?
+
                     workDescriptions
                         .map(
                             item => `
@@ -564,88 +1413,125 @@ async function generateReport() {
                                 </div>
                             `
                         )
-                        .join("");
+                        .join("")
 
-            }
+                    :
+
+                    "-";
 
 
-            // =================================================
-            // ADVISOR
-            // =================================================
+            // --------------------------------------------------
+            // Advisor
+            // --------------------------------------------------
 
             const advisor =
                 ro.advisorName ||
                 "Unknown Advisor";
 
 
-            // =================================================
-            // ADVISOR SUMMARY
-            // =================================================
+            // --------------------------------------------------
+            // Advisor Wise Summary
+            //
+            // Use item-code + description as the key,
+            // NOT the HTML workDone string.
+            // --------------------------------------------------
+
+            const workTypeKey =
+                itemInformation.length > 0
+
+                    ?
+
+                    itemInformation
+                        .map(
+                            item =>
+                                `${item.itemCode} - ${item.description}`
+                        )
+                        .join(" | ")
+
+                    :
+
+                    "-";
+
+
+            allWorkTypes.add(
+                workTypeKey
+            );
+
 
             if (
                 !advisorSummary[advisor]
             ) {
 
-                advisorSummary[advisor] =
-                    {};
+                advisorSummary[advisor] = {};
 
             }
 
 
             if (
-                !advisorSummary[advisor][workDone]
+                !advisorSummary[advisor][
+                    workTypeKey
+                ]
             ) {
 
-                advisorSummary[advisor][workDone] =
-                    0;
+                advisorSummary[advisor][
+                    workTypeKey
+                ] = 0;
 
             }
 
 
-            advisorSummary[advisor][workDone]++;
+            advisorSummary[advisor][
+                workTypeKey
+            ]++;
 
 
-            allWorkTypes.add(
-                workDone
-            );
+            // --------------------------------------------------
+            // DATE FORMAT
+            // --------------------------------------------------
 
-
-            // =================================================
-            // FORMAT DATE
-            // =================================================
-
-            const date =
+            const formattedDate =
                 createdDate.toLocaleDateString(
                     "en-GB"
                 );
 
 
-            // =================================================
-            // CREATE REPORT ROW
-            // =================================================
+            // --------------------------------------------------
+            // DISPLAY TABLE
+            // --------------------------------------------------
 
             html += `
 
                 <tr>
 
                     <td>
-                        ${ro.roNumber || "-"}
+                        ${escapeHtml(
+                            ro.roNumber ||
+                            "-"
+                        )}
                     </td>
 
                     <td>
-                        ${date}
+                        ${formattedDate}
                     </td>
 
                     <td>
-                        ${regionName}
+                        ${escapeHtml(
+                            regionName ||
+                            "-"
+                        )}
                     </td>
 
                     <td>
-                        ${advisor}
+                        ${escapeHtml(
+                            advisor
+                        )}
                     </td>
 
                     <td>
-                        ${ro.vehicleNumber || "-"}
+                        ${escapeHtml(
+                            ro.vehicleNumber ||
+                            "-"
+                        )}
                     </td>
 
                     <td>
@@ -653,7 +1539,9 @@ async function generateReport() {
                     </td>
 
                     <td>
-                        ₹${billingAmount.toLocaleString("en-IN")}
+                        ₹${billingAmount.toLocaleString(
+                            "en-IN"
+                        )}
                     </td>
 
                 </tr>
@@ -663,19 +1551,15 @@ async function generateReport() {
         }
 
 
-        // =====================================================
+        // ==================================================
         // ADVISOR WISE SUMMARY
-        // =====================================================
+        // ==================================================
 
         const workTypes =
             Array.from(
                 allWorkTypes
             );
 
-
-        // =====================================================
-        // HEADER
-        // =====================================================
 
         let head =
             "<tr><th>Advisor Name</th>";
@@ -686,7 +1570,9 @@ async function generateReport() {
 
                 head += `
                     <th>
-                        ${work}
+                        ${escapeHtml(
+                            work
+                        )}
                     </th>
                 `;
 
@@ -714,62 +1600,129 @@ async function generateReport() {
         }
 
 
-        // =====================================================
-        // BODY
-        // =====================================================
-
         let body = "";
 
-        let columnTotals = {};
+
+        const columnTotals = {};
+
 
         let grandTotal = 0;
 
 
-        for (
-            const advisor in advisorSummary
+        Object.keys(
+            advisorSummary
+        )
+        .sort()
+        .forEach(
+            advisor => {
+
+                body += `
+                    <tr>
+                `;
+
+
+                body += `
+                    <td>
+                        ${escapeHtml(
+                            advisor
+                        )}
+                    </td>
+                `;
+
+
+                let rowTotal = 0;
+
+
+                workTypes.forEach(
+                    work => {
+
+                        const count =
+                            advisorSummary[
+                                advisor
+                            ][work] || 0;
+
+
+                        body += `
+                            <td>
+                                ${count}
+                            </td>
+                        `;
+
+
+                        rowTotal +=
+                            count;
+
+
+                        columnTotals[work] =
+                            (
+                                columnTotals[work] ||
+                                0
+                            ) + count;
+
+                    }
+                );
+
+
+                body += `
+                    <td>
+                        <b>
+                            ${rowTotal}
+                        </b>
+                    </td>
+                `;
+
+
+                body += `
+                    </tr>
+                `;
+
+
+                grandTotal +=
+                    rowTotal;
+
+            }
+        );
+
+
+        // --------------------------------------------------
+        // TOTAL ROW
+        // --------------------------------------------------
+
+        if (
+            Object.keys(
+                advisorSummary
+            ).length > 0
         ) {
 
             body += `
-                <tr>
+                <tr
+                    style="
+                        font-weight:bold;
+                        background:#f5f5f5;
+                    "
+                >
             `;
 
 
             body += `
                 <td>
-                    ${advisor}
+                    TOTAL
                 </td>
             `;
-
-
-            let rowTotal =
-                0;
 
 
             workTypes.forEach(
                 work => {
 
-                    const count =
-                        advisorSummary[advisor][work] ||
-                        0;
-
-
                     body += `
                         <td>
-                            ${count}
+                            ${
+                                columnTotals[
+                                    work
+                                ] || 0
+                            }
                         </td>
                     `;
-
-
-                    rowTotal +=
-                        count;
-
-
-                    columnTotals[work] =
-                        (
-                            columnTotals[work] ||
-                            0
-                        ) +
-                        count;
 
                 }
             );
@@ -777,9 +1730,7 @@ async function generateReport() {
 
             body += `
                 <td>
-                    <b>
-                        ${rowTotal}
-                    </b>
+                    ${grandTotal}
                 </td>
             `;
 
@@ -788,55 +1739,7 @@ async function generateReport() {
                 </tr>
             `;
 
-
-            grandTotal +=
-                rowTotal;
-
         }
-
-
-        // =====================================================
-        // TOTAL ROW
-        // =====================================================
-
-        body += `
-
-            <tr
-                style="
-                    font-weight:bold;
-                    background:#f5f5f5;
-                "
-            >
-
-                <td>
-                    TOTAL
-                </td>
-
-        `;
-
-
-        workTypes.forEach(
-            work => {
-
-                body += `
-                    <td>
-                        ${columnTotals[work] || 0}
-                    </td>
-                `;
-
-            }
-        );
-
-
-        body += `
-
-                <td>
-                    ${grandTotal}
-                </td>
-
-            </tr>
-
-        `;
 
 
         const advisorSummaryBody =
@@ -855,9 +1758,9 @@ async function generateReport() {
         }
 
 
-        // =====================================================
-        // DISPLAY MAIN REPORT
-        // =====================================================
+        // ==================================================
+        // DISPLAY REPAIR ORDER REPORT
+        // ==================================================
 
         const reportBody =
             document.getElementById(
@@ -869,73 +1772,69 @@ async function generateReport() {
             html === ""
         ) {
 
-            reportBody.innerHTML = `
+            if (
+                reportBody
+            ) {
 
-                <tr>
+                reportBody.innerHTML = `
 
-                    <td
-                        colspan="7"
-                        style="
-                            text-align:center;
-                            color:red;
-                            font-size:18px;
-                            font-weight:bold;
-                            padding:20px;
-                        "
-                    >
-                        No Repair Orders Found
-                    </td>
+                    <tr>
 
-                </tr>
+                        <td
+                            colspan="7"
+                            style="
+                                text-align:center;
+                                color:red;
+                                font-size:18px;
+                                font-weight:bold;
+                                padding:20px;
+                            "
+                        >
 
-            `;
+                            No Repair Orders Found
+
+                        </td>
+
+                    </tr>
+
+                `;
+
+            }
 
 
-            exportBtn.disabled =
-                true;
+            if (
+                exportBtn
+            ) {
+
+                exportBtn.disabled =
+                    true;
+
+            }
 
         }
 
         else {
 
-            reportBody.innerHTML =
-                html;
+            if (
+                reportBody
+            ) {
+
+                reportBody.innerHTML =
+                    html;
+
+            }
 
 
-            exportBtn.disabled =
-                false;
+            if (
+                exportBtn
+            ) {
 
-        }
+                exportBtn.disabled =
+                    false;
 
-
-        // =====================================================
-        // ENABLE ADVISOR REPORT BUTTON
-        // =====================================================
-
-        if (
-            advisorExportBtn
-        ) {
-
-            advisorExportBtn.disabled =
-                false;
+            }
 
         }
-
-
-        // =====================================================
-        // RESTORE BUTTON
-        // =====================================================
-
-        btn.disabled =
-            false;
-
-        btn.innerHTML =
-            "Generate Report";
-
-
-        console.log(
-            "Report generated successfully."
-        );
 
     }
 
@@ -953,13 +1852,6 @@ async function generateReport() {
         );
 
 
-        btn.disabled =
-            false;
-
-        btn.innerHTML =
-            "Generate Report";
-
-
         if (
             exportBtn
         ) {
@@ -971,10 +1863,44 @@ async function generateReport() {
 
     }
 
+
+    // --------------------------------------------------
+    // Restore Generate button
+    // --------------------------------------------------
+
+    restoreGenerateButton();
+
 }
-// =====================================================
-// ADVISOR ITEM & AMOUNT REPORT
-// =====================================================
+
+
+// ======================================================
+// RESTORE GENERATE BUTTON
+// ======================================================
+
+function restoreGenerateButton() {
+
+    const btn =
+        document.getElementById(
+            "generateBtn"
+        );
+
+
+    if (btn) {
+
+        btn.disabled =
+            false;
+
+        btn.innerHTML =
+            "Generate Report";
+
+    }
+
+}
+
+
+// ======================================================
+// GENERATE ADVISOR ITEM REPORT
+// ======================================================
 
 async function generateAdvisorItemReport() {
 
@@ -984,7 +1910,9 @@ async function generateAdvisorItemReport() {
         );
 
 
-    if (advisorExportBtn) {
+    if (
+        advisorExportBtn
+    ) {
 
         advisorExportBtn.disabled =
             true;
@@ -1010,9 +1938,9 @@ async function generateAdvisorItemReport() {
         ).value;
 
 
-    // =================================================
-    // VALIDATE DATES
-    // =================================================
+    // --------------------------------------------------
+    // Validate dates
+    // --------------------------------------------------
 
     if (
         !fromDate ||
@@ -1052,7 +1980,9 @@ async function generateAdvisorItemReport() {
     );
 
 
-    if (from > to) {
+    if (
+        from > to
+    ) {
 
         alert(
             "From Date cannot be greater than To Date."
@@ -1065,50 +1995,56 @@ async function generateAdvisorItemReport() {
 
     try {
 
-        // =================================================
-        // LOAD ALL ITEM CODES
-        // =================================================
-        //
-        // IMPORTANT:
-        // We intentionally DO NOT use:
-        //
-        // .where("active", "==", true)
-        //
-        // because deleted/inactive Item Codes can still
-        // belong to old Repair Orders.
-        //
-        // Historical reports must still show their
-        // original billing amount and description.
-        //
-        // =================================================
+        // --------------------------------------------------
+        // Wait for regions
+        // --------------------------------------------------
+
+        if (
+            regionsLoadedPromise
+        ) {
+
+            await regionsLoadedPromise;
+
+        }
+
+
+        // ==================================================
+        // LOAD ITEM CODES
+        // ==================================================
 
         const itemSnapshot =
-            await db
-                .collection(
-                    "itemcodes"
-                )
-                .get();
+            await db.collection(
+                "itemcodes"
+            )
+            .where(
+                "active",
+                "==",
+                true
+            )
+            .get();
 
 
         const itemMap = {};
 
 
         itemSnapshot.forEach(
-            (doc) => {
+            doc => {
 
                 const item =
                     doc.data();
 
 
-                const itemCodeKey =
+                const code =
                     String(
-                        item.itemCode
-                    );
+                        item.itemCode ||
+                        doc.id
+                    ).trim();
 
 
-                itemMap[
-                    itemCodeKey
-                ] = {
+                itemMap[code] = {
+
+                    itemCode:
+                        code,
 
                     description:
                         item.description ||
@@ -1125,94 +2061,48 @@ async function generateAdvisorItemReport() {
         );
 
 
-        // =================================================
+        // ==================================================
         // LOAD REPAIR ORDERS
-        // =================================================
-
-        let roQuery =
-            db.collection(
-                "repairorders"
-            );
-
-
-        // =================================================
-        // REGION FILTER
-        // =================================================
-
-        if (
-            selectedRegion !== ""
-        ) {
-
-            roQuery =
-                roQuery.where(
-                    "region",
-                    "==",
-                    selectedRegion
-                );
-
-        }
-
+        // ==================================================
+        //
+        // IMPORTANT:
+        // No direct Firestore region equality filter.
+        // ==================================================
 
         const roSnapshot =
-            await roQuery.get();
+            await db.collection(
+                "repairorders"
+            ).get();
 
 
-        // =================================================
+        // ==================================================
         // STORE DATA BY ADVISOR
-        // =================================================
+        // ==================================================
 
         const advisorData = {};
 
 
-        // =================================================
-        // PROCESS REPAIR ORDERS
-        // =================================================
-
         roSnapshot.forEach(
-            (doc) => {
+            doc => {
 
                 const ro =
                     doc.data();
 
 
-                // =============================================
-                // DATE VALIDATION
-                // =============================================
+                // --------------------------------------------------
+                // DATE
+                // --------------------------------------------------
 
-                if (
-                    !ro.createdAt
-                ) {
-
-                    return;
-
-                }
+                const createdDate =
+                    getCreatedDate(ro);
 
 
-                let createdDate;
-
-
-                try {
-
-                    createdDate =
-                        ro.createdAt.toDate();
-
-                }
-
-                catch (error) {
-
-                    console.warn(
-                        "Invalid createdAt:",
-                        doc.id
-                    );
+                if (!createdDate) {
 
                     return;
 
                 }
 
-
-                // =============================================
-                // DATE FILTER
-                // =============================================
 
                 if (
                     createdDate < from ||
@@ -1224,75 +2114,50 @@ async function generateAdvisorItemReport() {
                 }
 
 
-                // =============================================
+                // --------------------------------------------------
+                // REGION FILTER
+                // --------------------------------------------------
+
+                if (
+                    !repairOrderMatchesRegion(
+                        ro,
+                        selectedRegion
+                    )
+                ) {
+
+                    return;
+
+                }
+
+
+                // --------------------------------------------------
                 // ADVISOR
-                // =============================================
+                // --------------------------------------------------
 
                 const advisor =
                     ro.advisorName ||
                     "Unknown Advisor";
 
 
-                // =============================================
+                // --------------------------------------------------
                 // ITEM CODES
-                // =============================================
+                // --------------------------------------------------
 
-                let items = [];
-
-
-                if (
-                    Array.isArray(
-                        ro.itemCodes
-                    )
-                ) {
-
-                    items =
-                        ro.itemCodes;
-
-                }
-
-                else if (
-                    ro.itemCodes !==
-                    undefined &&
-                    ro.itemCodes !==
-                    null &&
-                    ro.itemCodes !== ""
-                ) {
-
-                    items = [
-                        ro.itemCodes
-                    ];
-
-                }
-
-                else if (
-                    ro.itemCode !==
-                    undefined &&
-                    ro.itemCode !==
-                    null &&
-                    ro.itemCode !== ""
-                ) {
-
-                    items = [
-                        ro.itemCode
-                    ];
-
-                }
+                const items =
+                    getRepairOrderItemCodes(
+                        ro
+                    );
 
 
-                // =============================================
+                // --------------------------------------------------
                 // CREATE ADVISOR
-                // =============================================
+                // --------------------------------------------------
 
                 if (
-                    !advisorData[
-                        advisor
-                    ]
+                    !advisorData[advisor]
                 ) {
 
-                    advisorData[
-                        advisor
-                    ] = {
+                    advisorData[advisor] = {
 
                         items: {},
 
@@ -1303,39 +2168,30 @@ async function generateAdvisorItemReport() {
                 }
 
 
-                // =============================================
+                // --------------------------------------------------
                 // COUNT ITEMS
-                // =============================================
+                // --------------------------------------------------
 
                 items.forEach(
-                    (rawItemCode) => {
+                    itemCode => {
 
-                        // =====================================
-                        // NORMALIZE ITEM CODE
-                        // =====================================
-
-                        const itemCodeKey =
+                        const code =
                             String(
-                                rawItemCode
-                            );
+                                itemCode
+                            ).trim();
 
 
                         if (
                             !advisorData[
                                 advisor
-                            ].items[
-                                itemCodeKey
-                            ]
+                            ].items[code]
                         ) {
 
                             advisorData[
                                 advisor
-                            ].items[
-                                itemCodeKey
-                            ] = {
+                            ].items[code] = {
 
-                                quantity:
-                                    0
+                                quantity: 0
 
                             };
 
@@ -1344,17 +2200,16 @@ async function generateAdvisorItemReport() {
 
                         advisorData[
                             advisor
-                        ].items[
-                            itemCodeKey
-                        ].quantity++;
+                        ].items[code]
+                            .quantity++;
 
                     }
                 );
 
 
-                // =============================================
-                // INCENTIVE AMOUNT
-                // =============================================
+                // --------------------------------------------------
+                // INCENTIVE
+                // --------------------------------------------------
 
                 const incentive =
                     Number(
@@ -1371,9 +2226,9 @@ async function generateAdvisorItemReport() {
         );
 
 
-        // =================================================
+        // ==================================================
         // DISPLAY REPORT
-        // =================================================
+        // ==================================================
 
         const container =
             document.getElementById(
@@ -1399,12 +2254,13 @@ async function generateAdvisorItemReport() {
         const advisors =
             Object.keys(
                 advisorData
-            ).sort();
+            )
+            .sort();
 
 
-        // =================================================
+        // ==================================================
         // NO DATA
-        // =================================================
+        // ==================================================
 
         if (
             advisors.length === 0
@@ -1421,14 +2277,16 @@ async function generateAdvisorItemReport() {
                     "
                 >
 
-                    No data found for selected dates.
+                    No data found for selected dates or region.
 
                 </div>
 
             `;
 
 
-            if (advisorExportBtn) {
+            if (
+                advisorExportBtn
+            ) {
 
                 advisorExportBtn.disabled =
                     true;
@@ -1441,12 +2299,12 @@ async function generateAdvisorItemReport() {
         }
 
 
-        // =================================================
+        // ==================================================
         // CREATE ADVISOR SECTIONS
-        // =================================================
+        // ==================================================
 
         advisors.forEach(
-            (advisor) => {
+            advisor => {
 
                 const items =
                     advisorData[
@@ -1460,9 +2318,9 @@ async function generateAdvisorItemReport() {
                     ].incentive || 0;
 
 
-                // =============================================
+                // --------------------------------------------------
                 // ADVISOR HEADING
-                // =============================================
+                // --------------------------------------------------
 
                 const advisorTitle =
                     document.createElement(
@@ -1488,9 +2346,9 @@ async function generateAdvisorItemReport() {
                 );
 
 
-                // =============================================
+                // --------------------------------------------------
                 // TABLE
-                // =============================================
+                // --------------------------------------------------
 
                 const table =
                     document.createElement(
@@ -1543,26 +2401,16 @@ async function generateAdvisorItemReport() {
                     0;
 
 
-                // =============================================
-                // SORT ITEM CODES NUMERICALLY
-                // =============================================
-
-                const sortedItems =
-                    Object.keys(
-                        items
-                    ).sort(
-                        (a, b) =>
-                            Number(a) -
-                            Number(b)
-                    );
-
-
-                // =============================================
+                // --------------------------------------------------
                 // ITEMS
-                // =============================================
+                // --------------------------------------------------
 
-                sortedItems.forEach(
-                    (itemCode) => {
+                Object.keys(
+                    items
+                )
+                .sort()
+                .forEach(
+                    itemCode => {
 
                         const quantity =
                             items[
@@ -1570,16 +2418,13 @@ async function generateAdvisorItemReport() {
                             ].quantity;
 
 
-                        // =====================================
-                        // GET ITEM INFORMATION
-                        // =====================================
-
                         const itemInfo =
                             itemMap[
-                                String(
-                                    itemCode
-                                )
+                                itemCode
                             ] || {
+
+                                itemCode:
+                                    itemCode,
 
                                 description:
                                     "-",
@@ -1590,10 +2435,6 @@ async function generateAdvisorItemReport() {
                             };
 
 
-                        // =====================================
-                        // TOTAL AMOUNT
-                        // =====================================
-
                         const total =
                             quantity *
                             itemInfo.billingAmount;
@@ -1602,10 +2443,6 @@ async function generateAdvisorItemReport() {
                         advisorTotal +=
                             total;
 
-
-                        // =====================================
-                        // CREATE ROW
-                        // =====================================
 
                         const row =
                             document.createElement(
@@ -1616,11 +2453,15 @@ async function generateAdvisorItemReport() {
                         row.innerHTML = `
 
                             <td>
-                                ${itemCode}
+                                ${escapeHtml(
+                                    itemCode
+                                )}
                             </td>
 
                             <td>
-                                ${itemInfo.description}
+                                ${escapeHtml(
+                                    itemInfo.description
+                                )}
                             </td>
 
                             <td
@@ -1632,7 +2473,9 @@ async function generateAdvisorItemReport() {
                             <td
                                 class="amount-cell"
                             >
-                                ₹${total.toLocaleString("en-IN")}
+                                ₹${total.toLocaleString(
+                                    "en-IN"
+                                )}
                             </td>
 
                         `;
@@ -1651,9 +2494,9 @@ async function generateAdvisorItemReport() {
                 );
 
 
-                // =============================================
-                // BILLING / INCENTIVE / NET BILLING
-                // =============================================
+                // ==================================================
+                // BILLING + INCENTIVE + NET
+                // ==================================================
 
                 const totalDiv =
                     document.createElement(
@@ -1664,10 +2507,6 @@ async function generateAdvisorItemReport() {
                 totalDiv.className =
                     "advisor-total";
 
-
-                // =============================================
-                // NET BILLING
-                // =============================================
 
                 const netAmount =
                     advisorTotal -
@@ -1681,27 +2520,41 @@ async function generateAdvisorItemReport() {
                         Total Billing:
 
                         <strong>
-                            ₹${advisorTotal.toLocaleString("en-IN")}
+
+                            ₹${advisorTotal.toLocaleString(
+                                "en-IN"
+                            )}
+
                         </strong>
 
                     </div>
+
 
                     <div>
 
                         Incentive Amount:
 
                         <strong>
-                            ₹${incentiveAmount.toLocaleString("en-IN")}
+
+                            ₹${incentiveAmount.toLocaleString(
+                                "en-IN"
+                            )}
+
                         </strong>
 
                     </div>
+
 
                     <div>
 
                         Net Billing:
 
                         <strong>
-                            ₹${netAmount.toLocaleString("en-IN")}
+
+                            ₹${netAmount.toLocaleString(
+                                "en-IN"
+                            )}
+
                         </strong>
 
                     </div>
@@ -1717,11 +2570,13 @@ async function generateAdvisorItemReport() {
         );
 
 
-        // =================================================
-        // ENABLE ADVISOR PDF
-        // =================================================
+        // --------------------------------------------------
+        // Enable Advisor PDF
+        // --------------------------------------------------
 
-        if (advisorExportBtn) {
+        if (
+            advisorExportBtn
+        ) {
 
             advisorExportBtn.disabled =
                 false;
@@ -1744,7 +2599,9 @@ async function generateAdvisorItemReport() {
         );
 
 
-        if (advisorExportBtn) {
+        if (
+            advisorExportBtn
+        ) {
 
             advisorExportBtn.disabled =
                 true;
@@ -1756,34 +2613,15 @@ async function generateAdvisorItemReport() {
 }
 
 
-// =====================================================
+// ======================================================
 // EXPORT REPAIR ORDER PDF
-// =====================================================
+// ======================================================
 
 async function exportPDF() {
 
-    // =================================================
-    // CHECK jsPDF
-    // =================================================
-
-    if (
-        !window.jspdf ||
-        !window.jspdf.jsPDF
-    ) {
-
-        alert(
-            "jsPDF library is not loaded."
-        );
-
-        return;
-
-    }
-
-
     const {
         jsPDF
-    } =
-        window.jspdf;
+    } = window.jspdf;
 
 
     const doc =
@@ -1794,9 +2632,9 @@ async function exportPDF() {
         );
 
 
-    // =================================================
+    // ==================================================
     // HEADING
-    // =================================================
+    // ==================================================
 
     doc.setFontSize(
         18
@@ -1808,7 +2646,8 @@ async function exportPDF() {
         105,
         15,
         {
-            align: "center"
+            align:
+                "center"
         }
     );
 
@@ -1823,14 +2662,15 @@ async function exportPDF() {
         105,
         24,
         {
-            align: "center"
+            align:
+                "center"
         }
     );
 
 
-    // =================================================
+    // ==================================================
     // FILTERS
-    // =================================================
+    // ==================================================
 
     const fromDate =
         document.getElementById(
@@ -1844,7 +2684,7 @@ async function exportPDF() {
         ).value;
 
 
-    const region =
+    const regionSelect =
         document.getElementById(
             "reportRegion"
         );
@@ -1882,32 +2722,37 @@ async function exportPDF() {
     );
 
 
-    const selectedRegionText =
-        region &&
-        region.selectedIndex >= 0
+    let regionText =
+        "All Regions";
 
-            ? region
+
+    if (
+        regionSelect &&
+        regionSelect.selectedIndex >= 0
+    ) {
+
+        regionText =
+            regionSelect
                 .options[
-                    region.selectedIndex
+                    regionSelect.selectedIndex
                 ]
-                .text
+                .text;
 
-            : "All Regions";
+    }
 
 
     doc.text(
-        `Region : ${selectedRegionText}`,
+        `Region : ${regionText}`,
         14,
         41
     );
 
 
-    // =================================================
-    // EXTRACT REPORT TABLE
-    // =================================================
+    // ==================================================
+    // GET TABLE DATA
+    // ==================================================
 
-    const rows =
-        [];
+    const rows = [];
 
 
     document
@@ -1915,16 +2760,16 @@ async function exportPDF() {
             "#reportBody tr"
         )
         .forEach(
-            (tr) => {
+            tr => {
 
-                const row =
-                    [];
+                const row = [];
 
 
                 tr.querySelectorAll(
                     "td"
-                ).forEach(
-                    (td) => {
+                )
+                .forEach(
+                    td => {
 
                         row.push(
                             td.innerText
@@ -1935,12 +2780,17 @@ async function exportPDF() {
                 );
 
 
-                // =============================================
-                // Only include actual 7-column rows
-                // =============================================
+                // --------------------------------------------------
+                // Ignore "No Repair Orders Found"
+                // --------------------------------------------------
 
                 if (
-                    row.length === 7
+                    row.length === 7 &&
+                    !row[0]
+                        .toLowerCase()
+                        .includes(
+                            "no repair"
+                        )
                 ) {
 
                     rows.push(
@@ -1953,16 +2803,12 @@ async function exportPDF() {
         );
 
 
-    // =================================================
-    // NO DATA
-    // =================================================
-
     if (
         rows.length === 0
     ) {
 
         alert(
-            "Please generate the Repair Order Report first."
+            "Please generate a Repair Order Report first."
         );
 
         return;
@@ -1970,9 +2816,9 @@ async function exportPDF() {
     }
 
 
-    // =================================================
-    // PDF TABLE
-    // =================================================
+    // ==================================================
+    // AUTO TABLE
+    // ==================================================
 
     doc.autoTable({
 
@@ -2005,6 +2851,9 @@ async function exportPDF() {
 
         styles: {
 
+            font:
+                "helvetica",
+
             fontSize:
                 8,
 
@@ -2019,9 +2868,9 @@ async function exportPDF() {
         headStyles: {
 
             fillColor: [
-                41,
-                128,
-                185
+                13,
+                71,
+                161
             ],
 
             textColor:
@@ -2035,32 +2884,42 @@ async function exportPDF() {
         columnStyles: {
 
             0: {
-                cellWidth: 23
+                cellWidth:
+                    22
             },
 
             1: {
-                cellWidth: 22
+                cellWidth:
+                    22
             },
 
             2: {
-                cellWidth: 25
+                cellWidth:
+                    28
             },
 
             3: {
-                cellWidth: 28
+                cellWidth:
+                    28
             },
 
             4: {
-                cellWidth: 25
+                cellWidth:
+                    28
             },
 
             5: {
-                cellWidth: 45
+                cellWidth:
+                    45
             },
 
             6: {
-                cellWidth: 25,
-                halign: "right"
+                cellWidth:
+                    25,
+
+                halign:
+                    "right"
+
             }
 
         }
@@ -2068,14 +2927,9 @@ async function exportPDF() {
     });
 
 
-    // =================================================
+    // ==================================================
     // FOOTER
-    // =================================================
-
-    doc.setFontSize(
-        10
-    );
-
+    // ==================================================
 
     const generatedOn =
         new Date()
@@ -2108,52 +2962,42 @@ async function exportPDF() {
             );
 
 
-    const finalY =
-        doc.lastAutoTable &&
-        doc.lastAutoTable.finalY
+    let footerY =
+        doc.lastAutoTable.finalY +
+        15;
 
-            ? doc.lastAutoTable.finalY
-
-            : 48;
-
-
-    // =================================================
-    // CHECK FOOTER SPACE
-    // =================================================
 
     if (
-        finalY >
-        doc.internal.pageSize.height -
-        20
+        footerY >
+        285
     ) {
 
         doc.addPage();
 
-        doc.text(
-            `Generated on : ${generatedOn}`,
-            14,
-            15
-        );
-
-    }
-
-    else {
-
-        doc.text(
-            `Generated on : ${generatedOn}`,
-            14,
-            finalY + 15
-        );
+        footerY =
+            20;
 
     }
 
 
-    // =================================================
+    doc.setFontSize(
+        9
+    );
+
+
+    doc.text(
+        `Generated on : ${generatedOn}`,
+        14,
+        footerY
+    );
+
+
+    // ==================================================
     // FILE NAME
-    // =================================================
+    // ==================================================
 
-    const regionName =
-        selectedRegionText
+    const safeRegionName =
+        regionText
             .replace(
                 /\s+/g,
                 "_"
@@ -2176,12 +3020,8 @@ async function exportPDF() {
 
 
     const fileName =
-        `Repair_Report_${regionName}_${reportDate}.pdf`;
+        `Repair_Report_${safeRegionName}_${reportDate}.pdf`;
 
-
-    // =================================================
-    // SAVE PDF
-    // =================================================
 
     doc.save(
         fileName
@@ -2190,34 +3030,15 @@ async function exportPDF() {
 }
 
 
-// =====================================================
+// ======================================================
 // EXPORT ADVISOR ITEM & AMOUNT PDF
-// =====================================================
+// ======================================================
 
 async function exportAdvisorItemPDF() {
 
-    // =================================================
-    // CHECK jsPDF
-    // =================================================
-
-    if (
-        !window.jspdf ||
-        !window.jspdf.jsPDF
-    ) {
-
-        alert(
-            "jsPDF library is not loaded."
-        );
-
-        return;
-
-    }
-
-
     const {
         jsPDF
-    } =
-        window.jspdf;
+    } = window.jspdf;
 
 
     const doc =
@@ -2228,9 +3049,9 @@ async function exportAdvisorItemPDF() {
         );
 
 
-    // =================================================
+    // ==================================================
     // PAGE SETTINGS
-    // =================================================
+    // ==================================================
 
     const pageWidth =
         doc.internal.pageSize
@@ -2254,19 +3075,17 @@ async function exportAdvisorItemPDF() {
         15;
 
 
-    // =================================================
+    // ==================================================
     // FORMAT MONEY
-    // =================================================
+    // ==================================================
 
     function formatMoney(
         value
     ) {
 
         if (
-            value ===
-            null ||
-            value ===
-            undefined
+            value === null ||
+            value === undefined
         ) {
 
             return "Rs. 0";
@@ -2329,9 +3148,9 @@ async function exportAdvisorItemPDF() {
     }
 
 
-    // =================================================
+    // ==================================================
     // HEADING
-    // =================================================
+    // ==================================================
 
     doc.setFont(
         "helvetica",
@@ -2379,9 +3198,9 @@ async function exportAdvisorItemPDF() {
         11;
 
 
-    // =================================================
+    // ==================================================
     // DATE
-    // =================================================
+    // ==================================================
 
     const fromDate =
         document.getElementById(
@@ -2395,50 +3214,28 @@ async function exportAdvisorItemPDF() {
         ).value;
 
 
-    let from =
-        "-";
-
-
-    let to =
-        "-";
-
-
-    if (
+    const from =
         fromDate
-    ) {
-
-        from =
-            new Date(
+            ? new Date(
                 fromDate
             ).toLocaleDateString(
                 "en-GB"
-            );
+            )
+            : "-";
 
-    }
 
-
-    if (
+    const to =
         toDate
-    ) {
-
-        to =
-            new Date(
+            ? new Date(
                 toDate
             ).toLocaleDateString(
                 "en-GB"
-            );
-
-    }
+            )
+            : "-";
 
 
     doc.setFontSize(
         10
-    );
-
-
-    doc.setFont(
-        "helvetica",
-        "normal"
     );
 
 
@@ -2453,9 +3250,9 @@ async function exportAdvisorItemPDF() {
         6;
 
 
-    // =================================================
+    // ==================================================
     // REGION
-    // =================================================
+    // ==================================================
 
     const regionSelect =
         document.getElementById(
@@ -2472,20 +3269,12 @@ async function exportAdvisorItemPDF() {
         regionSelect.selectedIndex >= 0
     ) {
 
-        const selectedOption =
-            regionSelect.options[
-                regionSelect.selectedIndex
-            ];
-
-
-        if (
-            selectedOption
-        ) {
-
-            regionText =
-                selectedOption.text;
-
-        }
+        regionText =
+            regionSelect
+                .options[
+                    regionSelect.selectedIndex
+                ]
+                .text;
 
     }
 
@@ -2501,9 +3290,9 @@ async function exportAdvisorItemPDF() {
         10;
 
 
-    // =================================================
+    // ==================================================
     // REPORT CONTAINER
-    // =================================================
+    // ==================================================
 
     const container =
         document.getElementById(
@@ -2511,9 +3300,7 @@ async function exportAdvisorItemPDF() {
         );
 
 
-    if (
-        !container
-    ) {
+    if (!container) {
 
         alert(
             "Advisor Item Report container not found."
@@ -2537,9 +3324,9 @@ async function exportAdvisorItemPDF() {
     }
 
 
-    // =================================================
+    // ==================================================
     // FIND ADVISOR SECTIONS
-    // =================================================
+    // ==================================================
 
     const advisorSections =
         container.querySelectorAll(
@@ -2560,18 +3347,14 @@ async function exportAdvisorItemPDF() {
     }
 
 
-    // =================================================
+    // ==================================================
     // PROCESS EACH ADVISOR
-    // =================================================
+    // ==================================================
 
     advisorSections.forEach(
         (
             advisorHeading
         ) => {
-
-            // =============================================
-            // ADVISOR NAME
-            // =============================================
 
             const advisorName =
                 advisorHeading
@@ -2583,30 +3366,27 @@ async function exportAdvisorItemPDF() {
                     .trim();
 
 
-            // =============================================
+            // --------------------------------------------------
             // FIND TABLE
-            // =============================================
+            // --------------------------------------------------
 
             const table =
                 advisorHeading
                     .nextElementSibling;
 
 
-            if (
-                !table
-            ) {
+            if (!table) {
 
                 return;
 
             }
 
 
-            // =============================================
-            // EXTRACT TABLE ROWS
-            // =============================================
+            // --------------------------------------------------
+            // EXTRACT ROWS
+            // --------------------------------------------------
 
-            const rows =
-                [];
+            const rows = [];
 
 
             table
@@ -2614,7 +3394,7 @@ async function exportAdvisorItemPDF() {
                     "tbody tr"
                 )
                 .forEach(
-                    (tr) => {
+                    tr => {
 
                         const cells =
                             tr.querySelectorAll(
@@ -2623,7 +3403,8 @@ async function exportAdvisorItemPDF() {
 
 
                         if (
-                            cells.length < 4
+                            cells.length <
+                            4
                         ) {
 
                             return;
@@ -2673,10 +3454,6 @@ async function exportAdvisorItemPDF() {
                 );
 
 
-            // =============================================
-            // SKIP EMPTY ADVISOR
-            // =============================================
-
             if (
                 rows.length === 0
             ) {
@@ -2686,9 +3463,9 @@ async function exportAdvisorItemPDF() {
             }
 
 
-            // =============================================
+            // --------------------------------------------------
             // CHECK PAGE SPACE
-            // =============================================
+            // --------------------------------------------------
 
             if (
                 currentY >
@@ -2703,9 +3480,9 @@ async function exportAdvisorItemPDF() {
             }
 
 
-            // =============================================
+            // --------------------------------------------------
             // ADVISOR HEADING
-            // =============================================
+            // --------------------------------------------------
 
             doc.setFont(
                 "helvetica",
@@ -2729,9 +3506,9 @@ async function exportAdvisorItemPDF() {
                 7;
 
 
-            // =============================================
+            // --------------------------------------------------
             // ADVISOR TABLE
-            // =============================================
+            // --------------------------------------------------
 
             doc.autoTable({
 
@@ -2780,15 +3557,6 @@ async function exportAdvisorItemPDF() {
                     cellPadding:
                         3,
 
-                    lineColor: [
-                        190,
-                        190,
-                        190
-                    ],
-
-                    lineWidth:
-                        0.2,
-
                     valign:
                         "middle"
 
@@ -2797,9 +3565,9 @@ async function exportAdvisorItemPDF() {
                 headStyles: {
 
                     fillColor: [
-                        41,
-                        128,
-                        185
+                        13,
+                        71,
+                        161
                     ],
 
                     textColor:
@@ -2809,10 +3577,7 @@ async function exportAdvisorItemPDF() {
                         "bold",
 
                     halign:
-                        "left",
-
-                    valign:
-                        "middle"
+                        "left"
 
                 },
 
@@ -2860,13 +3625,6 @@ async function exportAdvisorItemPDF() {
 
                 },
 
-                bodyStyles: {
-
-                    valign:
-                        "middle"
-
-                },
-
                 didParseCell:
                     function (
                         data
@@ -2902,18 +3660,18 @@ async function exportAdvisorItemPDF() {
             });
 
 
-            // =============================================
-            // TABLE BOTTOM
-            // =============================================
+            // --------------------------------------------------
+            // TABLE END
+            // --------------------------------------------------
 
             currentY =
                 doc.lastAutoTable.finalY +
                 5;
 
 
-            // =============================================
+            // ==================================================
             // BILLING / INCENTIVE / NET BILLING
-            // =============================================
+            // ==================================================
 
             const totalElement =
                 table.nextElementSibling;
@@ -2927,15 +3685,9 @@ async function exportAdvisorItemPDF() {
                     totalElement.innerText;
 
 
-                console.log(
-                    "PDF Summary:",
-                    summaryText
-                );
-
-
-                // =========================================
+                // --------------------------------------------------
                 // TOTAL BILLING
-                // =========================================
+                // --------------------------------------------------
 
                 const billingMatch =
                     summaryText.match(
@@ -2946,7 +3698,9 @@ async function exportAdvisorItemPDF() {
                 const billing =
                     billingMatch
 
-                        ? Number(
+                        ?
+
+                        Number(
                             billingMatch[1]
                                 .replace(
                                     /,/g,
@@ -2954,12 +3708,14 @@ async function exportAdvisorItemPDF() {
                                 )
                         )
 
-                        : 0;
+                        :
+
+                        0;
 
 
-                // =========================================
+                // --------------------------------------------------
                 // INCENTIVE
-                // =========================================
+                // --------------------------------------------------
 
                 const incentiveMatch =
                     summaryText.match(
@@ -2970,7 +3726,9 @@ async function exportAdvisorItemPDF() {
                 const incentive =
                     incentiveMatch
 
-                        ? Number(
+                        ?
+
+                        Number(
                             incentiveMatch[1]
                                 .replace(
                                     /,/g,
@@ -2978,12 +3736,14 @@ async function exportAdvisorItemPDF() {
                                 )
                         )
 
-                        : 0;
+                        :
+
+                        0;
 
 
-                // =========================================
+                // --------------------------------------------------
                 // NET BILLING
-                // =========================================
+                // --------------------------------------------------
 
                 const netBillingMatch =
                     summaryText.match(
@@ -2994,7 +3754,9 @@ async function exportAdvisorItemPDF() {
                 const netBilling =
                     netBillingMatch
 
-                        ? Number(
+                        ?
+
+                        Number(
                             netBillingMatch[1]
                                 .replace(
                                     /,/g,
@@ -3002,34 +3764,31 @@ async function exportAdvisorItemPDF() {
                                 )
                         )
 
-                        : 0;
+                        :
+
+                        0;
 
 
-                // =========================================
-                // FORMAT VALUES
-                // =========================================
+                // --------------------------------------------------
+                // CHECK SPACE
+                // --------------------------------------------------
 
-                const billingText =
-                    formatMoney(
-                        billing
-                    );
+                if (
+                    currentY >
+                    pageHeight - 35
+                ) {
 
+                    doc.addPage();
 
-                const incentiveText =
-                    formatMoney(
-                        incentive
-                    );
+                    currentY =
+                        20;
 
-
-                const netBillingText =
-                    formatMoney(
-                        netBilling
-                    );
+                }
 
 
-                // =========================================
-                // PDF STYLE
-                // =========================================
+                // --------------------------------------------------
+                // STYLE
+                // --------------------------------------------------
 
                 doc.setFont(
                     "helvetica",
@@ -3042,12 +3801,14 @@ async function exportAdvisorItemPDF() {
                 );
 
 
-                // =========================================
+                // --------------------------------------------------
                 // TOTAL BILLING
-                // =========================================
+                // --------------------------------------------------
 
                 doc.text(
-                    `Total Billing: ${billingText}`,
+                    `Total Billing: ${formatMoney(
+                        billing
+                    )}`,
                     pageWidth -
                         rightMargin,
                     currentY,
@@ -3062,12 +3823,14 @@ async function exportAdvisorItemPDF() {
                     5;
 
 
-                // =========================================
+                // --------------------------------------------------
                 // INCENTIVE
-                // =========================================
+                // --------------------------------------------------
 
                 doc.text(
-                    `Incentive Amount: ${incentiveText}`,
+                    `Incentive Amount: ${formatMoney(
+                        incentive
+                    )}`,
                     pageWidth -
                         rightMargin,
                     currentY,
@@ -3082,12 +3845,14 @@ async function exportAdvisorItemPDF() {
                     5;
 
 
-                // =========================================
+                // --------------------------------------------------
                 // NET BILLING
-                // =========================================
+                // --------------------------------------------------
 
                 doc.text(
-                    `Net Billing: ${netBillingText}`,
+                    `Net Billing: ${formatMoney(
+                        netBilling
+                    )}`,
                     pageWidth -
                         rightMargin,
                     currentY,
@@ -3107,9 +3872,9 @@ async function exportAdvisorItemPDF() {
     );
 
 
-    // =================================================
+    // ==================================================
     // FOOTER
-    // =================================================
+    // ==================================================
 
     if (
         currentY >
@@ -3164,30 +3929,49 @@ async function exportAdvisorItemPDF() {
 
 
     doc.text(
-
         `Generated on: ${generatedOn}`,
-
         leftMargin,
-
         currentY + 5
-
     );
 
 
-    // =================================================
+    // ==================================================
     // SAVE PDF
-    // =================================================
+    // ==================================================
+
+    const safeRegionName =
+        regionText
+            .replace(
+                /\s+/g,
+                "_"
+            )
+            .replace(
+                /[^a-zA-Z0-9_-]/g,
+                ""
+            );
+
+
+    const reportDate =
+        new Date()
+            .toLocaleDateString(
+                "en-GB"
+            )
+            .replace(
+                /\//g,
+                "-"
+            );
+
 
     doc.save(
-        "Advisor_Item_Amount_Report.pdf"
+        `Advisor_Item_Amount_Report_${safeRegionName}_${reportDate}.pdf`
     );
 
 }
 
 
-// =====================================================
+// ======================================================
 // GO TO ADMIN DASHBOARD
-// =====================================================
+// ======================================================
 
 function goToAdminDashboard() {
 
