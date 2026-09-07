@@ -2016,11 +2016,6 @@ async function generateAdvisorItemReport() {
             await db.collection(
                 "itemcodes"
             )
-            .where(
-                "active",
-                "==",
-                true
-            )
             .get();
 
 
@@ -2041,21 +2036,18 @@ async function generateAdvisorItemReport() {
                     ).trim();
 
 
-                itemMap[code] = {
+               itemMap[code] = {
+    itemCode: code,
 
-                    itemCode:
-                        code,
+    description:
+        item.description || "-",
 
-                    description:
-                        item.description ||
-                        "-",
+    billingAmount:
+        Number(item.billingAmount) || 0,
 
-                    billingAmount:
-                        Number(
-                            item.billingAmount
-                        ) || 0
-
-                };
+    incentiveAmount:
+        Number(item.incentiveAmount) || 0
+};
 
             }
         );
@@ -2168,59 +2160,57 @@ async function generateAdvisorItemReport() {
                 }
 
 
-                // --------------------------------------------------
-                // COUNT ITEMS
-                // --------------------------------------------------
+               items.forEach(itemCode => {
 
-                items.forEach(
-                    itemCode => {
+                const code =
+                    String(itemCode).trim();
 
-                        const code =
-                            String(
-                                itemCode
-                            ).trim();
+                // ---------------------------------------------
+                // Create item entry
+                // ---------------------------------------------
 
+                if (
+                    !advisorData[advisor].items[code]
+                ) {
 
-                        if (
-                            !advisorData[
-                                advisor
-                            ].items[code]
-                        ) {
+                    advisorData[advisor].items[code] = {
 
-                            advisorData[
-                                advisor
-                            ].items[code] = {
+                    quantity: 0
 
-                                quantity: 0
+                };
 
-                            };
+                }
 
-                        }
+                // ---------------------------------------------
+                // Increase item quantity
+                // ---------------------------------------------
 
+                advisorData[advisor]
+                    .items[code]
+                    .quantity++;
 
-                        advisorData[
-                            advisor
-                        ].items[code]
-                            .quantity++;
+                // ---------------------------------------------
+                // Get incentive from Item Master
+                // ---------------------------------------------
 
-                    }
-                );
-
-
-                // --------------------------------------------------
-                // INCENTIVE
-                // --------------------------------------------------
+                const itemInfo =
+                    itemMap[code];
 
                 const incentive =
-                    Number(
-                        ro.incentiveAmount
-                    ) || 0;
+                    itemInfo
+                        ? Number(itemInfo.incentiveAmount) || 0
+                        : 0;
+
+                // ---------------------------------------------
+                // Add incentive for this item
+                // ---------------------------------------------
+
+                advisorData[advisor]
+                    .incentive += incentive;
+
+            });
 
 
-                advisorData[
-                    advisor
-                ].incentive +=
-                    incentive;
 
             }
         );
