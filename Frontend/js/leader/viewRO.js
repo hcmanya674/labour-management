@@ -1,8 +1,18 @@
 // ==========================================
 // VIEW / EDIT REPAIR ORDER
+// LEADER VERSION
+// ==========================================
+//
+// IMPORTANT:
+// Billing amount is CALCULATED and STORED,
+// but NEVER DISPLAYED to the Leader.
+//
 // ==========================================
 
-const roId = localStorage.getItem("currentRO");
+
+const roId =
+    localStorage.getItem("currentRO");
+
 
 let currentItemCodes = [];
 
@@ -19,7 +29,9 @@ let isEditMode = false;
 
 if (!roId) {
 
-    alert("Repair Order not selected.");
+    alert(
+        "Repair Order not selected."
+    );
 
     history.back();
 
@@ -30,29 +42,226 @@ if (!roId) {
 // WAIT FOR LOGIN
 // ==========================================
 
-auth.onAuthStateChanged(async (user) => {
+auth.onAuthStateChanged(
+    async (user) => {
 
-    if (!user) {
+        if (!user) {
 
-        alert("Please login first.");
+            alert(
+                "Please login first."
+            );
 
-        window.location.href =
-            "../../pages/auth/loginindex.html";
+            window.location.href =
+                "../../pages/auth/loginindex.html";
 
-        return;
+            return;
+
+        }
+
+
+        currentLeaderUid =
+            user.uid;
+
+
+        console.log(
+            "Logged-in Leader UID:",
+            currentLeaderUid
+        );
+
+
+        await loadRepairOrder();
+
+    }
+);
+
+
+// ==========================================
+// FIND ITEM DOCUMENT
+// ==========================================
+//
+// This function handles all possible cases:
+//
+// 1. Document ID = item code
+//
+// OR
+//
+// 2. itemCode field contains NUMBER
+//
+// OR
+//
+// 3. itemCode field contains STRING
+//
+// ==========================================
+
+async function findItemDocument(itemCode) {
+
+    const code =
+        String(itemCode).trim();
+
+
+    if (!code) {
+
+        return null;
 
     }
 
-    currentLeaderUid = user.uid;
 
-    console.log(
-        "Logged-in Leader UID:",
-        currentLeaderUid
+    // ======================================
+    // STEP 1
+    // TRY DOCUMENT ID
+    // ======================================
+
+    try {
+
+        const directDoc =
+            await db.collection(
+                "itemcodes"
+            )
+            .doc(code)
+            .get();
+
+
+        if (directDoc.exists) {
+
+            console.log(
+                "Item found by document ID:",
+                code
+            );
+
+            return directDoc;
+
+        }
+
+    }
+
+    catch (error) {
+
+        console.warn(
+            "Document ID lookup failed:",
+            code,
+            error
+        );
+
+    }
+
+
+    // ======================================
+    // STEP 2
+    // TRY itemCode AS NUMBER
+    // ======================================
+
+    const numericCode =
+        Number(code);
+
+
+    if (
+        !Number.isNaN(numericCode)
+    ) {
+
+        try {
+
+            const numberQuery =
+                await db.collection(
+                    "itemcodes"
+                )
+                .where(
+                    "itemCode",
+                    "==",
+                    numericCode
+                )
+                .limit(1)
+                .get();
+
+
+            if (
+                !numberQuery.empty
+            ) {
+
+                console.log(
+                    "Item found by numeric itemCode:",
+                    numericCode
+                );
+
+
+                return numberQuery.docs[0];
+
+            }
+
+        }
+
+        catch (error) {
+
+            console.warn(
+                "Numeric itemCode lookup failed:",
+                numericCode,
+                error
+            );
+
+        }
+
+    }
+
+
+    // ======================================
+    // STEP 3
+    // TRY itemCode AS STRING
+    // ======================================
+
+    try {
+
+        const stringQuery =
+            await db.collection(
+                "itemcodes"
+            )
+            .where(
+                "itemCode",
+                "==",
+                code
+            )
+            .limit(1)
+            .get();
+
+
+        if (
+            !stringQuery.empty
+        ) {
+
+            console.log(
+                "Item found by string itemCode:",
+                code
+            );
+
+
+            return stringQuery.docs[0];
+
+        }
+
+    }
+
+    catch (error) {
+
+        console.warn(
+            "String itemCode lookup failed:",
+            code,
+            error
+        );
+
+    }
+
+
+    // ======================================
+    // NOT FOUND
+    // ======================================
+
+    console.warn(
+        "Item not found anywhere:",
+        code
     );
 
-    await loadRepairOrder();
 
-});
+    return null;
+
+}
 
 
 // ==========================================
@@ -64,14 +273,18 @@ async function loadRepairOrder() {
     try {
 
         const doc =
-            await db.collection("repairorders")
-                .doc(roId)
-                .get();
+            await db.collection(
+                "repairorders"
+            )
+            .doc(roId)
+            .get();
 
 
         if (!doc.exists) {
 
-            alert("Repair Order not found.");
+            alert(
+                "Repair Order not found."
+            );
 
             return;
 
@@ -93,7 +306,10 @@ async function loadRepairOrder() {
         // ======================================
 
         const roNumber =
-            document.getElementById("roNumber");
+            document.getElementById(
+                "roNumber"
+            );
+
 
         if (roNumber) {
 
@@ -144,6 +360,7 @@ async function loadRepairOrder() {
                     error
                 );
 
+
                 createdDate.textContent =
                     "-";
 
@@ -163,20 +380,36 @@ async function loadRepairOrder() {
         // VEHICLE NUMBER
         // ======================================
 
-        document.getElementById(
-            "vehicleNumber"
-        ).value =
-            repairData.vehicleNumber || "";
+        const vehicleNumber =
+            document.getElementById(
+                "vehicleNumber"
+            );
+
+
+        if (vehicleNumber) {
+
+            vehicleNumber.value =
+                repairData.vehicleNumber || "";
+
+        }
 
 
         // ======================================
         // ADVISOR NAME
         // ======================================
 
-        document.getElementById(
-            "advisorName"
-        ).value =
-            repairData.advisorName || "";
+        const advisorName =
+            document.getElementById(
+                "advisorName"
+            );
+
+
+        if (advisorName) {
+
+            advisorName.value =
+                repairData.advisorName || "";
+
+        }
 
 
         // ======================================
@@ -190,16 +423,22 @@ async function loadRepairOrder() {
         ) {
 
             currentItemCodes =
-                [...repairData.itemCodes];
+                repairData.itemCodes.map(
+                    code =>
+                        String(code).trim()
+                );
 
         }
 
         else if (
-            repairData.itemCode
+            repairData.itemCode !== undefined &&
+            repairData.itemCode !== null
         ) {
 
             currentItemCodes = [
-                repairData.itemCode
+                String(
+                    repairData.itemCode
+                ).trim()
             ];
 
         }
@@ -218,18 +457,7 @@ async function loadRepairOrder() {
 
 
         // ======================================
-        // DISPLAY BILLING
-        // ======================================
-
-        displayBillingAmount(
-            Number(
-                repairData.billingAmount || 0
-            )
-        );
-
-
-        // ======================================
-        // VIEW MODE
+        // LOAD ITEMS FOR VIEW MODE
         // ======================================
 
         await loadViewItems(
@@ -245,6 +473,7 @@ async function loadRepairOrder() {
             error
         );
 
+
         alert(
             "Unable to load Repair Order."
         );
@@ -257,32 +486,18 @@ async function loadRepairOrder() {
 // ==========================================
 // DISPLAY BILLING AMOUNT
 // ==========================================
+//
+// Billing is hidden from Leader.
+//
+// Function kept only for compatibility.
+// ==========================================
 
 function displayBillingAmount(amount) {
 
-    const billingElement =
-        document.getElementById(
-            "billingAmount"
-        );
-
-
-    if (!billingElement) {
-
-        return;
-
-    }
-
-
-    billingElement.value =
-        "₹" +
-        Number(amount || 0)
-            .toLocaleString(
-                "en-IN",
-                {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                }
-            );
+    console.log(
+        "Billing calculated internally:",
+        amount
+    );
 
 }
 
@@ -303,16 +518,23 @@ async function loadViewItems(
 
     if (!container) {
 
+        console.error(
+            "itemCodeContainer not found."
+        );
+
         return;
 
     }
 
 
-    container.innerHTML = "";
+    container.innerHTML =
+        "";
 
 
     if (
-        !Array.isArray(selectedItems) ||
+        !Array.isArray(
+            selectedItems
+        ) ||
         selectedItems.length === 0
     ) {
 
@@ -334,9 +556,9 @@ async function loadViewItems(
         try {
 
             const itemDoc =
-                await db.collection("itemcodes")
-                    .doc(itemCode)
-                    .get();
+                await findItemDocument(
+                    itemCode
+                );
 
 
             const itemDiv =
@@ -350,10 +572,10 @@ async function loadViewItems(
 
 
             // ==================================
-            // ITEM DOCUMENT NOT FOUND
+            // ITEM NOT FOUND
             // ==================================
 
-            if (!itemDoc.exists) {
+            if (!itemDoc) {
 
                 itemDiv.innerHTML = `
 
@@ -362,23 +584,30 @@ async function loadViewItems(
                         <input
                             type="checkbox"
                             name="itemCode"
-                            value="${itemCode}"
+                            value="${escapeHTML(itemCode)}"
                             checked
                             disabled
                         >
 
                         <span>
-                            ${itemCode}
+
+                            <strong>
+                                ${escapeHTML(itemCode)}
+                            </strong>
+
                             - Item details unavailable
+
                         </span>
 
                     </label>
 
                 `;
 
+
                 container.appendChild(
                     itemDiv
                 );
+
 
                 continue;
 
@@ -390,19 +619,24 @@ async function loadViewItems(
 
 
             const actualItemCode =
-                item.itemCode ||
-                itemCode;
+                String(
+                    item.itemCode ??
+                    itemCode
+                ).trim();
 
 
             const description =
-                item.description || "-";
+                item.description ||
+                "-";
 
 
-            const billingAmount =
-                Number(
-                    item.billingAmount
-                ) || 0;
-
+            // ==================================
+            // DISPLAY ITEM
+            // ==================================
+            //
+            // Billing is intentionally NOT shown.
+            //
+            // ==================================
 
             itemDiv.innerHTML = `
 
@@ -411,7 +645,7 @@ async function loadViewItems(
                     <input
                         type="checkbox"
                         name="itemCode"
-                        value="${actualItemCode}"
+                        value="${escapeHTML(actualItemCode)}"
                         checked
                         disabled
                     >
@@ -419,15 +653,11 @@ async function loadViewItems(
                     <span>
 
                         <strong>
-                            ${actualItemCode}
+                            ${escapeHTML(actualItemCode)}
                         </strong>
 
                         -
-                        ${description}
-
-                        <span>
-                            ₹${billingAmount.toLocaleString("en-IN")}
-                        </span>
+                        ${escapeHTML(description)}
 
                     </span>
 
@@ -438,6 +668,12 @@ async function loadViewItems(
 
             container.appendChild(
                 itemDiv
+            );
+
+
+            console.log(
+                "Displayed view item:",
+                actualItemCode
             );
 
         }
@@ -463,7 +699,9 @@ async function loadViewItems(
 
 async function enableEdit() {
 
-    if (isEditMode) {
+    if (
+        isEditMode
+    ) {
 
         return;
 
@@ -472,29 +710,52 @@ async function enableEdit() {
 
     try {
 
-        isEditMode = true;
+        // ======================================
+        // ENTER EDIT MODE
+        // ======================================
+
+        isEditMode =
+            true;
 
 
         // ======================================
-        // ENABLE VEHICLE
+        // ENABLE VEHICLE NUMBER
         // ======================================
 
-        document.getElementById(
-            "vehicleNumber"
-        ).disabled = false;
+        const vehicleNumber =
+            document.getElementById(
+                "vehicleNumber"
+            );
+
+
+        if (vehicleNumber) {
+
+            vehicleNumber.disabled =
+                false;
+
+        }
 
 
         // ======================================
-        // ENABLE ADVISOR
+        // ENABLE ADVISOR NAME
         // ======================================
 
-        document.getElementById(
-            "advisorName"
-        ).disabled = false;
+        const advisorName =
+            document.getElementById(
+                "advisorName"
+            );
+
+
+        if (advisorName) {
+
+            advisorName.disabled =
+                false;
+
+        }
 
 
         // ======================================
-        // LOAD ADMIN-ASSIGNED ITEMS
+        // LOAD LEADER ASSIGNED ITEMS
         // ======================================
 
         await loadAssignedItemsForEdit();
@@ -504,10 +765,18 @@ async function enableEdit() {
         // SHOW UPDATE BUTTON
         // ======================================
 
-        document.getElementById(
-            "updateBtn"
-        ).style.display =
-            "inline-block";
+        const updateBtn =
+            document.getElementById(
+                "updateBtn"
+            );
+
+
+        if (updateBtn) {
+
+            updateBtn.style.display =
+                "inline-block";
+
+        }
 
 
         // ======================================
@@ -536,11 +805,14 @@ async function enableEdit() {
             error
         );
 
+
         alert(
             "Unable to enable edit mode."
         );
 
-        isEditMode = false;
+
+        isEditMode =
+            false;
 
     }
 
@@ -548,7 +820,7 @@ async function enableEdit() {
 
 
 // ==========================================
-// LOAD LEADER ASSIGNED ITEMS
+// LOAD LEADER ASSIGNED ITEMS FOR EDIT
 // ==========================================
 
 async function loadAssignedItemsForEdit() {
@@ -559,6 +831,17 @@ async function loadAssignedItemsForEdit() {
         );
 
 
+    if (!container) {
+
+        console.error(
+            "itemCodeContainer not found."
+        );
+
+        return;
+
+    }
+
+
     container.innerHTML =
         "<p>Loading assigned items...</p>";
 
@@ -566,7 +849,7 @@ async function loadAssignedItemsForEdit() {
     try {
 
         // ======================================
-        // GET CURRENT LEADER
+        // GET CURRENT USER
         // ======================================
 
         const user =
@@ -584,6 +867,12 @@ async function loadAssignedItemsForEdit() {
 
         currentLeaderUid =
             user.uid;
+
+
+        console.log(
+            "Loading assignments for leader:",
+            currentLeaderUid
+        );
 
 
         // ======================================
@@ -607,6 +896,16 @@ async function loadAssignedItemsForEdit() {
             .get();
 
 
+        console.log(
+            "Assignment documents found:",
+            assignmentSnapshot.size
+        );
+
+
+        // ======================================
+        // NO ASSIGNMENTS
+        // ======================================
+
         if (
             assignmentSnapshot.empty
         ) {
@@ -623,14 +922,15 @@ async function loadAssignedItemsForEdit() {
 
 
         // ======================================
-        // CLEAR MAP
+        // CLEAR ASSIGNMENT MAP
         // ======================================
 
-        assignedItemMap = {};
+        assignedItemMap =
+            {};
 
 
         // ======================================
-        // STORE ASSIGNED ITEM CODES
+        // STORE ASSIGNED CODES
         // ======================================
 
         assignmentSnapshot.forEach(
@@ -640,12 +940,26 @@ async function loadAssignedItemsForEdit() {
                     doc.data();
 
 
+                console.log(
+                    "Assignment:",
+                    doc.id,
+                    data
+                );
+
+
                 if (
-                    data.itemCode
+                    data.itemCode !== undefined &&
+                    data.itemCode !== null
                 ) {
 
+                    const code =
+                        String(
+                            data.itemCode
+                        ).trim();
+
+
                     assignedItemMap[
-                        data.itemCode
+                        code
                     ] = true;
 
                 }
@@ -654,138 +968,232 @@ async function loadAssignedItemsForEdit() {
         );
 
 
-        console.log(
-            "Leader assigned items:",
+        const assignedCodes =
             Object.keys(
                 assignedItemMap
             )
+            .sort(
+                (a, b) => {
+
+                    const numA =
+                        Number(a);
+
+                    const numB =
+                        Number(b);
+
+
+                    if (
+                        !Number.isNaN(numA) &&
+                        !Number.isNaN(numB)
+                    ) {
+
+                        return numA - numB;
+
+                    }
+
+
+                    return a.localeCompare(b);
+
+                }
+            );
+
+
+        console.log(
+            "Leader assigned item codes:",
+            assignedCodes
         );
 
 
         // ======================================
-        // LOAD ITEM DETAILS
+        // NO VALID CODES
         // ======================================
 
-        container.innerHTML = "";
-
-
-        const assignedCodes =
-            Object.keys(
-                assignedItemMap
-            ).sort();
-
-
-        for (
-            const itemCode of assignedCodes
+        if (
+            assignedCodes.length === 0
         ) {
 
-            const itemDoc =
-                await db.collection(
-                    "itemcodes"
-                )
-                .doc(itemCode)
-                .get();
-
-
-            if (!itemDoc.exists) {
-
-                console.warn(
-                    "Assigned item does not exist:",
-                    itemCode
-                );
-
-                continue;
-
-            }
-
-
-            const item =
-                itemDoc.data();
-
-
-            const actualItemCode =
-                item.itemCode ||
-                itemCode;
-
-
-            const description =
-                item.description || "-";
-
-
-            const billingAmount =
-                Number(
-                    item.billingAmount
-                ) || 0;
-
-
-            // ==================================
-            // CHECK IF ITEM IS ALREADY IN RO
-            // ==================================
-
-            const isSelected =
-                currentItemCodes.includes(
-                    actualItemCode
-                );
-
-
-            // ==================================
-            // CREATE ITEM
-            // ==================================
-
-            const itemDiv =
-                document.createElement(
-                    "div"
-                );
-
-
-            itemDiv.className =
-                "item-option";
-
-
-            itemDiv.innerHTML = `
-
-                <label class="item-checkbox">
-
-                    <input
-                        type="checkbox"
-                        name="itemCode"
-                        value="${actualItemCode}"
-                        ${isSelected ? "checked" : ""}
-                        onchange="recalculateBilling()"
-                    >
-
-                    <span>
-
-                        <strong>
-                            ${actualItemCode}
-                        </strong>
-
-                        -
-                        ${description}
-
-                        <span>
-                            ₹${billingAmount.toLocaleString("en-IN")}
-                        </span>
-
-                    </span>
-
-                </label>
-
+            container.innerHTML = `
+                <p>
+                    No valid item codes found in your assignments.
+                </p>
             `;
 
-
-            container.appendChild(
-                itemDiv
-            );
+            return;
 
         }
 
 
         // ======================================
-        // INITIAL BILLING
+        // CLEAR OLD VIEW ITEMS
         // ======================================
 
-        recalculateBilling();
+        container.innerHTML =
+            "";
+
+
+        // ======================================
+        // LOAD EACH ASSIGNED ITEM
+        // ======================================
+
+        for (
+            const assignedCode of assignedCodes
+        ) {
+
+            try {
+
+                const itemDoc =
+                    await findItemDocument(
+                        assignedCode
+                    );
+
+
+                // ==================================
+                // ITEM NOT FOUND
+                // ==================================
+
+                if (!itemDoc) {
+
+                    console.warn(
+                        "Assigned item not found:",
+                        assignedCode
+                    );
+
+                    continue;
+
+                }
+
+
+                const item =
+                    itemDoc.data();
+
+
+                const actualItemCode =
+                    String(
+                        item.itemCode ??
+                        assignedCode
+                    ).trim();
+
+
+                const description =
+                    item.description ||
+                    "-";
+
+
+                // ==================================
+                // CHECK IF ALREADY IN CURRENT RO
+                // ==================================
+
+                const isSelected =
+                    currentItemCodes
+                        .map(
+                            code =>
+                                String(
+                                    code
+                                ).trim()
+                        )
+                        .includes(
+                            actualItemCode
+                        );
+
+
+                // ==================================
+                // CREATE ITEM DIV
+                // ==================================
+
+                const itemDiv =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                itemDiv.className =
+                    "item-option";
+
+
+                itemDiv.innerHTML = `
+
+                    <label class="item-checkbox">
+
+                        <input
+                            type="checkbox"
+                            name="itemCode"
+                            value="${escapeHTML(actualItemCode)}"
+                            ${isSelected ? "checked" : ""}
+                            onchange="recalculateBilling()"
+                        >
+
+                        <span>
+
+                            <strong>
+                                ${escapeHTML(actualItemCode)}
+                            </strong>
+
+                            -
+                            ${escapeHTML(description)}
+
+                        </span>
+
+                    </label>
+
+                `;
+
+
+                container.appendChild(
+                    itemDiv
+                );
+
+
+                console.log(
+                    "Displayed assigned item:",
+                    actualItemCode,
+                    "Selected:",
+                    isSelected
+                );
+
+            }
+
+            catch (error) {
+
+                console.error(
+                    "Error loading assigned item:",
+                    assignedCode,
+                    error
+                );
+
+            }
+
+        }
+
+
+        // ======================================
+        // CHECK WHETHER ITEMS WERE DISPLAYED
+        // ======================================
+
+        if (
+            container.children.length === 0
+        ) {
+
+            container.innerHTML = `
+                <p>
+                    Assigned items could not be loaded.
+                </p>
+            `;
+
+            return;
+
+        }
+
+
+        // ======================================
+        // RECALCULATE BILLING INTERNALLY
+        // ======================================
+
+        await recalculateBilling();
+
+
+        console.log(
+            "Assigned items loaded successfully."
+        );
 
     }
 
@@ -796,11 +1204,13 @@ async function loadAssignedItemsForEdit() {
             error
         );
 
+
         container.innerHTML = `
             <p>
                 Unable to load assigned items.
             </p>
         `;
+
 
         throw error;
 
@@ -812,12 +1222,18 @@ async function loadAssignedItemsForEdit() {
 // ==========================================
 // RECALCULATE BILLING
 // ==========================================
+//
+// Billing is calculated internally only.
+// Nothing is displayed to Leader.
+// ==========================================
 
 async function recalculateBilling() {
 
-    if (!isEditMode) {
+    if (
+        !isEditMode
+    ) {
 
-        return;
+        return 0;
 
     }
 
@@ -830,7 +1246,9 @@ async function recalculateBilling() {
         )
         .map(
             checkbox =>
-                checkbox.value
+                String(
+                    checkbox.value
+                ).trim()
         );
 
 
@@ -843,7 +1261,7 @@ async function recalculateBilling() {
     ) {
 
         // ======================================
-        // USE ASSIGNED ITEM MAP
+        // VERIFY ASSIGNMENT
         // ======================================
 
         if (
@@ -863,15 +1281,13 @@ async function recalculateBilling() {
         try {
 
             const itemDoc =
-                await db.collection(
-                    "itemcodes"
-                )
-                .doc(itemCode)
-                .get();
+                await findItemDocument(
+                    itemCode
+                );
 
 
             if (
-                itemDoc.exists
+                itemDoc
             ) {
 
                 const item =
@@ -900,9 +1316,17 @@ async function recalculateBilling() {
     }
 
 
-    displayBillingAmount(
+    // ======================================
+    // BILLING IS NOT DISPLAYED
+    // ======================================
+
+    console.log(
+        "Internal Billing Total:",
         total
     );
+
+
+    return total;
 
 }
 
@@ -913,205 +1337,69 @@ async function recalculateBilling() {
 
 async function updateRO() {
 
-    if (!isEditMode) {
-
-        return;
-
-    }
-
-
-    // ======================================
-    // VEHICLE NUMBER
-    // ======================================
-
-    const vehicleNumber =
-        document.getElementById(
-            "vehicleNumber"
-        )
-        .value
-        .trim()
-        .toUpperCase();
-
-
-    // ======================================
-    // ADVISOR NAME
-    // ======================================
-
-    const advisorName =
-        document.getElementById(
-            "advisorName"
-        )
-        .value
-        .trim()
-        .toUpperCase();
-
-
-    // ======================================
-    // SELECTED ITEMS
-    // ======================================
-
-    const selectedItems =
-        Array.from(
-            document.querySelectorAll(
-                'input[name="itemCode"]:checked'
-            )
-        )
-        .map(
-            checkbox =>
-                checkbox.value
-        );
-
-
-    // ======================================
-    // VALIDATION
-    // ======================================
-
-    if (!vehicleNumber) {
-
-        alert(
-            "Please enter Vehicle Number."
-        );
-
-        return;
-
-    }
-
-
-    if (!advisorName) {
-
-        alert(
-            "Please enter Advisor Name."
-        );
-
-        return;
-
-    }
-
-
     if (
-        selectedItems.length === 0
+        !isEditMode
     ) {
-
-        alert(
-            "Please select at least one item."
-        );
 
         return;
 
     }
-
-
-    // ======================================
-    // VERIFY ALL ITEMS ARE ASSIGNED
-    // ======================================
-
-    for (
-        const itemCode of selectedItems
-    ) {
-
-        if (
-            !assignedItemMap[itemCode]
-        ) {
-
-            alert(
-                "You are not authorized to use item: " +
-                itemCode
-            );
-
-            return;
-
-        }
-
-    }
-
-
-    // ======================================
-    // ADVISOR VALIDATION
-    // ======================================
-
-    const namePattern =
-        /^[A-Za-z]+(?: [A-Za-z]+)*$/;
-
-
-    if (
-        !namePattern.test(
-            advisorName
-        )
-    ) {
-
-        alert(
-            "Advisor name can contain only letters and spaces."
-        );
-
-        return;
-
-    }
-
-
-    if (
-        advisorName.length < 3
-    ) {
-
-        alert(
-            "Advisor name must contain at least 3 characters."
-        );
-
-        return;
-
-    }
-
-
-    if (
-        advisorName.length > 30
-    ) {
-
-        alert(
-            "Advisor name cannot exceed 30 characters."
-        );
-
-        return;
-
-    }
-
-
-    // ======================================
-    // CALCULATE BILLING
-    // ======================================
-
-    let billingAmount =
-        0;
 
 
     try {
 
-        for (
-            const itemCode of selectedItems
-        ) {
+        // ======================================
+        // VEHICLE NUMBER
+        // ======================================
 
-            const itemDoc =
-                await db.collection(
-                    "itemcodes"
+        const vehicleElement =
+            document.getElementById(
+                "vehicleNumber"
+            );
+
+
+        const vehicleNumber =
+            vehicleElement
+                ? vehicleElement.value
+                    .trim()
+                    .toUpperCase()
+                : "";
+
+
+        // ======================================
+        // ADVISOR NAME
+        // ======================================
+
+        const advisorElement =
+            document.getElementById(
+                "advisorName"
+            );
+
+
+        const advisorName =
+            advisorElement
+                ? advisorElement.value
+                    .trim()
+                    .toUpperCase()
+                : "";
+
+
+        // ======================================
+        // SELECTED ITEMS
+        // ======================================
+
+        const selectedItems =
+            Array.from(
+                document.querySelectorAll(
+                    'input[name="itemCode"]:checked'
                 )
-                .doc(itemCode)
-                .get();
-
-
-            if (
-                itemDoc.exists
-            ) {
-
-                const itemData =
-                    itemDoc.data();
-
-
-                billingAmount +=
-                    Number(
-                        itemData.billingAmount
-                    ) || 0;
-
-            }
-
-        }
+            )
+            .map(
+                checkbox =>
+                    String(
+                        checkbox.value
+                    ).trim()
+            );
 
 
         console.log(
@@ -1120,9 +1408,224 @@ async function updateRO() {
         );
 
 
+        // ======================================
+        // VALIDATION
+        // ======================================
+
+        if (
+            !vehicleNumber
+        ) {
+
+            alert(
+                "Please enter Vehicle Number."
+            );
+
+            return;
+
+        }
+
+
+        if (
+            !advisorName
+        ) {
+
+            alert(
+                "Please enter Advisor Name."
+            );
+
+            return;
+
+        }
+
+
+        if (
+            selectedItems.length === 0
+        ) {
+
+            alert(
+                "Please select at least one item."
+            );
+
+            return;
+
+        }
+
+
+        // ======================================
+        // VERIFY ALL ITEMS ARE ASSIGNED
+        // ======================================
+
+        for (
+            const itemCode of selectedItems
+        ) {
+
+            if (
+                !assignedItemMap[itemCode]
+            ) {
+
+                alert(
+                    "You are not authorized to use item: " +
+                    itemCode
+                );
+
+                return;
+
+            }
+
+        }
+
+
+        // ======================================
+        // ADVISOR VALIDATION
+        // ======================================
+
+        const namePattern =
+            /^[A-Za-z]+(?: [A-Za-z]+)*$/;
+
+
+        if (
+            !namePattern.test(
+                advisorName
+            )
+        ) {
+
+            alert(
+                "Advisor name can contain only letters and spaces."
+            );
+
+            return;
+
+        }
+
+
+        if (
+            advisorName.length < 3
+        ) {
+
+            alert(
+                "Advisor name must contain at least 3 characters."
+            );
+
+            return;
+
+        }
+
+
+        if (
+            advisorName.length > 30
+        ) {
+
+            alert(
+                "Advisor name cannot exceed 30 characters."
+            );
+
+            return;
+
+        }
+
+
+        // ======================================
+        // CALCULATE BILLING
+        // ======================================
+
+        let billingAmount =
+            0;
+
+
+        // ======================================
+        // CREATE ITEM DETAILS
+        // ======================================
+
+        const updatedItemDetails =
+            [];
+
+
+        for (
+            const itemCode of selectedItems
+        ) {
+
+            const itemDoc =
+                await findItemDocument(
+                    itemCode
+                );
+
+
+            if (!itemDoc) {
+
+                alert(
+                    "Item details not found for item: " +
+                    itemCode
+                );
+
+                return;
+
+            }
+
+
+            const itemData =
+                itemDoc.data();
+
+
+            const actualItemCode =
+                String(
+                    itemData.itemCode ??
+                    itemCode
+                ).trim();
+
+
+            const description =
+                itemData.description ||
+                "-";
+
+
+            const itemBilling =
+                Number(
+                    itemData.billingAmount
+                ) || 0;
+
+
+            // ==================================
+            // CALCULATE TOTAL
+            // ==================================
+
+            billingAmount +=
+                itemBilling;
+
+
+            // ==================================
+            // STORE ITEM DETAILS
+            // ==================================
+            //
+            // Billing is stored for Admin,
+            // but not displayed to Leader.
+            //
+            // ==================================
+
+            updatedItemDetails.push({
+
+                itemCode:
+                    actualItemCode,
+
+                description:
+                    description,
+
+                billingAmount:
+                    itemBilling
+
+            });
+
+        }
+
+
         console.log(
             "New Billing Amount:",
             billingAmount
+        );
+
+
+        console.log(
+            "Updated Item Details:",
+            updatedItemDetails
         );
 
 
@@ -1145,11 +1648,18 @@ async function updateRO() {
             itemCodes:
                 selectedItems,
 
+            itemDetails:
+                updatedItemDetails,
+
             billingAmount:
                 billingAmount
 
         });
 
+
+        // ======================================
+        // SUCCESS
+        // ======================================
 
         alert(
             "Repair Order Updated Successfully."
@@ -1160,11 +1670,12 @@ async function updateRO() {
         // EXIT EDIT MODE
         // ======================================
 
-        isEditMode = false;
+        isEditMode =
+            false;
 
 
         // ======================================
-        // RELOAD
+        // RELOAD PAGE
         // ======================================
 
         location.reload();
@@ -1178,11 +1689,59 @@ async function updateRO() {
             error
         );
 
+
         alert(
             "Unable to update Repair Order: " +
             error.message
         );
 
     }
+
+}
+
+
+// ==========================================
+// ESCAPE HTML
+// ==========================================
+
+function escapeHTML(
+    value
+) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+
+        return "";
+    }
+
+
+    return String(value)
+
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+
+        .replace(
+            /</g,
+            "&lt;"
+        )
+
+        .replace(
+            />/g,
+            "&gt;"
+        )
+
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+
+        .replace(
+            /'/g,
+            "&#039;"
+        );
 
 }

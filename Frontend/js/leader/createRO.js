@@ -2,6 +2,7 @@
 // CREATE REPAIR ORDER
 // =====================================================
 
+
 // =====================================================
 // GLOBAL VARIABLES
 // =====================================================
@@ -131,7 +132,6 @@ document.addEventListener(
                     // ======================================
 
                     await loadItems();
-
 
                 }
 
@@ -400,8 +400,6 @@ async function loadItems() {
                 </div>
             `;
 
-            updateBillingAmount();
-
             return;
 
         }
@@ -479,6 +477,9 @@ async function loadItems() {
                     description:
                         data.description || "",
 
+                    // IMPORTANT:
+                    // Billing is loaded internally only.
+                    // It is NOT displayed to the leader.
                     billingAmount:
                         Number(
                             data.billingAmount
@@ -519,8 +520,6 @@ async function loadItems() {
                 </div>
             `;
 
-            updateBillingAmount();
-
             return;
 
         }
@@ -538,19 +537,6 @@ async function loadItems() {
         // ==========================================
 
         renderItems();
-
-
-        // ==========================================
-        // INITIAL BILLING
-        // ==========================================
-
-        updateBillingAmount();
-
-
-        console.log(
-            "Total assigned items:",
-            Object.keys(itemMap).length
-        );
 
     }
 
@@ -581,6 +567,8 @@ async function loadItems() {
 
 // =====================================================
 // RENDER ITEMS
+// IMPORTANT:
+// BILLING AMOUNT IS NOT DISPLAYED TO LEADER
 // =====================================================
 
 function renderItems(
@@ -742,13 +730,16 @@ function renderItems(
 
 
             // ======================================
-            // STORE ITEM DATA
+            // DO NOT EXPOSE BILLING AMOUNT
             // ======================================
-
-            checkbox.dataset.cost =
-                String(
-                    item.billingAmount
-                );
+            //
+            // We intentionally DO NOT set:
+            //
+            // checkbox.dataset.cost
+            //
+            // because leaders should not see
+            // billing information through the UI.
+            //
 
 
             checkbox.dataset.description =
@@ -789,15 +780,12 @@ function renderItems(
                         )
                     );
 
-
-                    updateBillingAmount();
-
                 }
             );
 
 
             // ======================================
-            // TEXT
+            // ITEM TEXT
             // ======================================
 
             const span =
@@ -810,31 +798,11 @@ function renderItems(
                 "item-text";
 
 
+            // ONLY ITEM CODE + DESCRIPTION
+            // NO BILLING AMOUNT
+
             span.textContent =
                 `${itemCode} - ${item.description}`;
-
-
-            // ======================================
-            // PRICE
-            // ======================================
-
-            const strong =
-                document.createElement(
-                    "strong"
-                );
-
-
-            strong.textContent =
-                ` ₹${Number(
-                    item.billingAmount
-                ).toLocaleString(
-                    "en-IN"
-                )}`;
-
-
-            span.appendChild(
-                strong
-            );
 
 
             // ======================================
@@ -866,9 +834,6 @@ function renderItems(
 }
 
 
-// =====================================================
-// SEARCH ITEMS
-// =====================================================
 // =====================================================
 // SEARCH ITEMS
 // FILTER WHILE TYPING
@@ -1003,6 +968,8 @@ function searchItems() {
     }
 
 }
+
+
 // =====================================================
 // FILTER ITEMS WHILE TYPING
 // =====================================================
@@ -1022,6 +989,8 @@ document.addEventListener(
 
     }
 );
+
+
 // =====================================================
 // CLEAR SEARCH
 // =====================================================
@@ -1100,21 +1069,19 @@ document.addEventListener(
 
 
 // =====================================================
-// CALCULATE BILLING
+// CALCULATE BILLING AMOUNT
+// INTERNAL USE ONLY
 // =====================================================
+//
+// IMPORTANT:
+// This function calculates billing internally
+// so that the correct amount can be saved
+// in Firestore.
+//
+// It DOES NOT display the amount to the leader.
+//
 
 function calculateBillingAmount() {
-
-    updateBillingAmount();
-
-}
-
-
-// =====================================================
-// UPDATE BILLING DISPLAY
-// =====================================================
-
-function updateBillingAmount() {
 
     let total = 0;
 
@@ -1139,31 +1106,7 @@ function updateBillingAmount() {
     );
 
 
-    const totalElement =
-        document.getElementById(
-            "totalBillingAmount"
-        );
-
-
-    if (!totalElement) {
-
-        return;
-
-    }
-
-
-    totalElement.textContent =
-        "₹" +
-        total.toLocaleString(
-            "en-IN",
-            {
-                minimumFractionDigits:
-                    2,
-
-                maximumFractionDigits:
-                    2
-            }
-        );
+    return total;
 
 }
 
@@ -1404,6 +1347,12 @@ async function saveRO() {
     // ==========================================
     // ITEM DETAILS
     // ==========================================
+    //
+    // Billing amount is saved internally
+    // for Admin reports.
+    //
+    // It is NOT displayed to the leader.
+    //
 
     const itemDetails =
         selectedItems.map(
@@ -1434,45 +1383,36 @@ async function saveRO() {
 
     // ==========================================
     // CALCULATE BILLING
+    // INTERNAL ONLY
     // ==========================================
 
-    let billingAmount = 0;
-
-
-    selectedItems.forEach(
-        itemCode => {
-
-            const item =
-                itemMap[itemCode];
-
-
-            if (item) {
-
-                billingAmount +=
-                    Number(
-                        item.billingAmount
-                    ) || 0;
-
-            }
-
-        }
-    );
+    const billingAmount =
+        calculateBillingAmount();
 
 
     // ==========================================
-    // VALIDATION
+    // RO NUMBER OR VEHICLE NUMBER VALIDATION
     // ==========================================
 
-    if (!vehicleNumber) {
+    // At least one must be entered
+
+    if (
+        !roNumber &&
+        !vehicleNumber
+    ) {
 
         alert(
-            "Please enter Vehicle Number."
+            "Please enter either RO Number or Vehicle Number."
         );
 
         return;
 
     }
 
+
+    // ==========================================
+    // ADVISOR VALIDATION
+    // ==========================================
 
     if (!advisorName) {
 
@@ -1529,6 +1469,10 @@ async function saveRO() {
 
     }
 
+
+    // ==========================================
+    // ITEM VALIDATION
+    // ==========================================
 
     if (
         selectedItems.length === 0
@@ -1675,69 +1619,17 @@ async function saveRO() {
 
         // ======================================
         // DOCUMENT ID
+        // ALWAYS UNIQUE
         // ======================================
 
-        let documentId;
-
-
-        if (roNumber) {
-
-            documentId =
-                displayDate +
-                " | " +
-                roNumber;
-
-        }
-
-        else {
-
-            documentId =
-                displayDate +
-                " | NO-RO-" +
-                Date.now() +
-                "-" +
-                Math.random()
-                    .toString(36)
-                    .substring(2, 8);
-
-        }
-
-
-        // ======================================
-        // DUPLICATE RO CHECK
-        // ======================================
-
-        if (roNumber) {
-
-            const existing =
-                await db
-                    .collection(
-                        "repairorders"
-                    )
-                    .where(
-                        "leaderUid",
-                        "==",
-                        leaderUid
-                    )
-                    .where(
-                        "roNumber",
-                        "==",
-                        roNumber
-                    )
-                    .get();
-
-
-            if (!existing.empty) {
-
-                alert(
-                    "RO Number already exists."
-                );
-
-                return;
-
-            }
-
-        }
+        const documentId =
+            displayDate +
+            " | " +
+            Date.now() +
+            "-" +
+            Math.random()
+                .toString(36)
+                .substring(2, 8);
 
 
         // ======================================
@@ -1753,7 +1645,9 @@ async function saveRO() {
             )
             .set({
 
+                // ==================================
                 // BASIC INFORMATION
+                // ==================================
 
                 roNumber:
                     roNumber || "",
@@ -1777,7 +1671,9 @@ async function saveRO() {
                     vehicleNumber,
 
 
+                // ==================================
                 // ITEM INFORMATION
+                // ==================================
 
                 itemCodes:
                     selectedItems,
@@ -1786,19 +1682,29 @@ async function saveRO() {
                     itemDetails,
 
 
+                // ==================================
                 // BILLING
+                // ==================================
+                //
+                // Stored for ADMIN reports.
+                // NOT displayed to leader.
+                //
 
                 billingAmount:
                     billingAmount,
 
 
+                // ==================================
                 // STATUS
+                // ==================================
 
                 status:
                     "Pending",
 
 
+                // ==================================
                 // CREATED TIME
+                // ==================================
 
                 createdAt:
                     firebase.firestore
@@ -1881,21 +1787,12 @@ async function saveRO() {
 
         renderItems();
 
-
-        // ==========================================
-        // RESET BILLING
-        // ==========================================
-
-        updateBillingAmount(
-            0
-        );
-
     }
 
     catch (error) {
 
         console.error(
-            "Error saving repair order:",
+            "Error saving Repair Order:",
             error
         );
 
@@ -1986,7 +1883,7 @@ function logout() {
 function showDashboard() {
 
     window.location.href =
-        "leader.html";
+        "leaders.html";
 
 }
 

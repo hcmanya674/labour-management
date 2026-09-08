@@ -1,9 +1,9 @@
 // ==========================================
-// REPAIR ORDERS
+// LABOUR MANAGEMENT SYSTEM
+// LEADER - REPAIR ORDERS
 // ==========================================
 
 let leaderData = {};
-let itemMap = {};
 
 
 // ==========================================
@@ -18,6 +18,7 @@ auth.onAuthStateChanged(async (user) => {
             "../../pages/auth/loginindex.html";
 
         return;
+
     }
 
 
@@ -31,7 +32,9 @@ auth.onAuthStateChanged(async (user) => {
 
         if (!leaderDoc.exists) {
 
-            alert("Leader record not found.");
+            alert(
+                "Leader record not found."
+            );
 
             return;
 
@@ -56,13 +59,6 @@ auth.onAuthStateChanged(async (user) => {
 
 
         // ------------------------------------------
-        // Load item codes
-        // ------------------------------------------
-
-        await loadItemCodes();
-
-
-        // ------------------------------------------
         // Load repair orders
         // ------------------------------------------
 
@@ -76,6 +72,7 @@ auth.onAuthStateChanged(async (user) => {
             "Error loading repair orders:",
             error
         );
+
 
         alert(
             "Unable to load Repair Orders."
@@ -99,6 +96,10 @@ function initializeMonthFilter() {
 
 
     if (!select) {
+
+        console.warn(
+            "monthFilter not found."
+        );
 
         return;
 
@@ -139,7 +140,9 @@ function initializeMonthFilter() {
 
 
         const value =
-            `${year}-${String(month + 1).padStart(2, "0")}`;
+            `${year}-${String(
+                month + 1
+            ).padStart(2, "0")}`;
 
 
         const label =
@@ -172,71 +175,19 @@ function initializeMonthFilter() {
 
     }
 
-}
 
+    // ------------------------------------------
+    // Reload when month changes
+    // ------------------------------------------
 
-// ==========================================
-// LOAD ITEM CODES
-// ==========================================
+    select.addEventListener(
+        "change",
+        function () {
 
-async function loadItemCodes() {
+            loadRepairOrders();
 
-    try {
-
-        const snapshot =
-            await db.collection("itemcodes")
-                .where(
-                    "active",
-                    "==",
-                    true
-                )
-                .get();
-
-
-        itemMap = {};
-
-
-        snapshot.forEach(doc => {
-
-            const item =
-                doc.data();
-
-
-            const itemCode =
-                item.itemCode ||
-                doc.id;
-
-
-            itemMap[itemCode] = {
-
-                description:
-                    item.description || "",
-
-                billingAmount:
-                    Number(
-                        item.billingAmount
-                    ) || 0
-
-            };
-
-        });
-
-
-        console.log(
-            "Item Map:",
-            itemMap
-        );
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "Error loading item codes:",
-            error
-        );
-
-    }
+        }
+    );
 
 }
 
@@ -249,10 +200,25 @@ async function loadRepairOrders() {
 
     try {
 
-        const selectedMonth =
+        const monthFilter =
             document.getElementById(
                 "monthFilter"
-            ).value;
+            );
+
+
+        if (!monthFilter) {
+
+            console.error(
+                "monthFilter not found."
+            );
+
+            return;
+
+        }
+
+
+        const selectedMonth =
+            monthFilter.value;
 
 
         if (!selectedMonth) {
@@ -271,9 +237,9 @@ async function loadRepairOrders() {
                 .map(Number);
 
 
-        // ------------------------------------------
-        // Start of selected month
-        // ------------------------------------------
+        // ======================================
+        // START OF SELECTED MONTH
+        // ======================================
 
         const startDate =
             new Date(
@@ -283,9 +249,9 @@ async function loadRepairOrders() {
             );
 
 
-        // ------------------------------------------
-        // Start of next month
-        // ------------------------------------------
+        // ======================================
+        // START OF NEXT MONTH
+        // ======================================
 
         const endDate =
             new Date(
@@ -301,9 +267,9 @@ async function loadRepairOrders() {
         );
 
 
-        // ------------------------------------------
-        // Firestore query
-        // ------------------------------------------
+        // ======================================
+        // FIRESTORE QUERY
+        // ======================================
 
         const snapshot =
             await db.collection(
@@ -338,9 +304,9 @@ async function loadRepairOrders() {
         let html = "";
 
 
-        // ------------------------------------------
-        // Create rows
-        // ------------------------------------------
+        // ======================================
+        // CREATE ROWS
+        // ======================================
 
         for (
             const doc of snapshot.docs
@@ -350,9 +316,9 @@ async function loadRepairOrders() {
                 doc.data();
 
 
-            // ======================================
+            // ==================================
             // DATE
-            // ======================================
+            // ==================================
 
             let date = "-";
 
@@ -361,20 +327,39 @@ async function loadRepairOrders() {
 
                 try {
 
-                    date =
-                        ro.createdAt
-                            .toDate()
+                    if (
+                        typeof ro.createdAt.toDate ===
+                        "function"
+                    ) {
+
+                        date =
+                            ro.createdAt
+                                .toDate()
+                                .toLocaleDateString(
+                                    "en-GB"
+                                );
+
+                    }
+
+                    else {
+
+                        date =
+                            new Date(
+                                ro.createdAt
+                            )
                             .toLocaleDateString(
                                 "en-GB"
                             );
 
+                    }
+
                 }
 
-                catch (e) {
+                catch (error) {
 
                     console.error(
                         "Date conversion error:",
-                        e
+                        error
                     );
 
                 }
@@ -382,9 +367,9 @@ async function loadRepairOrders() {
             }
 
 
-            // ======================================
+            // ==================================
             // ITEM CODES
-            // ======================================
+            // ==================================
 
             let itemCodes = [];
 
@@ -411,9 +396,9 @@ async function loadRepairOrders() {
             }
 
 
-            // ======================================
+            // ==================================
             // NO ITEM CODE
-            // ======================================
+            // ==================================
 
             if (
                 itemCodes.length === 0
@@ -425,48 +410,63 @@ async function loadRepairOrders() {
 
                     <td>
 
-                      <input
+                        <input
                             type="checkbox"
                             class="ro-checkbox"
-                            value="${doc.id}"
+                            value="${escapeHTML(
+                                doc.id
+                            )}"
                             onchange="updateDeleteButton()"
                         >
 
                     </td>
 
-                    <td>
-                        ${ro.roNumber || "-"}
-                    </td>
 
                     <td>
-                        ${date}
+                        ${escapeHTML(
+                            ro.roNumber || "-"
+                        )}
                     </td>
 
-                    <td>
-                        ${ro.vehicleNumber || "-"}
-                    </td>
 
                     <td>
-                        ${ro.advisorName || "-"}
+                        ${escapeHTML(
+                            date
+                        )}
                     </td>
+
+
+                    <td>
+                        ${escapeHTML(
+                            ro.vehicleNumber || "-"
+                        )}
+                    </td>
+
+
+                    <td>
+                        ${escapeHTML(
+                            ro.advisorName || "-"
+                        )}
+                    </td>
+
 
                     <td>
                         -
                     </td>
 
+
                     <td>
                         -
                     </td>
 
-                    <td>
-                        ₹0.00
-                    </td>
 
                     <td>
 
                         <button
                             class="view-btn"
-                            onclick="viewRO('${doc.id}')"
+                            onclick="viewRO('${escapeHTML(
+                                doc.id
+                            )}')"
                         >
                             View
                         </button>
@@ -477,22 +477,23 @@ async function loadRepairOrders() {
 
                 `;
 
+
                 continue;
 
             }
 
 
-            // ======================================
+            // ==================================
             // ROWSPAN
-            // ======================================
+            // ==================================
 
             const rowCount =
                 itemCodes.length;
 
 
-            // ======================================
+            // ==================================
             // ITEM ROWS
-            // ======================================
+            // ==================================
 
             itemCodes.forEach(
                 (
@@ -500,13 +501,16 @@ async function loadRepairOrders() {
                     index
                 ) => {
 
-                    let itemInfo =
-                        null;
-
-
                     // ----------------------------------
-                    // Saved item snapshot
+                    // Get item description
+                    //
+                    // We intentionally DO NOT load or
+                    // display billing amount here.
                     // ----------------------------------
+
+                    let description =
+                        itemCode;
+
 
                     if (
                         Array.isArray(
@@ -514,55 +518,45 @@ async function loadRepairOrders() {
                         )
                     ) {
 
-                        itemInfo =
+                        const itemInfo =
                             ro.itemDetails.find(
                                 item =>
-                                    item.itemCode ===
-                                    itemCode
+                                    String(
+                                        item.itemCode
+                                    ).trim() ===
+                                    String(
+                                        itemCode
+                                    ).trim()
                             );
 
-                    }
 
+                        if (
+                            itemInfo &&
+                            itemInfo.description
+                        ) {
 
-                    // ----------------------------------
-                    // Fallback
-                    // ----------------------------------
+                            description =
+                                itemInfo.description;
 
-                    if (!itemInfo) {
-
-                        itemInfo =
-                            itemMap[itemCode] || {
-
-                                description:
-                                    itemCode,
-
-                                billingAmount:
-                                    0
-
-                            };
+                        }
 
                     }
 
 
-                    const description =
-                        itemInfo.description ||
-                        itemCode;
-
-
-                    const billingAmount =
-                        Number(
-                            itemInfo.billingAmount
-                        ) || 0;
-
+                    // ==================================
+                    // START ROW
+                    // ==================================
 
                     html += `<tr>`;
 
 
-                    // =================================
+                    // ==================================
                     // CHECKBOX
-                    // =================================
+                    // ==================================
 
-                    if (index === 0) {
+                    if (
+                        index === 0
+                    ) {
 
                         html += `
 
@@ -571,7 +565,9 @@ async function loadRepairOrders() {
                             <input
                                 type="checkbox"
                                 class="ro-checkbox"
-                                value="${doc.id}"
+                                value="${escapeHTML(
+                                    doc.id
+                                )}"
                                 onchange="updateDeleteButton()"
                             >
 
@@ -582,16 +578,20 @@ async function loadRepairOrders() {
                     }
 
 
-                    // =================================
+                    // ==================================
                     // RO NUMBER
-                    // =================================
+                    // ==================================
 
-                    if (index === 0) {
+                    if (
+                        index === 0
+                    ) {
 
                         html += `
 
                         <td rowspan="${rowCount}">
-                            ${ro.roNumber || "-"}
+                            ${escapeHTML(
+                                ro.roNumber || "-"
+                            )}
                         </td>
 
                         `;
@@ -599,16 +599,20 @@ async function loadRepairOrders() {
                     }
 
 
-                    // =================================
+                    // ==================================
                     // DATE
-                    // =================================
+                    // ==================================
 
-                    if (index === 0) {
+                    if (
+                        index === 0
+                    ) {
 
                         html += `
 
                         <td rowspan="${rowCount}">
-                            ${date}
+                            ${escapeHTML(
+                                date
+                            )}
                         </td>
 
                         `;
@@ -616,16 +620,20 @@ async function loadRepairOrders() {
                     }
 
 
-                    // =================================
+                    // ==================================
                     // VEHICLE
-                    // =================================
+                    // ==================================
 
-                    if (index === 0) {
+                    if (
+                        index === 0
+                    ) {
 
                         html += `
 
                         <td rowspan="${rowCount}">
-                            ${ro.vehicleNumber || "-"}
+                            ${escapeHTML(
+                                ro.vehicleNumber || "-"
+                            )}
                         </td>
 
                         `;
@@ -633,16 +641,20 @@ async function loadRepairOrders() {
                     }
 
 
-                    // =================================
+                    // ==================================
                     // ADVISOR
-                    // =================================
+                    // ==================================
 
-                    if (index === 0) {
+                    if (
+                        index === 0
+                    ) {
 
                         html += `
 
                         <td rowspan="${rowCount}">
-                            ${ro.advisorName || "-"}
+                            ${escapeHTML(
+                                ro.advisorName || "-"
+                            )}
                         </td>
 
                         `;
@@ -650,58 +662,43 @@ async function loadRepairOrders() {
                     }
 
 
-                    // =================================
+                    // ==================================
                     // ITEM CODE
-                    // =================================
+                    // ==================================
 
                     html += `
 
                     <td>
-                        ${itemCode}
-                    </td>
-
-                    `;
-
-
-                    // =================================
-                    // WORK DONE
-                    // =================================
-
-                    html += `
-
-                    <td>
-                        ${description}
-                    </td>
-
-                    `;
-
-
-                    // =================================
-                    // BILLING
-                    // =================================
-
-                    html += `
-
-                    <td>
-
-                        ₹${billingAmount.toLocaleString(
-                            "en-IN",
-                            {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2
-                            }
+                        ${escapeHTML(
+                            itemCode
                         )}
-
                     </td>
 
                     `;
 
 
-                    // =================================
-                    // VIEW
-                    // =================================
+                    // ==================================
+                    // WORK DONE
+                    // ==================================
 
-                    if (index === 0) {
+                    html += `
+
+                    <td>
+                        ${escapeHTML(
+                            description
+                        )}
+                    </td>
+
+                    `;
+
+
+                    // ==================================
+                    // VIEW
+                    // ==================================
+
+                    if (
+                        index === 0
+                    ) {
 
                         html += `
 
@@ -709,7 +706,9 @@ async function loadRepairOrders() {
 
                             <button
                                 class="view-btn"
-                                onclick="viewRO('${doc.id}')"
+                                onclick="viewRO('${escapeHTML(
+                                    doc.id
+                                )}')"
                             >
                                 View
                             </button>
@@ -720,6 +719,10 @@ async function loadRepairOrders() {
 
                     }
 
+
+                    // ==================================
+                    // END ROW
+                    // ==================================
 
                     html += `</tr>`;
 
@@ -733,18 +736,20 @@ async function loadRepairOrders() {
         // NO RECORDS
         // ==========================================
 
-        if (html === "") {
+        if (
+            html === ""
+        ) {
 
             html = `
 
             <tr>
 
                 <td
-                    colspan="9"
+                    colspan="8"
                     style="
                         text-align:center;
                         color:red;
-                         padding:20px;
+                        padding:20px;
                     "
                 >
 
@@ -761,22 +766,24 @@ async function loadRepairOrders() {
 
 
         // ==========================================
-        // DISPLAY
+        // DISPLAY TABLE
         // ==========================================
 
-    
         const tableBody =
             document.getElementById(
                 "repairOrderBody"
             );
 
 
-        if (tableBody) {
+        if (
+            tableBody
+        ) {
 
             tableBody.innerHTML =
                 html;
 
         }
+
         else {
 
             console.error(
@@ -788,31 +795,51 @@ async function loadRepairOrders() {
         }
 
 
-        updateDeleteButton();
-
+        // ==========================================
+        // RESET SELECT ALL
+        // ==========================================
 
         const selectAll =
-        document.getElementById(
-            "selectAllRO"
-        );
+            document.getElementById(
+                "selectAllRO"
+            );
 
 
-    if (selectAll) {
+        if (
+            selectAll
+        ) {
 
-        selectAll.checked = false;
+            selectAll.checked =
+                false;
 
-    }
+        }
+
+
+        // ==========================================
+        // UPDATE DELETE BUTTON
+        // ==========================================
+
+        updateDeleteButton();
 
 
         // ==========================================
         // STATUS
         // ==========================================
 
-        document.getElementById(
-            "roStatus"
-        ).textContent =
-            `${snapshot.size} Repair Order(s) found.`;
+        const status =
+            document.getElementById(
+                "roStatus"
+            );
 
+
+        if (
+            status
+        ) {
+
+            status.textContent =
+                `${snapshot.size} Repair Order(s) found.`;
+
+        }
 
     }
 
@@ -825,7 +852,7 @@ async function loadRepairOrders() {
 
 
         // ==========================================
-        // Firestore index error
+        // FIRESTORE INDEX ERROR
         // ==========================================
 
         if (
@@ -843,10 +870,20 @@ async function loadRepairOrders() {
         }
 
 
-        document.getElementById(
-            "roStatus"
-        ).textContent =
-            "Unable to load Repair Orders.";
+        const status =
+            document.getElementById(
+                "roStatus"
+            );
+
+
+        if (
+            status
+        ) {
+
+            status.textContent =
+                "Unable to load Repair Orders.";
+
+        }
 
     }
 
@@ -900,14 +937,19 @@ function updateDeleteButton() {
         );
 
 
-    if (!button) {
+    if (
+        !button
+    ) {
 
         return;
 
     }
 
+
     const count =
         selected.length;
+
+
     button.disabled =
         count === 0;
 
@@ -968,7 +1010,9 @@ async function deleteSelectedROs() {
         );
 
 
-    if (!confirmation) {
+    if (
+        !confirmation
+    ) {
 
         return;
 
@@ -1055,5 +1099,48 @@ function goToLeaderDashboard() {
 
     window.location.href =
         "leaders.html";
+
+}
+
+
+// ==========================================
+// ESCAPE HTML
+// ==========================================
+
+function escapeHTML(
+    value
+) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+
+        return "";
+
+    }
+
+
+    return String(value)
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
 
 }
