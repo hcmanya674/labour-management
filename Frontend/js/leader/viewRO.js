@@ -3,12 +3,15 @@
 // LEADER VERSION
 // ==========================================
 //
-// IMPORTANT:
-// Billing amount is CALCULATED and STORED,
+// Billing amount is CALCULATED and STORED
 // but NEVER DISPLAYED to the Leader.
 //
 // ==========================================
 
+
+// ==========================================
+// GLOBAL VARIABLES
+// ==========================================
 
 const roId =
     localStorage.getItem("currentRO");
@@ -79,24 +82,21 @@ auth.onAuthStateChanged(
 // FIND ITEM DOCUMENT
 // ==========================================
 //
-// This function handles all possible cases:
+// Supports:
 //
 // 1. Document ID = item code
 //
-// OR
+// 2. itemCode field = number
 //
-// 2. itemCode field contains NUMBER
-//
-// OR
-//
-// 3. itemCode field contains STRING
+// 3. itemCode field = string
 //
 // ==========================================
 
 async function findItemDocument(itemCode) {
 
     const code =
-        String(itemCode).trim();
+        String(itemCode)
+            .trim();
 
 
     if (!code) {
@@ -107,8 +107,8 @@ async function findItemDocument(itemCode) {
 
 
     // ======================================
-    // STEP 1
-    // TRY DOCUMENT ID
+    // METHOD 1
+    // DOCUMENT ID
     // ======================================
 
     try {
@@ -137,7 +137,7 @@ async function findItemDocument(itemCode) {
     catch (error) {
 
         console.warn(
-            "Document ID lookup failed:",
+            "Document ID search failed:",
             code,
             error
         );
@@ -146,8 +146,8 @@ async function findItemDocument(itemCode) {
 
 
     // ======================================
-    // STEP 2
-    // TRY itemCode AS NUMBER
+    // METHOD 2
+    // itemCode = NUMBER
     // ======================================
 
     const numericCode =
@@ -160,7 +160,7 @@ async function findItemDocument(itemCode) {
 
         try {
 
-            const numberQuery =
+            const numberSnapshot =
                 await db.collection(
                     "itemcodes"
                 )
@@ -174,16 +174,16 @@ async function findItemDocument(itemCode) {
 
 
             if (
-                !numberQuery.empty
+                !numberSnapshot.empty
             ) {
 
                 console.log(
-                    "Item found by numeric itemCode:",
+                    "Item found as number:",
                     numericCode
                 );
 
 
-                return numberQuery.docs[0];
+                return numberSnapshot.docs[0];
 
             }
 
@@ -192,7 +192,7 @@ async function findItemDocument(itemCode) {
         catch (error) {
 
             console.warn(
-                "Numeric itemCode lookup failed:",
+                "Numeric itemCode search failed:",
                 numericCode,
                 error
             );
@@ -203,13 +203,13 @@ async function findItemDocument(itemCode) {
 
 
     // ======================================
-    // STEP 3
-    // TRY itemCode AS STRING
+    // METHOD 3
+    // itemCode = STRING
     // ======================================
 
     try {
 
-        const stringQuery =
+        const stringSnapshot =
             await db.collection(
                 "itemcodes"
             )
@@ -223,16 +223,16 @@ async function findItemDocument(itemCode) {
 
 
         if (
-            !stringQuery.empty
+            !stringSnapshot.empty
         ) {
 
             console.log(
-                "Item found by string itemCode:",
+                "Item found as string:",
                 code
             );
 
 
-            return stringQuery.docs[0];
+            return stringSnapshot.docs[0];
 
         }
 
@@ -241,7 +241,7 @@ async function findItemDocument(itemCode) {
     catch (error) {
 
         console.warn(
-            "String itemCode lookup failed:",
+            "String itemCode search failed:",
             code,
             error
         );
@@ -254,7 +254,7 @@ async function findItemDocument(itemCode) {
     // ======================================
 
     console.warn(
-        "Item not found anywhere:",
+        "ITEM DOCUMENT NOT FOUND:",
         code
     );
 
@@ -320,7 +320,7 @@ async function loadRepairOrder() {
 
 
         // ======================================
-        // DATE & TIME
+        // DATE
         // ======================================
 
         const createdDate =
@@ -359,7 +359,6 @@ async function loadRepairOrder() {
                     "Date error:",
                     error
                 );
-
 
                 createdDate.textContent =
                     "-";
@@ -413,7 +412,7 @@ async function loadRepairOrder() {
 
 
         // ======================================
-        // GET CURRENT RO ITEMS
+        // CURRENT RO ITEM CODES
         // ======================================
 
         if (
@@ -436,9 +435,11 @@ async function loadRepairOrder() {
         ) {
 
             currentItemCodes = [
+
                 String(
                     repairData.itemCode
                 ).trim()
+
             ];
 
         }
@@ -457,7 +458,7 @@ async function loadRepairOrder() {
 
 
         // ======================================
-        // LOAD ITEMS FOR VIEW MODE
+        // LOAD ITEMS FOR VIEW
         // ======================================
 
         await loadViewItems(
@@ -484,26 +485,7 @@ async function loadRepairOrder() {
 
 
 // ==========================================
-// DISPLAY BILLING AMOUNT
-// ==========================================
-//
-// Billing is hidden from Leader.
-//
-// Function kept only for compatibility.
-// ==========================================
-
-function displayBillingAmount(amount) {
-
-    console.log(
-        "Billing calculated internally:",
-        amount
-    );
-
-}
-
-
-// ==========================================
-// LOAD ITEMS FOR VIEW MODE
+// LOAD ITEMS IN VIEW MODE
 // ==========================================
 
 async function loadViewItems(
@@ -527,14 +509,11 @@ async function loadViewItems(
     }
 
 
-    container.innerHTML =
-        "";
+    container.innerHTML = "";
 
 
     if (
-        !Array.isArray(
-            selectedItems
-        ) ||
+        !Array.isArray(selectedItems) ||
         selectedItems.length === 0
     ) {
 
@@ -583,8 +562,6 @@ async function loadViewItems(
 
                         <input
                             type="checkbox"
-                            name="itemCode"
-                            value="${escapeHTML(itemCode)}"
                             checked
                             disabled
                         >
@@ -634,7 +611,7 @@ async function loadViewItems(
             // DISPLAY ITEM
             // ==================================
             //
-            // Billing is intentionally NOT shown.
+            // Billing is NOT displayed.
             //
             // ==================================
 
@@ -644,8 +621,6 @@ async function loadViewItems(
 
                     <input
                         type="checkbox"
-                        name="itemCode"
-                        value="${escapeHTML(actualItemCode)}"
                         checked
                         disabled
                     >
@@ -681,7 +656,7 @@ async function loadViewItems(
         catch (error) {
 
             console.error(
-                "Error loading item:",
+                "Error loading view item:",
                 itemCode,
                 error
             );
@@ -694,14 +669,15 @@ async function loadViewItems(
 
 
 // ==========================================
-// ENABLE EDIT
+// ENABLE EDIT MODE
+// ==========================================
+//
+// Edit button becomes Update.
 // ==========================================
 
 async function enableEdit() {
 
-    if (
-        isEditMode
-    ) {
+    if (isEditMode) {
 
         return;
 
@@ -710,16 +686,11 @@ async function enableEdit() {
 
     try {
 
-        // ======================================
-        // ENTER EDIT MODE
-        // ======================================
-
-        isEditMode =
-            true;
+        isEditMode = true;
 
 
         // ======================================
-        // ENABLE VEHICLE NUMBER
+        // ENABLE VEHICLE
         // ======================================
 
         const vehicleNumber =
@@ -737,7 +708,7 @@ async function enableEdit() {
 
 
         // ======================================
-        // ENABLE ADVISOR NAME
+        // ENABLE ADVISOR
         // ======================================
 
         const advisorName =
@@ -755,46 +726,43 @@ async function enableEdit() {
 
 
         // ======================================
-        // LOAD LEADER ASSIGNED ITEMS
+        // LOAD ASSIGNED ITEMS
         // ======================================
 
         await loadAssignedItemsForEdit();
 
 
         // ======================================
-        // SHOW UPDATE BUTTON
+        // CHANGE EDIT → UPDATE
         // ======================================
 
-        const updateBtn =
+        const actionBtn =
             document.getElementById(
-                "updateBtn"
+                "actionBtn"
             );
 
 
-        if (updateBtn) {
+        if (actionBtn) {
 
-            updateBtn.style.display =
-                "inline-block";
-
-        }
+            actionBtn.textContent =
+                "Update";
 
 
-        // ======================================
-        // HIDE EDIT BUTTON
-        // ======================================
-
-        const editBtn =
-            document.querySelector(
-                ".edit-btn"
+            actionBtn.classList.remove(
+                "edit-btn"
             );
 
 
-        if (editBtn) {
+            actionBtn.classList.add(
+                "save-btn"
+            );
 
-            editBtn.style.display =
-                "none";
+
+            actionBtn.onclick =
+                updateRO;
 
         }
+
 
     }
 
@@ -849,7 +817,7 @@ async function loadAssignedItemsForEdit() {
     try {
 
         // ======================================
-        // GET CURRENT USER
+        // CURRENT USER
         // ======================================
 
         const user =
@@ -870,7 +838,7 @@ async function loadAssignedItemsForEdit() {
 
 
         console.log(
-            "Loading assignments for leader:",
+            "Loading assignments for:",
             currentLeaderUid
         );
 
@@ -897,7 +865,7 @@ async function loadAssignedItemsForEdit() {
 
 
         console.log(
-            "Assignment documents found:",
+            "Assignment documents:",
             assignmentSnapshot.size
         );
 
@@ -922,7 +890,7 @@ async function loadAssignedItemsForEdit() {
 
 
         // ======================================
-        // CLEAR ASSIGNMENT MAP
+        // RESET ASSIGNED MAP
         // ======================================
 
         assignedItemMap =
@@ -930,7 +898,7 @@ async function loadAssignedItemsForEdit() {
 
 
         // ======================================
-        // STORE ASSIGNED CODES
+        // COLLECT ASSIGNED CODES
         // ======================================
 
         assignmentSnapshot.forEach(
@@ -1004,17 +972,13 @@ async function loadAssignedItemsForEdit() {
         );
 
 
-        // ======================================
-        // NO VALID CODES
-        // ======================================
-
         if (
             assignedCodes.length === 0
         ) {
 
             container.innerHTML = `
                 <p>
-                    No valid item codes found in your assignments.
+                    No valid item codes found.
                 </p>
             `;
 
@@ -1024,15 +988,14 @@ async function loadAssignedItemsForEdit() {
 
 
         // ======================================
-        // CLEAR OLD VIEW ITEMS
+        // CLEAR VIEW ITEMS
         // ======================================
 
-        container.innerHTML =
-            "";
+        container.innerHTML = "";
 
 
         // ======================================
-        // LOAD EACH ASSIGNED ITEM
+        // LOAD ASSIGNED ITEMS
         // ======================================
 
         for (
@@ -1080,24 +1043,25 @@ async function loadAssignedItemsForEdit() {
 
 
                 // ==================================
-                // CHECK IF ALREADY IN CURRENT RO
+                // CHECK CURRENT RO ITEM
                 // ==================================
+
+                const normalizedCurrentCodes =
+                    currentItemCodes.map(
+                        code =>
+                            String(code)
+                                .trim()
+                    );
+
 
                 const isSelected =
-                    currentItemCodes
-                        .map(
-                            code =>
-                                String(
-                                    code
-                                ).trim()
-                        )
-                        .includes(
-                            actualItemCode
-                        );
+                    normalizedCurrentCodes.includes(
+                        actualItemCode
+                    );
 
 
                 // ==================================
-                // CREATE ITEM DIV
+                // CREATE ITEM
                 // ==================================
 
                 const itemDiv =
@@ -1166,11 +1130,13 @@ async function loadAssignedItemsForEdit() {
 
 
         // ======================================
-        // CHECK WHETHER ITEMS WERE DISPLAYED
+        // CHECK DISPLAYED ITEMS
         // ======================================
 
         if (
-            container.children.length === 0
+            container.querySelectorAll(
+                'input[name="itemCode"]'
+            ).length === 0
         ) {
 
             container.innerHTML = `
@@ -1179,13 +1145,17 @@ async function loadAssignedItemsForEdit() {
                 </p>
             `;
 
+            console.error(
+                "No assigned item documents could be found."
+            );
+
             return;
 
         }
 
 
         // ======================================
-        // RECALCULATE BILLING INTERNALLY
+        // CALCULATE BILLING
         // ======================================
 
         await recalculateBilling();
@@ -1223,15 +1193,14 @@ async function loadAssignedItemsForEdit() {
 // RECALCULATE BILLING
 // ==========================================
 //
-// Billing is calculated internally only.
-// Nothing is displayed to Leader.
+// Billing is calculated internally.
+// It is NOT displayed.
+//
 // ==========================================
 
 async function recalculateBilling() {
 
-    if (
-        !isEditMode
-    ) {
+    if (!isEditMode) {
 
         return 0;
 
@@ -1252,8 +1221,7 @@ async function recalculateBilling() {
         );
 
 
-    let total =
-        0;
+    let total = 0;
 
 
     for (
@@ -1286,9 +1254,7 @@ async function recalculateBilling() {
                 );
 
 
-            if (
-                itemDoc
-            ) {
+            if (itemDoc) {
 
                 const item =
                     itemDoc.data();
@@ -1316,10 +1282,6 @@ async function recalculateBilling() {
     }
 
 
-    // ======================================
-    // BILLING IS NOT DISPLAYED
-    // ======================================
-
     console.log(
         "Internal Billing Total:",
         total
@@ -1337,9 +1299,7 @@ async function recalculateBilling() {
 
 async function updateRO() {
 
-    if (
-        !isEditMode
-    ) {
+    if (!isEditMode) {
 
         return;
 
@@ -1403,7 +1363,7 @@ async function updateRO() {
 
 
         console.log(
-            "Selected Items:",
+            "Selected items:",
             selectedItems
         );
 
@@ -1412,9 +1372,7 @@ async function updateRO() {
         // VALIDATION
         // ======================================
 
-        if (
-            !vehicleNumber
-        ) {
+        if (!vehicleNumber) {
 
             alert(
                 "Please enter Vehicle Number."
@@ -1425,9 +1383,7 @@ async function updateRO() {
         }
 
 
-        if (
-            !advisorName
-        ) {
+        if (!advisorName) {
 
             alert(
                 "Please enter Advisor Name."
@@ -1452,7 +1408,7 @@ async function updateRO() {
 
 
         // ======================================
-        // VERIFY ALL ITEMS ARE ASSIGNED
+        // VERIFY ASSIGNMENTS
         // ======================================
 
         for (
@@ -1528,16 +1484,10 @@ async function updateRO() {
         // CALCULATE BILLING
         // ======================================
 
-        let billingAmount =
-            0;
+        let billingAmount = 0;
 
 
-        // ======================================
-        // CREATE ITEM DETAILS
-        // ======================================
-
-        const updatedItemDetails =
-            [];
+        const updatedItemDetails = [];
 
 
         for (
@@ -1585,7 +1535,7 @@ async function updateRO() {
 
 
             // ==================================
-            // CALCULATE TOTAL
+            // BILLING CALCULATION
             // ==================================
 
             billingAmount +=
@@ -1596,8 +1546,9 @@ async function updateRO() {
             // STORE ITEM DETAILS
             // ==================================
             //
-            // Billing is stored for Admin,
-            // but not displayed to Leader.
+            // Admin can use this.
+            //
+            // Leader does NOT display it.
             //
             // ==================================
 
@@ -1620,12 +1571,6 @@ async function updateRO() {
         console.log(
             "New Billing Amount:",
             billingAmount
-        );
-
-
-        console.log(
-            "Updated Item Details:",
-            updatedItemDetails
         );
 
 
@@ -1666,10 +1611,6 @@ async function updateRO() {
         );
 
 
-        // ======================================
-        // EXIT EDIT MODE
-        // ======================================
-
         isEditMode =
             false;
 
@@ -1704,9 +1645,7 @@ async function updateRO() {
 // ESCAPE HTML
 // ==========================================
 
-function escapeHTML(
-    value
-) {
+function escapeHTML(value) {
 
     if (
         value === null ||
@@ -1714,6 +1653,7 @@ function escapeHTML(
     ) {
 
         return "";
+
     }
 
 

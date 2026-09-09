@@ -5827,3 +5827,119 @@ input[type="checkbox"] {
     }
 
 }
+
+/* ==========================================
+   VIEW RO PAGE - HOME BUTTON
+   ========================================== */
+
+.view-home-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: auto !important;
+
+    padding: 10px 22px;
+
+    margin-bottom: 20px;
+
+    background: #0D47A1;
+    color: #FFFFFF;
+
+    border: none;
+    border-radius: 8px;
+
+    font-size: 16px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    box-sizing: border-box;
+}
+
+.view-home-btn:hover {
+    background: #1565C0;
+}
+/* ==========================================
+   VIEW RO PAGE
+   EDIT / UPDATE / BACK BUTTONS
+   ========================================== */
+
+.view-ro-buttons {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    width: 100%;
+    margin-top: 20px;
+}
+
+
+/* Edit, Update and Back buttons */
+
+.view-ro-buttons button {
+    flex: 1;
+    width: auto !important;
+    margin: 0;
+
+    min-height: 52px;
+
+    border-radius: 10px;
+
+    font-size: 18px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+/* ==========================================
+   EDIT / UPDATE
+========================================== */
+
+.view-ro-buttons .edit-btn,
+.view-ro-buttons .save-btn {
+
+    background: #0D47A1;
+
+    color: #FFFFFF;
+
+}
+/* ==========================================
+   BACK
+========================================== */
+
+.view-ro-buttons .back-btn {
+
+    background: #0D47A1;
+
+    color: #FFFFFF;
+
+}
+
+
+/* ==========================================
+   HOVER
+========================================== */
+
+.view-ro-buttons button:hover {
+
+    background: #1565C0;
+
+}
+/* ==========================================
+   MOBILE
+   ========================================== */
+
+@media (max-width: 600px) {
+
+    .view-ro-buttons {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+    }
+
+    .view-ro-buttons button {
+        flex: 1;
+        min-height: 52px;
+        font-size: 17px;
+    }
+
+}

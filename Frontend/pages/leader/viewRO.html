@@ -27,37 +27,29 @@
 
 
     <!-- =====================================
-         SIDEBAR
-         ===================================== -->
-
-    <div class="sidebar">
-
-        <h2>Leader Panel</h2>
-
-        <button onclick="showDashboard()">
-            Dashboard
-        </button>
-
-        <button onclick="showCreateRO()">
-            Create RO
-        </button>
-
-        <button onclick="showRepairOrders()">
-            Repair Orders
-        </button>
-
-        <button onclick="logout()">
-            Logout
-        </button>
-
-    </div>
-
-
-    <!-- =====================================
          MAIN
+         NO SIDEBAR
          ===================================== -->
 
     <div class="main">
+
+
+        <!-- =================================
+             HOME BUTTON
+             ================================= -->
+
+        <button
+            type="button"
+            class="view-home-btn"
+            onclick="goToLeaderDashboard()"
+        >
+            🏠 Home
+        </button>
+
+
+        <!-- =================================
+             PAGE TITLE
+             ================================= -->
 
         <h2>
             View Repair Order Details
@@ -67,7 +59,9 @@
         <div class="form-box">
 
 
-            <!-- RO NUMBER -->
+            <!-- =================================
+                 RO NUMBER
+                 ================================= -->
 
             <div class="row">
 
@@ -82,7 +76,9 @@
             </div>
 
 
-            <!-- DATE -->
+            <!-- =================================
+                 DATE
+                 ================================= -->
 
             <div class="row">
 
@@ -97,7 +93,9 @@
             </div>
 
 
-            <!-- VEHICLE -->
+            <!-- =================================
+                 VEHICLE NUMBER
+                 ================================= -->
 
             <div class="row">
 
@@ -114,7 +112,9 @@
             </div>
 
 
-            <!-- ADVISOR -->
+            <!-- =================================
+                 ADVISOR NAME
+                 ================================= -->
 
             <div class="row">
 
@@ -131,7 +131,9 @@
             </div>
 
 
-            <!-- ITEM CODES -->
+            <!-- =================================
+                 ITEM CODES
+                 ================================= -->
 
             <div class="row">
 
@@ -151,46 +153,40 @@
 
 
                 <small>
-
                     Select one or more item codes.
-
                 </small>
 
             </div>
-            <!-- BUTTONS -->
 
-            <div class="btn-group">
 
+            <!-- =================================
+                 BUTTONS
+                 ================================= -->
+
+            <div class="view-ro-buttons">
+
+
+                <!-- ONE BUTTON:
+                     EDIT → UPDATE -->
 
                 <button
+                    type="button"
+                    id="actionBtn"
                     class="edit-btn"
                     onclick="enableEdit()"
                 >
-
                     Edit
-
                 </button>
 
 
-                <button
-                    class="save-btn"
-                    id="updateBtn"
-                    onclick="updateRO()"
-                    style="display:none;"
-                >
-
-                    Update
-
-                </button>
-
+                <!-- BACK -->
 
                 <button
+                    type="button"
                     class="back-btn"
                     onclick="history.back()"
                 >
-
                     Back
-
                 </button>
 
 
@@ -206,6 +202,7 @@
 </div>
 
 
+
 <!-- =====================================
      FIREBASE
      ===================================== -->
@@ -217,19 +214,40 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 
-<!-- Firebase Configuration -->
+<!-- =====================================
+     FIREBASE CONFIGURATION
+     ===================================== -->
 
 <script src="../../js/common/firebase.js"></script>
 
 
-<!-- Leader Common -->
+<!-- =====================================
+     LEADER COMMON
+     ===================================== -->
 
 <script src="../../js/common/leader-common.js"></script>
 
 
-<!-- View RO -->
+<!-- =====================================
+     VIEW RO JAVASCRIPT
+     ===================================== -->
 
 <script src="../../js/leader/viewRO.js"></script>
+
+
+<!-- =====================================
+     HOME FUNCTION
+     ===================================== -->
+
+<script>
+
+function goToLeaderDashboard() {
+
+    window.location.href = "leaders.html";
+
+}
+
+</script>
 
 
 </body>
