@@ -17,12 +17,14 @@
 // 11. Repair Order PDF
 // 12. Advisor Item & Amount PDF
 //
-// IMPORTANT:
-// Region filtering supports:
-// - Region Firestore document ID
-// - regionId
-// - regionName
-// - Different capitalization / spaces
+// BILLING LOGIC:
+// Priority:
+// 1. repairorders.billingAmount
+// 2. repairorders.itemDetails[].billingAmount
+// 3. itemcodes.billingAmount
+//
+// This keeps historical Repair Order billing correct even if
+// the Item Master price is changed later.
 // ======================================================
 
 
@@ -59,7 +61,9 @@ function normalizeText(value) {
         value === null ||
         value === undefined
     ) {
+
         return "";
+
     }
 
     return String(value)
@@ -70,6 +74,91 @@ function normalizeText(value) {
 }
 
 
+// ======================================================
+// CONVERT VALUE TO NUMBER
+// ======================================================
+//
+// Handles:
+// 1500
+// "1500"
+// "1,500"
+// "₹1,500"
+// "Rs. 1,500"
+// ======================================================
+
+function toNumber(value) {
+
+    if (
+        value === null ||
+        value === undefined ||
+        value === ""
+    ) {
+        return 0;
+    }
+
+    if (typeof value === "number") {
+        return Number.isFinite(value) ? value : 0;
+    }
+
+    let cleaned = String(value)
+        .trim();
+
+    // Convert superscript digits to normal digits
+    cleaned = cleaned.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, ch => {
+
+        const map = {
+            "⁰": "0",
+            "¹": "1",
+            "²": "2",
+            "³": "3",
+            "⁴": "4",
+            "⁵": "5",
+            "⁶": "6",
+            "⁷": "7",
+            "⁸": "8",
+            "⁹": "9"
+        };
+
+        return map[ch];
+    });
+
+    cleaned = cleaned
+        .replace(/₹/g, "")
+        .replace(/Rs\.?/gi, "")
+        .replace(/INR/gi, "")
+        .replace(/,/g, "")
+        .trim();
+
+    const number = Number(cleaned);
+
+    return Number.isFinite(number)
+        ? number
+        : 0;
+}
+
+function formatMoney(value) {
+
+    const amount = toNumber(value);
+
+    return "₹" + amount.toLocaleString("en-IN", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+    });
+
+}
+function formatReportMoney(value) {
+
+    const amount = toNumber(value);
+
+    return (
+        '<span class="currency-symbol">&#8377;</span>' +
+        amount.toLocaleString("en-IN", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2
+        })
+    );
+
+}
 // ======================================================
 // LOAD REGIONS
 // ======================================================
@@ -116,13 +205,6 @@ async function loadRegions() {
             );
 
 
-            // --------------------------------------------------
-            // IMPORTANT:
-            // Use Firestore document ID as dropdown value.
-            // We will compare it against all possible region
-            // values stored inside Repair Orders.
-            // --------------------------------------------------
-
             html += `
 
                 <option value="${escapeHtmlAttribute(doc.id)}">
@@ -151,7 +233,6 @@ async function loadRegions() {
 
         }
 
-
     }
 
     catch (error) {
@@ -160,6 +241,7 @@ async function loadRegions() {
             "Error loading regions:",
             error
         );
+
 
         const regionSelect =
             document.getElementById(
@@ -219,7 +301,7 @@ function escapeHtmlAttribute(value) {
 
 
 // ======================================================
-// GET REGION OBJECT
+// GET SELECTED REGION OBJECT
 // ======================================================
 
 function getSelectedRegionObject(
@@ -237,6 +319,7 @@ function getSelectedRegionObject(
         regionData.find(region => {
 
             return (
+
                 normalizeText(region.docId) ===
                     normalizeText(selectedRegion)
 
@@ -249,6 +332,7 @@ function getSelectedRegionObject(
 
                 normalizeText(region.regionName) ===
                     normalizeText(selectedRegion)
+
             );
 
         });
@@ -262,16 +346,6 @@ function getSelectedRegionObject(
 // ======================================================
 // CHECK REGION MATCH
 // ======================================================
-//
-// This is the MAIN FIX.
-//
-// A Repair Order may contain:
-// ro.region = document ID
-// ro.region = regionId
-// ro.region = regionName
-//
-// We compare against all possible values.
-// ======================================================
 
 function repairOrderMatchesRegion(
     repairOrder,
@@ -279,7 +353,7 @@ function repairOrderMatchesRegion(
 ) {
 
     // --------------------------------------------------
-    // All Regions
+    // ALL REGIONS
     // --------------------------------------------------
 
     if (
@@ -325,15 +399,12 @@ function repairOrderMatchesRegion(
 
 
     // --------------------------------------------------
-    // If region is stored as a string
+    // STRING / NUMBER
     // --------------------------------------------------
 
     if (
-        typeof repairOrderRegion ===
-        "string" ||
-
-        typeof repairOrderRegion ===
-        "number"
+        typeof repairOrderRegion === "string" ||
+        typeof repairOrderRegion === "number"
     ) {
 
         const roRegion =
@@ -363,12 +434,11 @@ function repairOrderMatchesRegion(
 
 
     // --------------------------------------------------
-    // If region was stored as an object
+    // OBJECT
     // --------------------------------------------------
 
     if (
-        typeof repairOrderRegion ===
-        "object"
+        typeof repairOrderRegion === "object"
     ) {
 
         const possibleValues = [
@@ -438,12 +508,11 @@ function getRegionDisplayName(
 
 
     // --------------------------------------------------
-    // Object region
+    // OBJECT REGION
     // --------------------------------------------------
 
     if (
-        typeof value ===
-        "object"
+        typeof value === "object"
     ) {
 
         const possibleValues = [
@@ -520,7 +589,7 @@ function getRegionDisplayName(
 
 
     // --------------------------------------------------
-    // String / Number region
+    // STRING / NUMBER
     // --------------------------------------------------
 
     const found =
@@ -559,9 +628,6 @@ function getRegionDisplayName(
     }
 
 
-    // If no region document matches,
-    // display the original value.
-
     return String(value);
 
 }
@@ -599,8 +665,7 @@ function getCreatedDate(
         // JavaScript Date
 
         if (
-            repairOrder.createdAt instanceof
-            Date
+            repairOrder.createdAt instanceof Date
         ) {
 
             return repairOrder.createdAt;
@@ -608,10 +673,11 @@ function getCreatedDate(
         }
 
 
-        // Timestamp object
+        // Timestamp-like object
 
         if (
-            repairOrder.createdAt.seconds
+            repairOrder.createdAt.seconds !==
+            undefined
         ) {
 
             return new Date(
@@ -643,7 +709,7 @@ function getCreatedDate(
 
 
 // ======================================================
-// GET ITEM CODES FROM REPAIR ORDER
+// GET REPAIR ORDER ITEM CODES
 // ======================================================
 
 function getRepairOrderItemCodes(
@@ -654,7 +720,7 @@ function getRepairOrderItemCodes(
 
 
     // --------------------------------------------------
-    // New records
+    // NEW FORMAT
     // --------------------------------------------------
 
     if (
@@ -670,18 +736,13 @@ function getRepairOrderItemCodes(
 
 
     // --------------------------------------------------
-    // Older records
+    // SINGLE itemCodes
     // --------------------------------------------------
 
     else if (
-        repairOrder.itemCodes !==
-        undefined &&
-
-        repairOrder.itemCodes !==
-        null &&
-
-        repairOrder.itemCodes !==
-        ""
+        repairOrder.itemCodes !== undefined &&
+        repairOrder.itemCodes !== null &&
+        repairOrder.itemCodes !== ""
     ) {
 
         items = [
@@ -692,18 +753,13 @@ function getRepairOrderItemCodes(
 
 
     // --------------------------------------------------
-    // Very old records
+    // OLD itemCode
     // --------------------------------------------------
 
     else if (
-        repairOrder.itemCode !==
-        undefined &&
-
-        repairOrder.itemCode !==
-        null &&
-
-        repairOrder.itemCode !==
-        ""
+        repairOrder.itemCode !== undefined &&
+        repairOrder.itemCode !== null &&
+        repairOrder.itemCode !== ""
     ) {
 
         items = [
@@ -714,8 +770,30 @@ function getRepairOrderItemCodes(
 
 
     // --------------------------------------------------
-    // Convert everything to strings
+    // WORK DONE FALLBACK
     // --------------------------------------------------
+
+    else if (
+        Array.isArray(repairOrder.workDone)
+    ) {
+
+        items =
+            repairOrder.workDone;
+
+    }
+
+    else if (
+        repairOrder.workDone !== undefined &&
+        repairOrder.workDone !== null &&
+        repairOrder.workDone !== ""
+    ) {
+
+        items = [
+            repairOrder.workDone
+        ];
+
+    }
+
 
     return items
         .filter(
@@ -733,107 +811,477 @@ function getRepairOrderItemCodes(
 
 
 // ======================================================
-// LOAD ITEM INFORMATION
+// GET ITEM DETAILS FROM RO
+// ======================================================
+//
+// Uses the itemDetails already saved inside the RO.
+//
+// This is important because the RO contains the billing
+// amount that was applicable when the RO was created.
 // ======================================================
 
-async function loadItemInformation(
-    itemCodes
+function getStoredItemDetails(
+    repairOrder
 ) {
 
-    const result = [];
-
-
-    for (
-        const itemCode
-        of itemCodes
+    if (
+        !Array.isArray(
+            repairOrder.itemDetails
+        )
     ) {
 
-        try {
+        return [];
 
-            const itemDoc =
-                await db.collection(
-                    "itemcodes"
-                )
-                .doc(
-                    String(itemCode)
-                )
-                .get();
+    }
 
 
-            if (
-                itemDoc.exists
-            ) {
+    return repairOrder.itemDetails.map(
+        item => {
 
-                const item =
-                    itemDoc.data();
-
-
-                result.push({
-
-                    itemCode:
-                        item.itemCode ||
-                        itemCode,
-
-                    description:
-                        item.description ||
-                        "-",
-
-                    billingAmount:
-                        Number(
-                            item.billingAmount
-                        ) || 0
-
-                });
-
-            }
-
-            else {
-
-                result.push({
-
-                    itemCode:
-                        itemCode,
-
-                    description:
-                        "-",
-
-                    billingAmount:
-                        0
-
-                });
-
-            }
-
-        }
-
-        catch (error) {
-
-            console.error(
-                "Error loading item:",
-                itemCode,
-                error
-            );
+            const code =
+                String(
+                    item.itemCode ||
+                    item.code ||
+                    ""
+                ).trim();
 
 
-            result.push({
+            return {
 
                 itemCode:
-                    itemCode,
+                    code,
 
                 description:
+                    item.description ||
+                    item.itemDescription ||
+                    item.workDescription ||
+                    item.workDone ||
                     "-",
 
                 billingAmount:
-                    0
+                    toNumber(
+                        item.billingAmount
+                    ),
+
+                incentiveAmount:
+                    toNumber(
+                        item.incentiveAmount
+                    )
+
+            };
+
+        }
+    );
+
+}
+
+
+// ======================================================
+// LOAD ALL ITEM MASTER DATA
+// ======================================================
+//
+// Creates a normalized map so that:
+// itemCode = 1
+// itemCode = "1"
+// document ID = "1"
+//
+// can all be resolved.
+// ======================================================
+
+async function loadItemMasterMap() {
+
+    const snapshot =
+        await db.collection(
+            "itemcodes"
+        ).get();
+
+
+    const itemMap = {};
+
+
+    snapshot.forEach(doc => {
+
+        const item =
+            doc.data();
+
+
+        const code =
+            String(
+                item.itemCode !== undefined &&
+                item.itemCode !== null &&
+                item.itemCode !== ""
+                    ? item.itemCode
+                    : doc.id
+            ).trim();
+
+
+        const itemObject = {
+
+            itemCode:
+                code,
+
+            description:
+                item.description ||
+                item.itemDescription ||
+                item.workDescription ||
+                item.workDone ||
+                "-",
+
+            billingAmount:
+                toNumber(
+                    item.billingAmount
+                ),
+
+            incentiveAmount:
+                toNumber(
+                    item.incentiveAmount
+                )
+
+        };
+
+
+        // Normal key
+
+        itemMap[
+            normalizeText(code)
+        ] =
+            itemObject;
+
+
+        // Document ID key
+
+        itemMap[
+            normalizeText(doc.id)
+        ] =
+            itemObject;
+
+    });
+
+
+    return itemMap;
+
+}
+
+
+// ======================================================
+// GET ITEM INFORMATION
+// ======================================================
+//
+// Priority:
+// 1. Stored itemDetails
+// 2. Item Master
+// 3. Not found
+// ======================================================
+
+function getItemInformation(
+    repairOrder,
+    itemCodes,
+    itemMap
+) {
+
+    const storedDetails =
+        getStoredItemDetails(
+            repairOrder
+        );
+
+
+    const information = [];
+
+
+    itemCodes.forEach(
+        rawCode => {
+
+            const code =
+                String(rawCode).trim();
+
+
+            if (!code) {
+
+                return;
+
+            }
+
+
+            // --------------------------------------------------
+            // FIRST: STORED ITEM DETAIL
+            // --------------------------------------------------
+
+            const stored =
+                storedDetails.find(
+                    item =>
+                        normalizeText(
+                            item.itemCode
+                        ) ===
+                        normalizeText(code)
+                );
+
+
+            if (stored) {
+
+                information.push({
+
+                    itemCode:
+                        stored.itemCode ||
+                        code,
+
+                    description:
+                        stored.description ||
+                        "-",
+
+                    billingAmount:
+                        toNumber(
+                            stored.billingAmount
+                        ),
+
+                    incentiveAmount:
+                        toNumber(
+                            stored.incentiveAmount
+                        ),
+
+                    fromStoredRO:
+                        true
+
+                });
+
+                return;
+
+            }
+
+
+            // --------------------------------------------------
+            // SECOND: ITEM MASTER
+            // --------------------------------------------------
+
+            const master =
+                itemMap[
+                    normalizeText(code)
+                ];
+
+
+            if (master) {
+
+                information.push({
+
+                    itemCode:
+                        master.itemCode ||
+                        code,
+
+                    description:
+                        master.description ||
+                        "-",
+
+                    billingAmount:
+                        toNumber(
+                            master.billingAmount
+                        ),
+
+                    incentiveAmount:
+                        toNumber(
+                            master.incentiveAmount
+                        ),
+
+                    fromStoredRO:
+                        false
+
+                });
+
+                return;
+
+            }
+
+
+            // --------------------------------------------------
+            // NOT FOUND
+            // --------------------------------------------------
+
+            information.push({
+
+                itemCode:
+                    code,
+
+                description:
+                    "Description Not Found",
+
+                billingAmount:
+                    0,
+
+                incentiveAmount:
+                    0,
+
+                fromStoredRO:
+                    false
 
             });
+
+        }
+    );
+
+
+    return information;
+
+}
+
+
+// ======================================================
+// GET REPAIR ORDER BILLING
+// ======================================================
+//
+// VERY IMPORTANT:
+//
+// 1. Use stored ro.billingAmount
+// 2. Otherwise sum itemDetails billing
+// 3. Otherwise use item master
+// ======================================================
+
+function getRepairOrderBilling(
+    repairOrder,
+    itemInformation
+) {
+
+    // --------------------------------------------------
+    // FIRST: STORED TOTAL BILLING
+    // --------------------------------------------------
+
+    if (
+        repairOrder.billingAmount !==
+        undefined &&
+        repairOrder.billingAmount !==
+        null &&
+        repairOrder.billingAmount !== ""
+    ) {
+
+        return toNumber(
+            repairOrder.billingAmount
+        );
+
+    }
+
+
+    // --------------------------------------------------
+    // SECOND: STORED ITEM DETAILS
+    // --------------------------------------------------
+
+    const storedDetails =
+        getStoredItemDetails(
+            repairOrder
+        );
+
+
+    if (
+        storedDetails.length > 0
+    ) {
+
+        const storedTotal =
+            storedDetails.reduce(
+                (
+                    total,
+                    item
+                ) => {
+
+                    return total +
+                        toNumber(
+                            item.billingAmount
+                        );
+
+                },
+                0
+            );
+
+
+        if (
+            storedTotal > 0
+        ) {
+
+            return storedTotal;
 
         }
 
     }
 
 
-    return result;
+    // --------------------------------------------------
+    // THIRD: ITEM MASTER FALLBACK
+    // --------------------------------------------------
+
+    return itemInformation.reduce(
+        (
+            total,
+            item
+        ) => {
+
+            return total +
+                toNumber(
+                    item.billingAmount
+                );
+
+        },
+        0
+    );
+
+}
+
+
+// ======================================================
+// GET REPAIR ORDER INCENTIVE
+// ======================================================
+
+function getRepairOrderIncentive(
+    repairOrder,
+    itemInformation
+) {
+
+    const storedDetails =
+        getStoredItemDetails(
+            repairOrder
+        );
+
+
+    if (
+        storedDetails.length > 0
+    ) {
+
+        const storedTotal =
+            storedDetails.reduce(
+                (
+                    total,
+                    item
+                ) => {
+
+                    return total +
+                        toNumber(
+                            item.incentiveAmount
+                        );
+
+                },
+                0
+            );
+
+
+        if (
+            storedTotal > 0
+        ) {
+
+            return storedTotal;
+
+        }
+
+    }
+
+
+    return itemInformation.reduce(
+        (
+            total,
+            item
+        ) => {
+
+            return total +
+                toNumber(
+                    item.incentiveAmount
+                );
+
+        },
+        0
+    );
 
 }
 
@@ -880,10 +1328,6 @@ async function generateReport() {
         );
 
 
-    // --------------------------------------------------
-    // Disable buttons while generating
-    // --------------------------------------------------
-
     if (exportBtn) {
 
         exportBtn.disabled =
@@ -914,18 +1358,17 @@ async function generateReport() {
 
 
     // --------------------------------------------------
-    // Validate dates
+    // VALIDATE DATES
     // --------------------------------------------------
 
     if (
-        fromDate === "" ||
-        toDate === ""
+        !fromDate ||
+        !toDate
     ) {
 
         alert(
             "Please select From Date and To Date."
         );
-
 
         restoreGenerateButton();
 
@@ -933,10 +1376,6 @@ async function generateReport() {
 
     }
 
-
-    // --------------------------------------------------
-    // Validate date order
-    // --------------------------------------------------
 
     const start =
         new Date(fromDate);
@@ -970,7 +1409,6 @@ async function generateReport() {
             "From Date cannot be greater than To Date."
         );
 
-
         restoreGenerateButton();
 
         return;
@@ -979,10 +1417,6 @@ async function generateReport() {
 
 
     try {
-
-        // --------------------------------------------------
-        // Wait for regions to finish loading
-        // --------------------------------------------------
 
         if (
             regionsLoadedPromise
@@ -994,13 +1428,15 @@ async function generateReport() {
 
 
         // --------------------------------------------------
+        // LOAD ITEM MASTER ONCE
+        // --------------------------------------------------
+
+        const itemMap =
+            await loadItemMasterMap();
+
+
+        // --------------------------------------------------
         // LOAD REPAIR ORDERS
-        //
-        // IMPORTANT:
-        // Do NOT use .where("region","==",...)
-        //
-        // because old records may contain:
-        // document ID / regionId / regionName.
         // --------------------------------------------------
 
         const snapshot =
@@ -1019,9 +1455,9 @@ async function generateReport() {
             new Set();
 
 
-        // --------------------------------------------------
+        // ==================================================
         // PROCESS REPAIR ORDERS
-        // --------------------------------------------------
+        // ==================================================
 
         for (
             const doc
@@ -1033,11 +1469,13 @@ async function generateReport() {
 
 
             // --------------------------------------------------
-            // Date
+            // DATE
             // --------------------------------------------------
 
             const createdDate =
-                getCreatedDate(ro);
+                getCreatedDate(
+                    ro
+                );
 
 
             if (!createdDate) {
@@ -1058,7 +1496,7 @@ async function generateReport() {
 
 
             // --------------------------------------------------
-            // REGION FILTER
+            // REGION
             // --------------------------------------------------
 
             if (
@@ -1073,326 +1511,60 @@ async function generateReport() {
             }
 
 
-            // --------------------------------------------------
-            // REGION NAME
-            // --------------------------------------------------
-
             const regionName =
-                getRegionDisplayName(ro);
+                getRegionDisplayName(
+                    ro
+                );
 
 
             // --------------------------------------------------
-// GET ITEM CODES / WORK DONE
-// --------------------------------------------------
+            // ITEM CODES
+            // --------------------------------------------------
 
-let itemCodes = [];
+            const itemCodes =
+                getRepairOrderItemCodes(
+                    ro
+                );
 
-// New format: itemCodes is an array
-if (Array.isArray(ro.itemCodes)) {
 
-    itemCodes = ro.itemCodes;
+            console.log(
+                "RO:",
+                doc.id,
+                "ITEM CODES:",
+                itemCodes
+            );
 
-}
-
-// Single itemCodes value
-else if (
-    ro.itemCodes !== undefined &&
-    ro.itemCodes !== null &&
-    ro.itemCodes !== ""
-) {
-
-    itemCodes = [
-        ro.itemCodes
-    ];
-
-}
-
-// Old format: itemCode
-else if (
-    ro.itemCode !== undefined &&
-    ro.itemCode !== null &&
-    ro.itemCode !== ""
-) {
-
-    itemCodes = [
-        ro.itemCode
-    ];
-
-}
-
-// Another possible old format: workDone
-else if (Array.isArray(ro.workDone)) {
-
-    itemCodes = ro.workDone;
-
-}
-
-else if (
-    ro.workDone !== undefined &&
-    ro.workDone !== null &&
-    ro.workDone !== ""
-) {
-
-    itemCodes = [
-        ro.workDone
-    ];
-
-}
-
-console.log(
-    "RO:",
-    doc.id,
-    "ITEM CODES:",
-    itemCodes
-);
 
             // --------------------------------------------------
-// LOAD ITEM INFORMATION
-// --------------------------------------------------
+            // ITEM INFORMATION
+            // --------------------------------------------------
+
+            const itemInformation =
+                getItemInformation(
+                    ro,
+                    itemCodes,
+                    itemMap
+                );
 
-const itemInformation = [];
-
-for (const rawCode of itemCodes) {
-
-    if (
-        rawCode === null ||
-        rawCode === undefined ||
-        rawCode === ""
-    ) {
-        continue;
-    }
-
-    const code =
-        String(rawCode).trim();
-
-    let itemData = null;
-
-    // ==================================================
-    // FIRST: TRY DOCUMENT ID
-    // ==================================================
-
-    try {
-
-        const itemDoc =
-            await db
-                .collection("itemcodes")
-                .doc(code)
-                .get();
-
-        if (itemDoc.exists) {
-
-            itemData =
-                itemDoc.data();
-
-        }
-
-    }
-
-    catch (error) {
-
-        console.warn(
-            "Document ID lookup failed:",
-            code,
-            error
-        );
-
-    }
-
-
-    // ==================================================
-    // SECOND: SEARCH itemCode AS STRING
-    // ==================================================
-
-    if (!itemData) {
-
-        try {
-
-            const stringSnapshot =
-                await db
-                    .collection("itemcodes")
-                    .where(
-                        "itemCode",
-                        "==",
-                        code
-                    )
-                    .limit(1)
-                    .get();
-
-            if (!stringSnapshot.empty) {
-
-                itemData =
-                    stringSnapshot
-                        .docs[0]
-                        .data();
-
-            }
-
-        }
-
-        catch (error) {
-
-            console.warn(
-                "String itemCode lookup failed:",
-                code,
-                error
-            );
-
-        }
-
-    }
-
-
-    // ==================================================
-    // THIRD: SEARCH itemCode AS NUMBER
-    // ==================================================
-
-    if (!itemData && !isNaN(Number(code))) {
-
-        try {
-
-            const numberSnapshot =
-                await db
-                    .collection("itemcodes")
-                    .where(
-                        "itemCode",
-                        "==",
-                        Number(code)
-                    )
-                    .limit(1)
-                    .get();
-
-            if (!numberSnapshot.empty) {
-
-                itemData =
-                    numberSnapshot
-                        .docs[0]
-                        .data();
-
-            }
-
-        }
-
-        catch (error) {
-
-            console.warn(
-                "Number itemCode lookup failed:",
-                code,
-                error
-            );
-
-        }
-
-    }
-
-
-    // ==================================================
-    // ITEM FOUND
-    // ==================================================
-
-    if (itemData) {
-
-        const actualItemCode =
-            itemData.itemCode !== undefined
-                ? itemData.itemCode
-                : code;
-
-        const description =
-            itemData.description ||
-            itemData.workDescription ||
-            itemData.workDone ||
-            "-";
-
-        const billingAmount =
-            Number(
-                itemData.billingAmount
-            ) || 0;
-
-
-        itemInformation.push({
-
-            itemCode:
-                String(actualItemCode),
-
-            description:
-                String(description),
-
-            billingAmount:
-                billingAmount
-
-        });
-
-
-        console.log(
-            "ITEM FOUND:",
-            code,
-            description
-        );
-
-    }
-
-
-    // ==================================================
-    // ITEM NOT FOUND
-    // ==================================================
-
-    else {
-
-        console.warn(
-            "ITEM DESCRIPTION NOT FOUND FOR:",
-            code
-        );
-
-
-        // Keep the code visible but clearly indicate
-        // that the item master does not contain it.
-
-        itemInformation.push({
-
-            itemCode:
-                code,
-
-            description:
-                "Description Not Found",
-
-            billingAmount:
-                0
-
-        });
-
-    }
-
-}
 
             // --------------------------------------------------
             // BILLING
             // --------------------------------------------------
 
-            let billingAmount = 0;
+            const billingAmount =
+                getRepairOrderBilling(
+                    ro,
+                    itemInformation
+                );
 
 
-            const workDescriptions = [];
-
-
-            itemInformation.forEach(
-                item => {
-
-                    billingAmount +=
-                        Number(
-                            item.billingAmount
-                        ) || 0;
-
-
-                    workDescriptions.push(
-
-                        `${escapeHtml(
-                            item.itemCode
-                        )} - ${escapeHtml(
-                            item.description
-                        )}`
-
-                    );
-
-                }
+            console.log(
+                "RO:",
+                doc.id,
+                "STORED BILLING:",
+                ro.billingAmount,
+                "DISPLAY BILLING:",
+                billingAmount
             );
 
 
@@ -1400,20 +1572,32 @@ for (const rawCode of itemCodes) {
             // WORK DONE
             // --------------------------------------------------
 
+            const workDescriptions =
+                itemInformation.map(
+                    item => {
+
+                        return `
+                            <div class="work-item">
+                                ${escapeHtml(
+                                    item.itemCode
+                                )}
+                                -
+                                ${escapeHtml(
+                                    item.description
+                                )}
+                            </div>
+                        `;
+
+                    }
+                );
+
+
             const workDone =
                 workDescriptions.length > 0
 
                     ?
 
-                    workDescriptions
-                        .map(
-                            item => `
-                                <div class="work-item">
-                                    ${item}
-                                </div>
-                            `
-                        )
-                        .join("")
+                    workDescriptions.join("")
 
                     :
 
@@ -1421,7 +1605,7 @@ for (const rawCode of itemCodes) {
 
 
             // --------------------------------------------------
-            // Advisor
+            // ADVISOR
             // --------------------------------------------------
 
             const advisor =
@@ -1430,10 +1614,7 @@ for (const rawCode of itemCodes) {
 
 
             // --------------------------------------------------
-            // Advisor Wise Summary
-            //
-            // Use item-code + description as the key,
-            // NOT the HTML workDone string.
+            // ADVISOR SUMMARY
             // --------------------------------------------------
 
             const workTypeKey =
@@ -1486,7 +1667,7 @@ for (const rawCode of itemCodes) {
 
 
             // --------------------------------------------------
-            // DATE FORMAT
+            // DATE
             // --------------------------------------------------
 
             const formattedDate =
@@ -1495,9 +1676,9 @@ for (const rawCode of itemCodes) {
                 );
 
 
-            // --------------------------------------------------
-            // DISPLAY TABLE
-            // --------------------------------------------------
+            // ==================================================
+            // TABLE ROW
+            // ==================================================
 
             html += `
 
@@ -1538,11 +1719,9 @@ for (const rawCode of itemCodes) {
                         ${workDone}
                     </td>
 
-                    <td>
-                        ₹${billingAmount.toLocaleString(
-                            "en-IN"
-                        )}
-                    </td>
+   <td class="billing-cell">
+    ${formatReportMoney(billingAmount)}
+</td>
 
                 </tr>
 
@@ -1569,11 +1748,13 @@ for (const rawCode of itemCodes) {
             work => {
 
                 head += `
+
                     <th>
                         ${escapeHtml(
                             work
                         )}
                     </th>
+
                 `;
 
             }
@@ -1864,10 +2045,6 @@ for (const rawCode of itemCodes) {
     }
 
 
-    // --------------------------------------------------
-    // Restore Generate button
-    // --------------------------------------------------
-
     restoreGenerateButton();
 
 }
@@ -1939,7 +2116,7 @@ async function generateAdvisorItemReport() {
 
 
     // --------------------------------------------------
-    // Validate dates
+    // VALIDATE
     // --------------------------------------------------
 
     if (
@@ -1950,6 +2127,13 @@ async function generateAdvisorItemReport() {
         alert(
             "Please select From Date and To Date."
         );
+
+        if (advisorExportBtn) {
+
+            advisorExportBtn.disabled =
+                true;
+
+        }
 
         return;
 
@@ -1988,16 +2172,19 @@ async function generateAdvisorItemReport() {
             "From Date cannot be greater than To Date."
         );
 
+        if (advisorExportBtn) {
+
+            advisorExportBtn.disabled =
+                true;
+
+        }
+
         return;
 
     }
 
 
     try {
-
-        // --------------------------------------------------
-        // Wait for regions
-        // --------------------------------------------------
 
         if (
             regionsLoadedPromise
@@ -2009,56 +2196,15 @@ async function generateAdvisorItemReport() {
 
 
         // ==================================================
-        // LOAD ITEM CODES
+        // LOAD ITEM MASTER
         // ==================================================
 
-        const itemSnapshot =
-            await db.collection(
-                "itemcodes"
-            )
-            .get();
-
-
-        const itemMap = {};
-
-
-        itemSnapshot.forEach(
-            doc => {
-
-                const item =
-                    doc.data();
-
-
-                const code =
-                    String(
-                        item.itemCode ||
-                        doc.id
-                    ).trim();
-
-
-               itemMap[code] = {
-    itemCode: code,
-
-    description:
-        item.description || "-",
-
-    billingAmount:
-        Number(item.billingAmount) || 0,
-
-    incentiveAmount:
-        Number(item.incentiveAmount) || 0
-};
-
-            }
-        );
+        const itemMap =
+            await loadItemMasterMap();
 
 
         // ==================================================
         // LOAD REPAIR ORDERS
-        // ==================================================
-        //
-        // IMPORTANT:
-        // No direct Firestore region equality filter.
         // ==================================================
 
         const roSnapshot =
@@ -2068,7 +2214,7 @@ async function generateAdvisorItemReport() {
 
 
         // ==================================================
-        // STORE DATA BY ADVISOR
+        // ADVISOR DATA
         // ==================================================
 
         const advisorData = {};
@@ -2086,7 +2232,9 @@ async function generateAdvisorItemReport() {
                 // --------------------------------------------------
 
                 const createdDate =
-                    getCreatedDate(ro);
+                    getCreatedDate(
+                        ro
+                    );
 
 
                 if (!createdDate) {
@@ -2107,7 +2255,7 @@ async function generateAdvisorItemReport() {
 
 
                 // --------------------------------------------------
-                // REGION FILTER
+                // REGION
                 // --------------------------------------------------
 
                 if (
@@ -2142,8 +2290,14 @@ async function generateAdvisorItemReport() {
 
 
                 // --------------------------------------------------
-                // CREATE ADVISOR
+                // STORED ITEM DETAILS
                 // --------------------------------------------------
+
+                const storedDetails =
+                    getStoredItemDetails(
+                        ro
+                    );
+
 
                 if (
                     !advisorData[advisor]
@@ -2153,71 +2307,203 @@ async function generateAdvisorItemReport() {
 
                         items: {},
 
-                        incentive: 0
+                        incentive: 0,
+
+                        billing: 0
 
                     };
 
                 }
 
 
-               items.forEach(itemCode => {
+                // ==================================================
+                // BILLING
+                // ==================================================
 
-                const code =
-                    String(itemCode).trim();
+                const roBilling =
+                    getRepairOrderBilling(
+                        ro,
+                        getItemInformation(
+                            ro,
+                            items,
+                            itemMap
+                        )
+                    );
 
-                // ---------------------------------------------
-                // Create item entry
-                // ---------------------------------------------
+
+                advisorData[advisor]
+                    .billing +=
+                    roBilling;
+
+
+                // ==================================================
+                // ITEMS
+                // ==================================================
+
+                items.forEach(
+                    itemCodeRaw => {
+
+                        const code =
+                            String(
+                                itemCodeRaw
+                            ).trim();
+
+
+                        if (!code) {
+
+                            return;
+
+                        }
+
+
+                        if (
+                            !advisorData[
+                                advisor
+                            ].items[code]
+                        ) {
+
+                            advisorData[
+                                advisor
+                            ].items[code] = {
+
+                                quantity:
+                                    0,
+
+                                totalAmount:
+                                    0,
+
+                                incentiveAmount:
+                                    0,
+
+                                description:
+                                    "-"
+
+                            };
+
+                        }
+
+
+                        const entry =
+                            advisorData[
+                                advisor
+                            ].items[code];
+
+
+                        entry.quantity++;
+
+
+                        // --------------------------------------------------
+                        // FIRST: STORED ITEM DETAIL
+                        // --------------------------------------------------
+
+                        const stored =
+                            storedDetails.find(
+                                item =>
+                                    normalizeText(
+                                        item.itemCode
+                                    ) ===
+                                    normalizeText(
+                                        code
+                                    )
+                            );
+
+
+                        if (stored) {
+
+                            entry.description =
+                                stored.description ||
+                                "-";
+
+
+                            entry.totalAmount +=
+                                toNumber(
+                                    stored.billingAmount
+                                );
+
+
+                            entry.incentiveAmount +=
+                                toNumber(
+                                    stored.incentiveAmount
+                                );
+
+                        }
+
+                        else {
+
+                            // --------------------------------------------------
+                            // FALLBACK: ITEM MASTER
+                            // --------------------------------------------------
+
+                            const itemInfo =
+                                itemMap[
+                                    normalizeText(
+                                        code
+                                    )
+                                ];
+
+
+                            if (itemInfo) {
+
+                                entry.description =
+                                    itemInfo.description ||
+                                    "-";
+
+
+                                entry.totalAmount +=
+                                    toNumber(
+                                        itemInfo.billingAmount
+                                    );
+
+
+                                entry.incentiveAmount +=
+                                    toNumber(
+                                        itemInfo.incentiveAmount
+                                    );
+
+                            }
+
+                        }
+
+                    }
+                );
+
+
+                // ==================================================
+                // INCENTIVE
+                // ==================================================
+
+                const storedIncentive =
+                    storedDetails.reduce(
+                        (
+                            total,
+                            item
+                        ) => {
+
+                            return total +
+                                toNumber(
+                                    item.incentiveAmount
+                                );
+
+                        },
+                        0
+                    );
+
 
                 if (
-                    !advisorData[advisor].items[code]
+                    storedIncentive > 0
                 ) {
 
-                    advisorData[advisor].items[code] = {
-
-                    quantity: 0
-
-                };
+                    // Already included in item-level incentive.
+                    // Do not add again here.
 
                 }
-
-                // ---------------------------------------------
-                // Increase item quantity
-                // ---------------------------------------------
-
-                advisorData[advisor]
-                    .items[code]
-                    .quantity++;
-
-                // ---------------------------------------------
-                // Get incentive from Item Master
-                // ---------------------------------------------
-
-                const itemInfo =
-                    itemMap[code];
-
-                const incentive =
-                    itemInfo
-                        ? Number(itemInfo.incentiveAmount) || 0
-                        : 0;
-
-                // ---------------------------------------------
-                // Add incentive for this item
-                // ---------------------------------------------
-
-                advisorData[advisor]
-                    .incentive += incentive;
-
-            });
-
-
 
             }
         );
 
 
         // ==================================================
-        // DISPLAY REPORT
+        // DISPLAY
         // ==================================================
 
         const container =
@@ -2296,16 +2582,14 @@ async function generateAdvisorItemReport() {
         advisors.forEach(
             advisor => {
 
+                const advisorInfo =
+                    advisorData[
+                        advisor
+                    ];
+
+
                 const items =
-                    advisorData[
-                        advisor
-                    ].items;
-
-
-                const incentiveAmount =
-                    advisorData[
-                        advisor
-                    ].incentive || 0;
+                    advisorInfo.items;
 
 
                 // --------------------------------------------------
@@ -2391,6 +2675,10 @@ async function generateAdvisorItemReport() {
                     0;
 
 
+                let incentiveAmount =
+                    0;
+
+
                 // --------------------------------------------------
                 // ITEMS
                 // --------------------------------------------------
@@ -2402,36 +2690,34 @@ async function generateAdvisorItemReport() {
                 .forEach(
                     itemCode => {
 
-                        const quantity =
+                        const item =
                             items[
                                 itemCode
-                            ].quantity;
+                            ];
 
 
-                        const itemInfo =
-                            itemMap[
-                                itemCode
-                            ] || {
-
-                                itemCode:
-                                    itemCode,
-
-                                description:
-                                    "-",
-
-                                billingAmount:
-                                    0
-
-                            };
+                        const quantity =
+                            item.quantity;
 
 
                         const total =
-                            quantity *
-                            itemInfo.billingAmount;
+                            toNumber(
+                                item.totalAmount
+                            );
+
+
+                        const itemIncentive =
+                            toNumber(
+                                item.incentiveAmount
+                            );
 
 
                         advisorTotal +=
                             total;
+
+
+                        incentiveAmount +=
+                            itemIncentive;
 
 
                         const row =
@@ -2450,7 +2736,8 @@ async function generateAdvisorItemReport() {
 
                             <td>
                                 ${escapeHtml(
-                                    itemInfo.description
+                                    item.description ||
+                                    "-"
                                 )}
                             </td>
 
@@ -2463,8 +2750,8 @@ async function generateAdvisorItemReport() {
                             <td
                                 class="amount-cell"
                             >
-                                ₹${total.toLocaleString(
-                                    "en-IN"
+                                ${formatMoney(
+                                    total
                                 )}
                             </td>
 
@@ -2485,7 +2772,7 @@ async function generateAdvisorItemReport() {
 
 
                 // ==================================================
-                // BILLING + INCENTIVE + NET
+                // BILLING / INCENTIVE / NET
                 // ==================================================
 
                 const totalDiv =
@@ -2496,6 +2783,27 @@ async function generateAdvisorItemReport() {
 
                 totalDiv.className =
                     "advisor-total";
+
+
+                // --------------------------------------------------
+                // IMPORTANT:
+                // advisorTotal is based on item-level stored
+                // billing amounts.
+                //
+                // If there is a difference because an old RO
+                // only stored total billing, use the stored
+                // advisor billing as fallback.
+                // --------------------------------------------------
+
+                if (
+                    advisorTotal === 0 &&
+                    advisorInfo.billing > 0
+                ) {
+
+                    advisorTotal =
+                        advisorInfo.billing;
+
+                }
 
 
                 const netAmount =
@@ -2511,8 +2819,8 @@ async function generateAdvisorItemReport() {
 
                         <strong>
 
-                            ₹${advisorTotal.toLocaleString(
-                                "en-IN"
+                            ${formatMoney(
+                                advisorTotal
                             )}
 
                         </strong>
@@ -2526,8 +2834,8 @@ async function generateAdvisorItemReport() {
 
                         <strong>
 
-                            ₹${incentiveAmount.toLocaleString(
-                                "en-IN"
+                            ${formatMoney(
+                                incentiveAmount
                             )}
 
                         </strong>
@@ -2541,8 +2849,8 @@ async function generateAdvisorItemReport() {
 
                         <strong>
 
-                            ₹${netAmount.toLocaleString(
-                                "en-IN"
+                            ${formatMoney(
+                                netAmount
                             )}
 
                         </strong>
@@ -2559,10 +2867,6 @@ async function generateAdvisorItemReport() {
             }
         );
 
-
-        // --------------------------------------------------
-        // Enable Advisor PDF
-        // --------------------------------------------------
 
         if (
             advisorExportBtn
@@ -2744,53 +3048,72 @@ async function exportPDF() {
 
     const rows = [];
 
+document
+    .querySelectorAll(
+        "#reportBody tr"
+    )
+    .forEach(
+        tr => {
 
-    document
-        .querySelectorAll(
-            "#reportBody tr"
-        )
-        .forEach(
-            tr => {
-
-                const row = [];
+            const row = [];
 
 
-                tr.querySelectorAll(
-                    "td"
-                )
-                .forEach(
-                    td => {
+            tr.querySelectorAll(
+                "td"
+            )
+            .forEach(
+                (td, index) => {
 
-                        row.push(
-                            td.innerText
-                                .trim()
-                        );
+                    let value =
+                        td.innerText
+                            .trim();
+
+
+                    // --------------------------------------
+                    // BILLING AMOUNT
+                    // Replace ₹ with Rs.
+                    // because jsPDF Helvetica does not
+                    // properly support the ₹ symbol.
+                    // --------------------------------------
+
+                    if (
+                        index === 6
+                    ) {
+
+                        value =
+                            value.replace(
+                                /₹/g,
+                                "Rs. "
+                            );
 
                     }
-                );
 
 
-                // --------------------------------------------------
-                // Ignore "No Repair Orders Found"
-                // --------------------------------------------------
-
-                if (
-                    row.length === 7 &&
-                    !row[0]
-                        .toLowerCase()
-                        .includes(
-                            "no repair"
-                        )
-                ) {
-
-                    rows.push(
-                        row
+                    row.push(
+                        value
                     );
 
                 }
+            );
+
+
+            if (
+                row.length === 7 &&
+                !row[0]
+                    .toLowerCase()
+                    .includes(
+                        "no repair"
+                    )
+            ) {
+
+                rows.push(
+                    row
+                );
 
             }
-        );
+
+        }
+    );
 
 
     if (
@@ -2871,48 +3194,38 @@ async function exportPDF() {
 
         },
 
-        columnStyles: {
+       columnStyles: {
 
-            0: {
-                cellWidth:
-                    22
-            },
+    0: {
+        cellWidth: 20
+    },
 
-            1: {
-                cellWidth:
-                    22
-            },
+    1: {
+        cellWidth: 20
+    },
 
-            2: {
-                cellWidth:
-                    28
-            },
+    2: {
+        cellWidth: 25
+    },
 
-            3: {
-                cellWidth:
-                    28
-            },
+    3: {
+        cellWidth: 25
+    },
 
-            4: {
-                cellWidth:
-                    28
-            },
+    4: {
+        cellWidth: 25
+    },
 
-            5: {
-                cellWidth:
-                    45
-            },
+    5: {
+        cellWidth: 42
+    },
 
-            6: {
-                cellWidth:
-                    25,
+    6: {
+        cellWidth: 25,
+        halign: "center"
+    }
 
-                halign:
-                    "right"
-
-            }
-
-        }
+}
 
     });
 
@@ -3009,12 +3322,8 @@ async function exportPDF() {
             );
 
 
-    const fileName =
-        `Repair_Report_${safeRegionName}_${reportDate}.pdf`;
-
-
     doc.save(
-        fileName
+        `Repair_Report_${safeRegionName}_${reportDate}.pdf`
     );
 
 }
@@ -3066,72 +3375,24 @@ async function exportAdvisorItemPDF() {
 
 
     // ==================================================
-    // FORMAT MONEY
+    // FORMAT MONEY FOR PDF
     // ==================================================
 
-    function formatMoney(
+    function formatPDFMoney(
         value
     ) {
 
-        if (
-            value === null ||
-            value === undefined
-        ) {
-
-            return "Rs. 0";
-
-        }
-
-
-        let text =
-            String(
-                value
-            ).trim();
-
-
-        text =
-            text
-                .replace(
-                    /₹/g,
-                    ""
-                )
-                .replace(
-                    /Rs\.?/gi,
-                    ""
-                )
-                .replace(
-                    /,/g,
-                    ""
-                )
-                .replace(
-                    /\s/g,
-                    ""
-                )
-                .replace(
-                    /[^\d.-]/g,
-                    ""
-                );
-
-
-        const number =
-            Number(
-                text
-            );
-
-
-        if (
-            isNaN(number)
-        ) {
-
-            return "Rs. 0";
-
-        }
+        const amount =
+            toNumber(value);
 
 
         return (
             "Rs. " +
-            number.toLocaleString(
-                "en-IN"
+            amount.toLocaleString(
+                "en-IN",
+                {
+                    maximumFractionDigits: 2
+                }
             )
         );
 
@@ -3342,9 +3603,7 @@ async function exportAdvisorItemPDF() {
     // ==================================================
 
     advisorSections.forEach(
-        (
-            advisorHeading
-        ) => {
+        advisorHeading => {
 
             const advisorName =
                 advisorHeading
@@ -3393,8 +3652,7 @@ async function exportAdvisorItemPDF() {
 
 
                         if (
-                            cells.length <
-                            4
+                            cells.length < 4
                         ) {
 
                             return;
@@ -3434,7 +3692,7 @@ async function exportAdvisorItemPDF() {
 
                             itemsDone,
 
-                            formatMoney(
+                            formatPDFMoney(
                                 amount
                             )
 
@@ -3454,7 +3712,7 @@ async function exportAdvisorItemPDF() {
 
 
             // --------------------------------------------------
-            // CHECK PAGE SPACE
+            // PAGE SPACE
             // --------------------------------------------------
 
             if (
@@ -3616,9 +3874,7 @@ async function exportAdvisorItemPDF() {
                 },
 
                 didParseCell:
-                    function (
-                        data
-                    ) {
+                    function(data) {
 
                         if (
                             data.section ===
@@ -3650,17 +3906,13 @@ async function exportAdvisorItemPDF() {
             });
 
 
-            // --------------------------------------------------
-            // TABLE END
-            // --------------------------------------------------
-
             currentY =
                 doc.lastAutoTable.finalY +
                 5;
 
 
             // ==================================================
-            // BILLING / INCENTIVE / NET BILLING
+            // TOTALS
             // ==================================================
 
             const totalElement =
@@ -3675,10 +3927,6 @@ async function exportAdvisorItemPDF() {
                     totalElement.innerText;
 
 
-                // --------------------------------------------------
-                // TOTAL BILLING
-                // --------------------------------------------------
-
                 const billingMatch =
                     summaryText.match(
                         /Total Billing:\s*₹?\s*([\d,.-]+)/i
@@ -3690,22 +3938,14 @@ async function exportAdvisorItemPDF() {
 
                         ?
 
-                        Number(
+                        toNumber(
                             billingMatch[1]
-                                .replace(
-                                    /,/g,
-                                    ""
-                                )
                         )
 
                         :
 
                         0;
 
-
-                // --------------------------------------------------
-                // INCENTIVE
-                // --------------------------------------------------
 
                 const incentiveMatch =
                     summaryText.match(
@@ -3718,22 +3958,14 @@ async function exportAdvisorItemPDF() {
 
                         ?
 
-                        Number(
+                        toNumber(
                             incentiveMatch[1]
-                                .replace(
-                                    /,/g,
-                                    ""
-                                )
                         )
 
                         :
 
                         0;
 
-
-                // --------------------------------------------------
-                // NET BILLING
-                // --------------------------------------------------
 
                 const netBillingMatch =
                     summaryText.match(
@@ -3746,22 +3978,14 @@ async function exportAdvisorItemPDF() {
 
                         ?
 
-                        Number(
+                        toNumber(
                             netBillingMatch[1]
-                                .replace(
-                                    /,/g,
-                                    ""
-                                )
                         )
 
                         :
 
                         0;
 
-
-                // --------------------------------------------------
-                // CHECK SPACE
-                // --------------------------------------------------
 
                 if (
                     currentY >
@@ -3776,10 +4000,6 @@ async function exportAdvisorItemPDF() {
                 }
 
 
-                // --------------------------------------------------
-                // STYLE
-                // --------------------------------------------------
-
                 doc.setFont(
                     "helvetica",
                     "bold"
@@ -3791,12 +4011,8 @@ async function exportAdvisorItemPDF() {
                 );
 
 
-                // --------------------------------------------------
-                // TOTAL BILLING
-                // --------------------------------------------------
-
                 doc.text(
-                    `Total Billing: ${formatMoney(
+                    `Total Billing: ${formatPDFMoney(
                         billing
                     )}`,
                     pageWidth -
@@ -3813,12 +4029,8 @@ async function exportAdvisorItemPDF() {
                     5;
 
 
-                // --------------------------------------------------
-                // INCENTIVE
-                // --------------------------------------------------
-
                 doc.text(
-                    `Incentive Amount: ${formatMoney(
+                    `Incentive Amount: ${formatPDFMoney(
                         incentive
                     )}`,
                     pageWidth -
@@ -3835,12 +4047,8 @@ async function exportAdvisorItemPDF() {
                     5;
 
 
-                // --------------------------------------------------
-                // NET BILLING
-                // --------------------------------------------------
-
                 doc.text(
-                    `Net Billing: ${formatMoney(
+                    `Net Billing: ${formatPDFMoney(
                         netBilling
                     )}`,
                     pageWidth -
